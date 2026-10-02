@@ -65,3 +65,24 @@
   opacity: 0.85;
   transform: translate3d(32%, 0, -20px) rotateY(-12deg) scale(0.93);
 }
+
+/* Mobile Responsiveness for 3D Carousel */
+@media (max-width: 640px) {
+  .perspective-stage {
+    perspective: 800px;
+  }
+  .card-center {
+    transform: translate3d(0, 0, 45px) rotateY(0deg) scale(1);
+    box-shadow: 0 10px 30px -5px rgba(192, 132, 252, 0.25);
+  }
+  .card-left {
+    transform: translate3d(-52%, 0, -60px) rotateY(22deg) scale(0.82);
+    opacity: 0.25;
+    filter: blur(1px);
+  }
+  .card-right {
+    transform: translate3d(52%, 0, -60px) rotateY(-22deg) scale(0.82);
+    opacity: 0.25;
+    filter: blur(1px);
+  }
+}

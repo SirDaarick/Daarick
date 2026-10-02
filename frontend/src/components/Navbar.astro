@@ -3,19 +3,20 @@
 ---
 
 <header class="fixed top-0 left-0 right-0 z-40 bg-[rgba(26,15,30,0.85)] backdrop-blur-xl border-b border-[rgba(147,80,115,0.3)] shadow-[0_1px_8px_rgba(0,0,0,0.3)]">
-  <div class="h-16 max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between">
-    <a href="/" class="font-mono text-sm text-[#ddb8ff] tracking-wider transition-colors hover:text-[#D8B4FE] flex items-center gap-1.5">
-      <span class="text-[#c084fc] font-semibold">[daarick@systems:~]$</span>
+  <div class="h-16 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between">
+    <a href="/" class="font-mono text-sm text-[#ddb8ff] tracking-wider transition-colors hover:text-[#D8B4FE] flex items-center gap-1.5 shrink-0">
+      <span class="text-[#c084fc] font-semibold hidden sm:inline">[daarick@systems:~]$</span>
+      <span class="text-[#c084fc] font-semibold sm:hidden">[d@sys]$</span>
       <span class="animate-pulse text-[#10B981]">_</span>
     </a>
 
-    <div class="flex items-center gap-3">
-      <nav class="flex items-center gap-2">
+    <div class="flex items-center gap-2 sm:gap-3">
+      <nav class="flex items-center gap-1.5 sm:gap-2">
         <a
           href="https://github.com"
           target="_blank"
           rel="noopener noreferrer"
-          class="p-2 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.38)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-colors flex items-center gap-1.5 font-mono text-xs"
+          class="p-2 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.38)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-colors flex items-center gap-1.5 font-mono text-xs active:scale-95"
           title="GitHub"
         >
           <svg class="w-4 h-4 fill-current text-[#ddb8ff]" viewBox="0 0 24 24">
@@ -28,7 +29,7 @@
           href="https://linkedin.com"
           target="_blank"
           rel="noopener noreferrer"
-          class="p-2 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.38)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-colors flex items-center gap-1.5 font-mono text-xs"
+          class="p-2 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.38)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-colors flex items-center gap-1.5 font-mono text-xs active:scale-95"
           title="LinkedIn"
         >
           <svg class="w-4 h-4 fill-current text-[#c084fc]" viewBox="0 0 24 24">
@@ -39,7 +40,7 @@
 
         <a
           href="mailto:daarick@systems.local"
-          class="p-2 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.38)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-colors flex items-center gap-1.5 font-mono text-xs"
+          class="p-2 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.38)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-colors flex items-center gap-1.5 font-mono text-xs active:scale-95"
           title="Contacto / Email"
         >
           <svg class="w-4 h-4 fill-current text-[#ffafd5]" viewBox="0 0 24 24">

@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
-import { PROJECTS, type ProjectData } from '../data/projects';
+import React, { useState, useRef } from 'react';
+import { PROJECTS } from '../data/projects';
 
 export const CoverFlowCarousel: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const total = PROJECTS.length;
+
+  // Touch Swipe Gesture State
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const minSwipeDistance = 45; // Minimum px distance for swipe detection
 
   const nextCard = () => {
     setActiveIndex((prev) => (prev + 1) % total);
@@ -17,6 +22,28 @@ export const CoverFlowCarousel: React.FC = () => {
     setActiveIndex(index);
   };
 
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchEndX.current = null;
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    const distance = touchStartX.current - touchEndX.current;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      nextCard();
+    } else if (isRightSwipe) {
+      prevCard();
+    }
+  };
+
   const openInspectModal = (key: string) => {
     window.dispatchEvent(
       new CustomEvent('open-inspect-modal', { detail: { projectKey: key } })
@@ -24,18 +51,18 @@ export const CoverFlowCarousel: React.FC = () => {
   };
 
   return (
-    <section className="flex flex-col gap-6" id="proyectos">
+    <section className="flex flex-col gap-5 sm:gap-6" id="proyectos">
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 font-mono text-xs text-[#c084fc]">
             <span>[ 01 // SISTEMAS EN PRODUCCIÓN · VISTA PERSPECTIVA 3D ]</span>
           </div>
-          <h2 className="text-3xl font-semibold text-[#F8F4E9] mt-2">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-[#F8F4E9] mt-2">
             Proyectos Seleccionados
           </h2>
           <p className="text-sm text-[#F6DBC0] mt-1 max-w-xl leading-relaxed">
-            Navega entre los sistemas en perspectiva 3D interactiva. Pulsa cualquier tarjeta para enfocarla o inspeccionar su telemetría en tiempo real.
+            Navega entre los sistemas en perspectiva 3D interactiva. En móvil puedes <strong className="text-[#F8F4E9]">deslizar con el dedo</strong> o usar las flechas.
           </p>
         </div>
 
@@ -61,8 +88,13 @@ export const CoverFlowCarousel: React.FC = () => {
         </div>
       </div>
 
-      {/* 3D Stage Wrapper */}
-      <div className="relative w-full h-[470px] sm:h-[440px] my-4 perspective-stage flex items-center justify-center overflow-hidden py-4 select-none">
+      {/* 3D Stage Wrapper with Touch Handlers */}
+      <div
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        className="relative w-full h-[500px] sm:h-[440px] my-2 sm:my-4 perspective-stage flex items-center justify-center overflow-hidden py-4 select-none touch-pan-y"
+      >
         {PROJECTS.map((project, index) => {
           const diff = (index - activeIndex + total) % total;
           let positionClass = '';
@@ -79,7 +111,7 @@ export const CoverFlowCarousel: React.FC = () => {
             <div
               key={project.id}
               onClick={() => handleCardClick(index)}
-              className={`carousel-3d-card ${positionClass} absolute w-full max-w-[420px] sm:max-w-[450px] p-6 rounded-xl bg-[rgba(26,15,30,0.95)] border border-[rgba(147,80,115,0.4)] backdrop-blur-xl flex flex-col justify-between`}
+              className={`carousel-3d-card ${positionClass} absolute w-[90%] sm:w-full max-w-[360px] sm:max-w-[450px] p-5 sm:p-6 rounded-xl bg-[rgba(26,15,30,0.96)] border border-[rgba(147,80,115,0.4)] backdrop-blur-xl flex flex-col justify-between`}
             >
               {/* Corner Crosshairs */}
               <div className="absolute top-2 left-2 font-mono text-xs text-[#c084fc] select-none">+</div>
@@ -88,7 +120,7 @@ export const CoverFlowCarousel: React.FC = () => {
               <div className="absolute bottom-2 right-2 font-mono text-xs text-[#c084fc] select-none">+</div>
 
               {/* Card Header & Content */}
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3 sm:gap-4">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs text-[rgba(246,219,192,0.65)]">
                     [ ID: {project.id} ]
@@ -100,28 +132,28 @@ export const CoverFlowCarousel: React.FC = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-medium text-[#F8F4E9]">
+                  <h3 className="text-lg sm:text-xl font-medium text-[#F8F4E9]">
                     {project.title}
                   </h3>
-                  <p className="text-sm text-[#F6DBC0] mt-2 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-[#F6DBC0] mt-1.5 sm:mt-2 leading-relaxed line-clamp-3 sm:line-clamp-none">
                     {project.shortDesc}
                   </p>
                 </div>
 
                 {/* Metric Sparkline */}
-                <div className="p-3 rounded-lg bg-[rgba(21,10,25,0.85)] border border-[rgba(147,80,115,0.25)] flex items-center justify-between">
+                <div className="p-2.5 sm:p-3 rounded-lg bg-[rgba(21,10,25,0.85)] border border-[rgba(147,80,115,0.25)] flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="font-mono text-[11px] text-[rgba(246,219,192,0.65)]">
+                    <span className="font-mono text-[10px] sm:text-[11px] text-[rgba(246,219,192,0.65)]">
                       {project.metricLabel}
                     </span>
-                    <span className="font-mono text-base text-[#F8F4E9] font-semibold">
+                    <span className="font-mono text-sm sm:text-base text-[#F8F4E9] font-semibold">
                       {project.metricValue}{' '}
                       <span className="text-xs text-[#10B981]">
                         {project.metricDelta}
                       </span>
                     </span>
                   </div>
-                  <svg className="w-24 h-8" fill="none" viewBox="0 0 96 32">
+                  <svg className="w-20 sm:w-24 h-7 sm:h-8" fill="none" viewBox="0 0 96 32">
                     <path
                       d="M0 26 L16 22 L32 25 L48 14 L64 18 L80 8 L96 4"
                       stroke={project.sparklineColor}
@@ -135,8 +167,8 @@ export const CoverFlowCarousel: React.FC = () => {
               </div>
 
               {/* Tags & Action Buttons */}
-              <div className="flex flex-col gap-3 mt-4">
-                <div className="flex flex-wrap gap-1.5 font-mono text-xs text-[#F6DBC0]">
+              <div className="flex flex-col gap-2.5 sm:gap-3 mt-3 sm:mt-4">
+                <div className="flex flex-wrap gap-1 font-mono text-[11px] text-[#F6DBC0]">
                   {project.tags.map((tag) => (
                     <span
                       key={tag}
@@ -153,14 +185,14 @@ export const CoverFlowCarousel: React.FC = () => {
                       e.stopPropagation();
                       openInspectModal(project.key);
                     }}
-                    className="py-1.5 px-3 rounded bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-semibold transition-all text-center flex items-center justify-center gap-1 cursor-pointer shadow-md"
+                    className="py-2 px-3 rounded bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-semibold transition-all text-center flex items-center justify-center gap-1 cursor-pointer shadow-md active:scale-95"
                   >
                     <span>[ Inspeccionar ]</span>
                   </button>
                   <a
                     href={project.demoUrl}
                     onClick={(e) => e.stopPropagation()}
-                    className="py-1.5 px-3 rounded bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-mono text-xs transition-all text-center flex items-center justify-center gap-1"
+                    className="py-2 px-3 rounded bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-mono text-xs transition-all text-center flex items-center justify-center gap-1 active:scale-95"
                   >
                     <span>Demo App ↗</span>
                   </a>
@@ -172,8 +204,8 @@ export const CoverFlowCarousel: React.FC = () => {
       </div>
 
       {/* Tip below 3D Carousel */}
-      <div className="flex items-center justify-center gap-2 text-[rgba(246,219,192,0.65)] font-mono text-xs">
-        <span>// TIP: Haz clic en las tarjetas laterales o usa las flechas &lt; &gt; para rotar el carrusel</span>
+      <div className="flex items-center justify-center gap-2 text-[rgba(246,219,192,0.65)] font-mono text-[11px] sm:text-xs text-center px-4">
+        <span>// Desliza lateralmente con el dedo ↔ o usa &lt; &gt; para rotar</span>
       </div>
     </section>
   );
