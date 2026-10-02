@@ -1,0 +1,48 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Hero from '../components/Hero.astro';
+import TechStack from '../components/TechStack.astro';
+import { CoverFlowCarousel } from '../components/CoverFlowCarousel';
+import Testimonials from '../components/Testimonials.astro';
+---
+
+<Layout>
+  <div class="max-w-7xl mx-auto px-4 lg:px-8 py-10 flex flex-col gap-16 md:gap-24">
+    <Hero />
+    <TechStack />
+    <CoverFlowCarousel client:visible />
+    <Testimonials />
+
+    {/* Final Audit & Contact Section */}
+    <section class="p-6 md:p-10 rounded-2xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.35)] backdrop-blur-md flex flex-col lg:flex-row items-center justify-between gap-6 relative overflow-hidden">
+      <div class="max-w-xl flex flex-col gap-2">
+        <div class="font-mono text-xs text-[#c084fc]">
+          // AUDITORÍA Y AUTOMATIZACIÓN DE PROCESOS
+        </div>
+        <h3 class="text-2xl sm:text-3xl font-semibold text-[#F8F4E9]">
+          ¿Tienes un proceso manual en tu negocio que consume demasiado tiempo?
+        </h3>
+        <p class="text-sm text-[#F6DBC0] leading-relaxed">
+          Analizo tus cuellos de botella y diseño un prototipo funcional en FastAPI y agentes IA adaptado a los sistemas de tu empresa.
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+        <a
+          href="mailto:daarick@systems.local"
+          class="w-full sm:w-auto px-6 py-3 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold text-center transition-all shadow-lg cursor-pointer"
+        >
+          [ Iniciar Auditoría Técnica ↗ ]
+        </a>
+        <a
+          href="https://github.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="w-full sm:w-auto px-6 py-3 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] font-mono text-xs text-center transition-all"
+        >
+          // Ver Código en GitHub
+        </a>
+      </div>
+    </section>
+  </div>
+</Layout>

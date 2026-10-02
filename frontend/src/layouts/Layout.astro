@@ -1,0 +1,57 @@
+---
+import '../styles/global.css';
+import { AsciiCanvas } from '../components/AsciiCanvas';
+import { SandboxModal } from '../components/SandboxModal';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "Daarick // Sistemas de IA & Automatización",
+  description = "Ingeniero de Sistemas de IA & Automatización. Arquitecturas autónomas, limpias y deterministas con FastAPI, Python y React."
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es" class="dark scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-[#160B1A] font-sans text-[#F8F4E9] min-h-screen relative selection:bg-[#c084fc] selection:text-[#500989] overflow-x-hidden">
+    {/* Subtle Grid Pattern Background */}
+    <div class="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-10">
+      <div class="absolute inset-0 bg-[radial-gradient(#ddb8ff_1px,transparent_1px)] [background-size:24px_24px]"></div>
+    </div>
+
+    {/* Ambient Interactive ASCII Background Canvas */}
+    <AsciiCanvas client:load />
+
+    {/* Ambient Glow Spheres */}
+    <div class="pointer-events-none absolute top-12 left-1/4 w-96 h-96 bg-[#c084fc]/10 rounded-full blur-3xl z-0"></div>
+    <div class="pointer-events-none absolute top-96 right-10 w-80 h-80 bg-[rgba(113,52,85,0.2)] rounded-full blur-3xl z-0"></div>
+
+    <Navbar />
+
+    <main class="relative z-10 w-full pt-16 bg-transparent">
+      <slot />
+    </main>
+
+    <Footer />
+
+    {/* Interactive Modal Island (Loaded on Idle) */}
+    <SandboxModal client:idle />
+  </body>
+</html>

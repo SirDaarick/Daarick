@@ -1,0 +1,140 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { DocumentExtractorDemo } from '../../components/DocumentExtractorDemo';
+---
+
+<Layout
+  title="Extractor de Facturas Inteligente // Demo en Vivo · Daarick Systems"
+  description="Prueba la extracción automatizada de albaranes y facturas con OCR multimodal e IA determinista."
+>
+  <div class="max-w-7xl mx-auto px-4 lg:px-8 py-8 flex flex-col gap-10">
+    {/* Navigation & Header */}
+    <div class="flex items-center justify-between pb-4 border-b border-[rgba(147,80,115,0.25)]">
+      <a
+        href="/"
+        class="font-mono text-xs text-[#ddb8ff] hover:text-[#D8B4FE] transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded bg-[rgba(80,45,85,0.24)] border border-[rgba(147,80,115,0.3)]"
+      >
+        <span>&larr;</span>
+        <span>[ Volver al Portafolio ]</span>
+      </a>
+
+      <div class="flex items-center gap-2 font-mono text-xs">
+        <span class="text-[rgba(246,219,192,0.65)] hidden sm:inline">[ DEMO EN VIVO // SISTEMA DE IA ]</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-[#10B981] border border-emerald-500/20">
+          [ ● EN LÍNEA ]
+        </span>
+      </div>
+    </div>
+
+    {/* Project Title & Impact Pitch */}
+    <div class="flex flex-col gap-2 max-w-3xl">
+      <span class="font-mono text-xs text-[#c084fc]">
+        // HERRAMIENTA OPERATIVA INTELIGENTE
+      </span>
+      <h1 class="text-3xl sm:text-5xl font-semibold text-[#F8F4E9] tracking-tight">
+        Extractor de Documentos y Facturación Inteligente
+      </h1>
+      <p class="text-base sm:text-lg text-[#F6DBC0] leading-relaxed mt-1">
+        Lectura instantánea de facturas, albaranes y recibos en PDF o imagen, pasando los datos limpios a contabilidad sin trabajo manual.
+      </p>
+    </div>
+
+    {/* 3 Executive Business Cards */}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Card 1 */}
+      <div class="p-5 rounded-xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md flex flex-col justify-between">
+        <div>
+          <span class="font-mono text-[11px] text-[rgba(246,219,192,0.65)] block mb-1">
+            PROBLEMA RESUELTO
+          </span>
+          <h3 class="text-lg font-semibold text-[#F8F4E9]">¿Qué problema resuelve?</h3>
+          <p class="text-sm text-[#F6DBC0] mt-2 leading-relaxed">
+            Elimina el tiempo que el equipo administrativo pierde copiando datos de facturas a mano. Evita retrasos de pago, facturas extraviadas y errores humanos de digitación.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)]">
+          <span class="inline-block px-2.5 py-1 rounded bg-[rgba(80,45,85,0.3)] font-mono text-xs text-[#F8F4E9]">
+            ✓ Ahorro: 35 horas al mes
+          </span>
+        </div>
+      </div>
+
+      {/* Card 2 */}
+      <div class="p-5 rounded-xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md flex flex-col justify-between">
+        <div>
+          <span class="font-mono text-[11px] text-[rgba(246,219,192,0.65)] block mb-1">
+            FUNCIONAMIENTO
+          </span>
+          <h3 class="text-lg font-semibold text-[#F8F4E9]">¿Cómo lo hace?</h3>
+          <p class="text-sm text-[#F6DBC0] mt-2 leading-relaxed">
+            Subes cualquier PDF o fotografía (incluso arrugada o escaneada). La Inteligencia Artificial lee el texto, identifica automáticamente el proveedor, importes e impuestos, y los valida al instante.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)]">
+          <span class="inline-block px-2.5 py-1 rounded bg-[rgba(80,45,85,0.3)] font-mono text-xs text-[#ddb8ff]">
+            ⚡ 100% Automático
+          </span>
+        </div>
+      </div>
+
+      {/* Card 3 */}
+      <div class="p-5 rounded-xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md flex flex-col justify-between">
+        <div>
+          <span class="font-mono text-[11px] text-[rgba(246,219,192,0.65)] block mb-1">
+            RESULTADOS CLAVE
+          </span>
+          <h3 class="text-lg font-semibold text-[#F8F4E9]">Resultados obtenidos</h3>
+          <ul class="text-sm text-[#F6DBC0] mt-2 space-y-1.5">
+            <li class="flex items-center gap-2">
+              <span class="text-[#10B981]">●</span>
+              <span>Precisión en lectura: <strong>99.8%</strong></span>
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="text-[#10B981]">●</span>
+              <span>Tiempo por factura: <strong>&lt; 2 segundos</strong></span>
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="text-[#10B981]">●</span>
+              <span>Errores de transcripción: <strong>0 incidencias</strong></span>
+            </li>
+          </ul>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)]">
+          <span class="inline-block px-2.5 py-1 rounded bg-emerald-500/10 text-[#10B981] font-mono text-xs border border-emerald-500/20">
+            ★ Verificado en producción
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {/* Interactive Simulator Island */}
+    <DocumentExtractorDemo client:load />
+
+    {/* Conversion CTA */}
+    <div class="p-6 md:p-8 rounded-2xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="max-w-xl">
+        <h3 class="text-xl sm:text-2xl font-semibold text-[#F8F4E9]">
+          ¿Quieres ver cómo funcionaría con las facturas de tu negocio?
+        </h3>
+        <p class="text-sm text-[#F6DBC0] mt-1">
+          Hacemos una prueba rápida sin compromiso con 5 de tus documentos reales para que compruebes el ahorro de tiempo exacto.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3 w-full sm:w-auto">
+        <a
+          href="mailto:daarick@systems.local?subject=Prueba%20de%20facturas%20IA"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold text-center transition-all shadow-md cursor-pointer"
+        >
+          [ Solicitar prueba gratuita con tus facturas ]
+        </a>
+        <a
+          href="/"
+          class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] font-mono text-xs text-center transition-all"
+        >
+          [ Volver a proyectos ]
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>
