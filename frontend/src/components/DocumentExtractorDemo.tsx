@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FileText, CheckCircle2, Zap, Eye, Building2, Calendar, CreditCard, Sparkles } from 'lucide-react';
 
 interface PresetCase {
   id: string;
@@ -75,24 +76,24 @@ const PRESETS: PresetCase[] = [
 export const DocumentExtractorDemo: React.FC = () => {
   const [selectedPreset, setSelectedPreset] = useState<PresetCase>(PRESETS[0]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processStatus, setProcessStatus] = useState('✓ Listo para ERP');
+  const [processStatus, setProcessStatus] = useState('Listo para ERP');
 
   const handleSelect = (preset: PresetCase) => {
     setSelectedPreset(preset);
     setIsProcessing(true);
-    setProcessStatus('⏳ Procesando OCR...');
+    setProcessStatus('Procesando OCR...');
     setTimeout(() => {
       setIsProcessing(false);
-      setProcessStatus('✓ Listo para ERP');
+      setProcessStatus('Listo para ERP');
     }, 300);
   };
 
   const simulateProcess = () => {
     setIsProcessing(true);
-    setProcessStatus('⚡ Leyendo documento...');
+    setProcessStatus('Leyendo documento...');
     setTimeout(() => {
       setIsProcessing(false);
-      setProcessStatus('✓ Extracción Verificada');
+      setProcessStatus('Extracción Verificada');
     }, 400);
   };
 
@@ -105,11 +106,12 @@ export const DocumentExtractorDemo: React.FC = () => {
           <span className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
           <span className="w-3 h-3 rounded-full bg-[#27c93f]" />
           <span className="ml-3 font-mono text-xs text-[#c084fc]">
-            [ SIMULADOR INTERACTIVO // PRUÉBALO TÚ MISMO ]
+            simulador-operativo // extractor-facturacion
           </span>
         </div>
-        <span className="font-mono text-xs text-[#10B981]">
-          [ ● {processStatus} ]
+        <span className="inline-flex items-center gap-1.5 font-mono text-xs text-[#10B981]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+          {processStatus}
         </span>
       </div>
 
@@ -117,7 +119,7 @@ export const DocumentExtractorDemo: React.FC = () => {
         {/* Preset Selector */}
         <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-[rgba(147,80,115,0.25)]">
           <span className="font-mono text-xs text-[rgba(246,219,192,0.65)] mr-2">
-            // SELECCIONA UN CASO:
+            Selecciona un caso:
           </span>
           {PRESETS.map((preset) => {
             const isSelected = preset.id === selectedPreset.id;
@@ -125,7 +127,7 @@ export const DocumentExtractorDemo: React.FC = () => {
               <button
                 key={preset.id}
                 onClick={() => handleSelect(preset)}
-                className={`px-3 py-1.5 rounded font-mono text-xs transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded font-mono text-xs transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#c084fc] focus-visible:outline-none ${
                   isSelected
                     ? 'bg-[#c084fc] text-[#500989] font-bold shadow-md'
                     : 'bg-[rgba(80,45,85,0.25)] hover:bg-[rgba(80,45,85,0.4)] text-[#F6DBC0]'
@@ -137,15 +139,16 @@ export const DocumentExtractorDemo: React.FC = () => {
           })}
         </div>
 
-        {/* Split Screen: Left PDF Preview vs Right AI Extraction */}
+        {/* Split Screen */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left: Original Received Document Preview */}
           <div className="flex flex-col gap-3 p-4 rounded-xl bg-[rgba(15,7,18,0.85)] border border-[rgba(147,80,115,0.3)]">
             <div className="flex items-center justify-between font-mono text-xs">
-              <span className="text-[#ddb8ff] flex items-center gap-1">
-                📄 Documento original recibido
+              <span className="text-[#ddb8ff] flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-[#c084fc]" />
+                Documento recibido
               </span>
-              <span className="text-[rgba(246,219,192,0.65)] bg-[rgba(80,45,85,0.3)] px-2 py-0.5 rounded">
+              <span className="text-[rgba(246,219,192,0.65)] bg-[rgba(80,45,85,0.3)] px-2 py-0.5 rounded text-[11px]">
                 {selectedPreset.filename}
               </span>
             </div>
@@ -176,11 +179,11 @@ export const DocumentExtractorDemo: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-2 text-[11px] py-1 bg-[rgba(35,23,39,0.5)] p-2 rounded">
                 <div>
-                  <span className="text-[rgba(246,219,192,0.5)] block">CLIENTE:</span>
+                  <span className="text-[rgba(246,219,192,0.5)] block text-[10px]">CLIENTE:</span>
                   <span className="text-[#F8F4E9]">{selectedPreset.client}</span>
                 </div>
                 <div>
-                  <span className="text-[rgba(246,219,192,0.5)] block">PAGO:</span>
+                  <span className="text-[rgba(246,219,192,0.5)] block text-[10px]">PAGO:</span>
                   <span className="text-[#F8F4E9]">{selectedPreset.paymentMethod}</span>
                 </div>
               </div>
@@ -198,23 +201,25 @@ export const DocumentExtractorDemo: React.FC = () => {
               </div>
             </div>
 
-            <p className="text-xs text-[rgba(246,219,192,0.6)] font-mono">
-              👁 El sistema detecta tablas, importes y metadatos incluso en fotos o documentos arrugados.
+            <p className="text-xs text-[rgba(246,219,192,0.6)] font-mono flex items-center gap-1.5">
+              <Eye className="w-3.5 h-3.5 text-[#ddb8ff]" />
+              El sistema identifica tablas, importes y metadatos incluso en fotos o escaneos.
             </p>
           </div>
 
           {/* Right: AI Structured Data for ERP */}
           <div className="flex flex-col justify-between gap-4 p-4 rounded-xl bg-[rgba(15,7,18,0.85)] border border-[rgba(147,80,115,0.3)]">
             <div className="flex items-center justify-between font-mono text-xs">
-              <span className="text-[#10B981] flex items-center gap-1 font-semibold">
-                ✓ Datos extraídos automáticamente por la IA
+              <span className="text-[#10B981] flex items-center gap-1.5 font-semibold">
+                <CheckCircle2 className="w-4 h-4 text-[#10B981]" />
+                Datos extraídos automáticamente por IA
               </span>
-              <span className="text-xs text-[#c084fc] bg-[#c084fc]/10 px-2 py-0.5 rounded border border-[#c084fc]/20">
+              <span className="text-xs text-[#c084fc] bg-[#c084fc]/10 px-2 py-0.5 rounded border border-[#c084fc]/20 font-mono">
                 Listo para ERP
               </span>
             </div>
 
-            <div className="flex flex-col gap-2.5 font-mono text-xs">
+            <div className="flex flex-col gap-2 font-mono text-xs">
               <div className="flex justify-between p-2 rounded bg-[rgba(26,15,30,0.8)] border border-[rgba(147,80,115,0.2)]">
                 <span className="text-[rgba(246,219,192,0.65)]">Empresa Emisora:</span>
                 <span className="text-[#F8F4E9] font-semibold text-right">
@@ -251,18 +256,19 @@ export const DocumentExtractorDemo: React.FC = () => {
             </div>
 
             {/* Validation Notice & Simulator Button */}
-            <div className="flex flex-col gap-3 pt-2">
-              <div className="p-2.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-xs text-[#10B981] font-mono">
-                ✓ {selectedPreset.validationText}
+            <div className="flex flex-col gap-3 pt-1">
+              <div className="p-2.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-xs text-[#10B981] font-mono flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <span>{selectedPreset.validationText}</span>
               </div>
 
               <button
                 onClick={simulateProcess}
                 disabled={isProcessing}
-                className="w-full py-2.5 px-4 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-2.5 px-4 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-[#c084fc] focus-visible:outline-none"
               >
-                <span>⚡</span>
-                <span>[ Simular lectura en tiempo real ]</span>
+                <Zap className="w-4 h-4 fill-current" />
+                <span>Simular lectura en tiempo real</span>
               </button>
             </div>
           </div>
