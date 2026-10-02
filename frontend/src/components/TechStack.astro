@@ -3,89 +3,83 @@
 ---
 
 <section class="relative rounded-xl p-4 sm:p-6 bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md" id="stack">
-  {/* ASCII framing ornament */}
-  <div class="flex items-center justify-between font-mono text-xs text-[#ddb8ff] mb-4 select-none overflow-hidden text-ellipsis whitespace-nowrap">
-    <span>+-- [ STACK PRINCIPAL &amp; ARQUITECTURA // TOOLCHAIN OFICIAL ] ------------------------------------+</span>
-    <span class="hidden md:inline text-[rgba(246,219,192,0.65)]">0x8849 // ACTIVE RUNTIME</span>
+  {/* Header */}
+  <div class="flex items-center justify-between font-mono text-xs text-[#ddb8ff] mb-4 select-none">
+    <span>+-- [ HERRAMIENTAS Y TECNOLOGÍAS EN PRODUCCIÓN ] -------------------------+</span>
   </div>
 
   {/* Grid with prominent large icons */}
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-    {/* 01: Python */}
+    {/* Python */}
     <div class="group flex flex-col items-center text-center p-4 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.38)] border border-[rgba(147,80,115,0.25)] hover:border-[#ddb8ff]/50 transition-all duration-200">
       <div class="w-14 h-14 rounded-xl bg-[rgba(61,48,65,0.8)] flex items-center justify-center text-[#ddb8ff] group-hover:text-[#D8B4FE] transition-all mb-3 group-hover:scale-110 shadow-md">
         <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
           <path d="M11.914 0C5.82 0 6.2 2.656 6.2 2.656l.006 2.752h5.814v.826H3.85S0 5.766 0 11.879c0 6.114 3.36 5.925 3.36 5.925h2.005v-2.81c0-3.218 2.74-3.218 2.74-3.218h5.717s2.585.038 2.585-2.548V3.344S16.924 0 11.914 0zm-1.68 1.832a1.01 1.01 0 1 1 0 2.02 1.01 1.01 0 0 1 0-2.02zm1.852 22.168c6.094 0 5.714-2.656 5.714-2.656l-.006-2.752H11.98v-.826h8.17s3.85.468 3.85-5.645c0-6.113-3.36-5.925-3.36-5.925h-2.005v2.81c0 3.218-2.74 3.218-2.74 3.218H10.18s-2.585-.038-2.585 2.548v5.882s-.514 3.346 4.496 3.346zm1.68-1.832a1.01 1.01 0 1 1 0-2.02 1.01 1.01 0 0 1 0 2.02z"></path>
         </svg>
       </div>
-      <span class="font-mono text-xs text-[rgba(246,219,192,0.65)] group-hover:text-[#ddb8ff] transition-colors">01 / CORE</span>
-      <span class="text-sm font-semibold text-[#F8F4E9] mt-1">Python 3.12</span>
-      <span class="text-xs text-[#F6DBC0] block mt-0.5">AsyncIO &amp; Typing</span>
+      <span class="font-mono text-xs text-[rgba(246,219,192,0.65)] group-hover:text-[#ddb8ff] transition-colors">Lenguaje</span>
+      <span class="text-sm font-semibold text-[#F8F4E9] mt-1">Python</span>
+      <span class="text-xs text-[#F6DBC0] block mt-0.5">AsyncIO &amp; Tipado</span>
     </div>
 
-    {/* 02: FastAPI */}
+    {/* FastAPI */}
     <div class="group flex flex-col items-center text-center p-4 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.38)] border border-[rgba(147,80,115,0.25)] hover:border-[#10B981]/50 transition-all duration-200">
-      <div class="w-14 h-14 rounded-xl bg-[rgba(61,48,65,0.8)] flex items-center justify-center text-[#10B981] group-hover:text-[#10B981] transition-all mb-3 group-hover:scale-110 shadow-md">
+      <div class="w-14 h-14 rounded-xl bg-[rgba(61,48,65,0.8)] flex items-center justify-center text-[#10B981] transition-all mb-3 group-hover:scale-110 shadow-md">
         <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 0C5.373 0 0 5.373 0 12c0 6.627 5.373 12 12 12s12-5.373 12-12c0-6.627-5.373-12-12-12zm-1.071 18.857V12.857H7.714L13.714 5.143v6h3.429L10.929 18.857z"></path>
         </svg>
       </div>
-      <span class="font-mono text-xs text-[rgba(246,219,192,0.65)] group-hover:text-[#ddb8ff] transition-colors">02 / BACKEND</span>
+      <span class="font-mono text-xs text-[rgba(246,219,192,0.65)] group-hover:text-[#ddb8ff] transition-colors">Backend</span>
       <span class="text-sm font-semibold text-[#F8F4E9] mt-1">FastAPI</span>
-      <span class="text-xs text-[#F6DBC0] block mt-0.5">High-Throughput APIs</span>
+      <span class="text-xs text-[#F6DBC0] block mt-0.5">APIs de alto rendimiento</span>
     </div>
 
-    {/* 03: React / Vite */}
+    {/* React / Astro */}
     <div class="group flex flex-col items-center text-center p-4 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.38)] border border-[rgba(147,80,115,0.25)] hover:border-[#ddb8ff]/50 transition-all duration-200">
       <div class="w-14 h-14 rounded-xl bg-[rgba(61,48,65,0.8)] flex items-center justify-center text-[#ddb8ff] group-hover:text-[#D8B4FE] transition-all mb-3 group-hover:scale-110 shadow-md">
         <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0-7c-4.97 0-9 1.79-9 4 0 1.25 1.3 2.39 3.4 3.09-.32.96-.53 1.99-.6 3.06-1.74.45-2.8 1.13-2.8 1.85 0 2.21 4.03 4 9 4 1.15 0 2.24-.1 3.22-.29.47.88 1.09 1.66 1.84 2.3-.35.03-.7.05-1.06.05-4.97 0-9-1.79-9-4 0-.44.17-.86.47-1.25C4.22 13.9 3 12.3 3 10.5c0-3.31 4.03-6 9-6 .71 0 1.4.06 2.05.17-.61.85-1.09 1.82-1.42 2.87-.53-.03-1.07-.04-1.63-.04zm8.6 8.09c.26.6.4 1.24.4 1.91 0 3.31-4.03 6-9 6-.35 0-.7-.01-1.05-.04.33-.95.53-1.97.6-3.04 1.74-.46 2.8-1.14 2.8-1.87 0-1.25-1.3-2.39-3.4-3.09.32-.96.53-1.99.6-3.06 1.74-.45 2.8-1.13 2.8-1.85 0-.44-.17-.86-.47-1.25C19.78 4.1 21 5.7 21 7.5c0 .92-.37 1.78-1.01 2.51.2.33.4.69.61 1.08z"></path>
         </svg>
       </div>
-      <span class="font-mono text-xs text-[rgba(246,219,192,0.65)] group-hover:text-[#ddb8ff] transition-colors">03 / FRONTEND</span>
-      <span class="text-sm font-semibold text-[#F8F4E9] mt-1">React / Astro</span>
-      <span class="text-xs text-[#F6DBC0] block mt-0.5">Control Dashboards</span>
+      <span class="font-mono text-xs text-[rgba(246,219,192,0.65)] group-hover:text-[#ddb8ff] transition-colors">Frontend</span>
+      <span class="text-sm font-semibold text-[#F8F4E9] mt-1">React &amp; Astro</span>
+      <span class="text-xs text-[#F6DBC0] block mt-0.5">Interfaces de control</span>
     </div>
 
-    {/* 04: PyTorch / LLMs */}
+    {/* PyTorch / LLMs */}
     <div class="group flex flex-col items-center text-center p-4 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.38)] border border-[rgba(147,80,115,0.25)] hover:border-[#ffafd5]/50 transition-all duration-200">
       <div class="w-14 h-14 rounded-xl bg-[rgba(61,48,65,0.8)] flex items-center justify-center text-[#ffafd5] group-hover:text-[#ffd8e8] transition-all mb-3 group-hover:scale-110 shadow-md">
         <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
           <path d="M13.5 1.5a1 1 0 0 0-1.66-.45l-8.5 7.5A1 1 0 0 0 3 9.3V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9.3a1 1 0 0 0-.34-.75l-7.16-6.32zM12 5.5l5 4.41V19H7V9.91l5-4.41z"></path>
         </svg>
       </div>
-      <span class="font-mono text-xs text-[rgba(246,219,192,0.65)] group-hover:text-[#ddb8ff] transition-colors">04 / INTEL</span>
+      <span class="font-mono text-xs text-[rgba(246,219,192,0.65)] group-hover:text-[#ddb8ff] transition-colors">Modelos</span>
       <span class="text-sm font-semibold text-[#F8F4E9] mt-1">PyTorch &amp; LLMs</span>
-      <span class="text-xs text-[#F6DBC0] block mt-0.5">Fine-Tuning &amp; RAG</span>
+      <span class="text-xs text-[#F6DBC0] block mt-0.5">RAG e inferencia</span>
     </div>
 
-    {/* 05: Docker */}
+    {/* Docker */}
     <div class="group flex flex-col items-center text-center p-4 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.38)] border border-[rgba(147,80,115,0.25)] hover:border-[#c084fc]/50 transition-all duration-200">
       <div class="w-14 h-14 rounded-xl bg-[rgba(61,48,65,0.8)] flex items-center justify-center text-[#c084fc] group-hover:text-[#ddb8ff] transition-all mb-3 group-hover:scale-110 shadow-md">
         <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
           <path d="M23.77 12.27c-.3-.21-1.39-.77-2.82-.09-.2-.79-.65-1.46-1.28-1.92-.09-.07-.19-.13-.29-.18l-.51-.27-.3.47c-.52.83-.69 1.83-.49 2.81-.39.19-.82.35-1.28.47-.4-.86-1.07-1.55-1.92-1.98L14.4 11.3l-.28.49c-.43.76-.55 1.66-.35 2.53-.42.06-.85.09-1.29.09H1.47c-.26 0-.47.21-.47.47v.88c0 4.22 3.42 7.64 7.64 7.64 5.34 0 9.87-3.76 10.97-8.97 1.94-.09 3.73-.97 4.16-1.26.24-.16.32-.47.2-.73l-.2-.14zM4.77 10.9h2.15v2.15H4.77V10.9zm2.69 0h2.15v2.15H7.46V10.9zm2.69 0h2.15v2.15h-2.15V10.9zm-2.69-2.69h2.15v2.15H7.46V8.21zm2.69 0h2.15v2.15h-2.15V8.21zm2.69 0h2.15v2.15h-2.15V8.21zm-2.69-2.69h2.15v2.15h-2.15V5.52z"></path>
         </svg>
       </div>
-      <span class="font-mono text-xs text-[rgba(246,219,192,0.65)] group-hover:text-[#ddb8ff] transition-colors">05 / INFRA</span>
-      <span class="text-sm font-semibold text-[#F8F4E9] mt-1">Docker / CI-CD</span>
-      <span class="text-xs text-[#F6DBC0] block mt-0.5">Pipelines Contenedores</span>
+      <span class="font-mono text-xs text-[rgba(246,219,192,0.65)] group-hover:text-[#ddb8ff] transition-colors">Despliegue</span>
+      <span class="text-sm font-semibold text-[#F8F4E9] mt-1">Docker</span>
+      <span class="text-xs text-[#F6DBC0] block mt-0.5">Contenedores y CI/CD</span>
     </div>
 
-    {/* 06: PostgreSQL */}
+    {/* PostgreSQL */}
     <div class="group flex flex-col items-center text-center p-4 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.38)] border border-[rgba(147,80,115,0.25)] hover:border-[#ddb8ff]/50 transition-all duration-200">
       <div class="w-14 h-14 rounded-xl bg-[rgba(61,48,65,0.8)] flex items-center justify-center text-[#D8B4FE] group-hover:text-[#ddb8ff] transition-all mb-3 group-hover:scale-110 shadow-md">
         <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 2C6.48 2 2 4.02 2 6.5s4.48 4.5 10 4.5 10-2.02 10-4.5S17.52 2 12 2zm0 6.5c-4.41 0-8-1.57-8-3.5s3.59-3.5 8-3.5 8 1.57 8 3.5-3.59 3.5-8 3.5zM4 9.17C5.83 10.29 8.76 11 12 11s6.17-.71 8-1.83v3.33c0 2.48-4.48 4.5-10 4.5s-10-2.02-10-4.5V9.17zm0 5.5C5.83 15.79 8.76 16.5 12 16.5s6.17-.71 8-1.83v3.33c0 2.48-4.48 4.5-10 4.5s-10-2.02-10-4.5v-3.33z"></path>
         </svg>
       </div>
-      <span class="font-mono text-xs text-[rgba(246,219,192,0.65)] group-hover:text-[#ddb8ff] transition-colors">06 / STORAGE</span>
+      <span class="font-mono text-xs text-[rgba(246,219,192,0.65)] group-hover:text-[#ddb8ff] transition-colors">Datos</span>
       <span class="text-sm font-semibold text-[#F8F4E9] mt-1">PostgreSQL</span>
-      <span class="text-xs text-[#F6DBC0] block mt-0.5">pgvector &amp; ACID Ops</span>
+      <span class="text-xs text-[#F6DBC0] block mt-0.5">pgvector &amp; ACID</span>
     </div>
-  </div>
-
-  <div class="flex items-center justify-between font-mono text-xs text-[#ddb8ff] mt-4 select-none overflow-hidden text-ellipsis whitespace-nowrap">
-    <span>+--------------------------------------------------------------------------------------------------+</span>
-    <span class="text-[rgba(246,219,192,0.65)]">LATENCY: &lt;2ms</span>
   </div>
 </section>

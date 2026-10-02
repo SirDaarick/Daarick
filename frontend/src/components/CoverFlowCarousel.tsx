@@ -8,7 +8,7 @@ export const CoverFlowCarousel: React.FC = () => {
   // Touch Swipe Gesture State
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
-  const minSwipeDistance = 45; // Minimum px distance for swipe detection
+  const minSwipeDistance = 45;
 
   const nextCard = () => {
     setActiveIndex((prev) => (prev + 1) % total);
@@ -56,13 +56,13 @@ export const CoverFlowCarousel: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 font-mono text-xs text-[#c084fc]">
-            <span>[ 01 // SISTEMAS EN PRODUCCIÓN · VISTA PERSPECTIVA 3D ]</span>
+            <span>[ Proyectos en producción ]</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-semibold text-[#F8F4E9] mt-2">
-            Proyectos Seleccionados
+            Casos de estudio interactivos
           </h2>
           <p className="text-sm text-[#F6DBC0] mt-1 max-w-xl leading-relaxed">
-            Navega entre los sistemas en perspectiva 3D interactiva. En móvil puedes <strong className="text-[#F8F4E9]">deslizar con el dedo</strong> o usar las flechas.
+            Sistemas reales con integración de IA. Desliza lateralmente para navegar o pulsa una tarjeta para abrir su simulador.
           </p>
         </div>
 
@@ -76,7 +76,7 @@ export const CoverFlowCarousel: React.FC = () => {
             <span className="font-mono text-sm font-bold">&lt;</span>
           </button>
           <span className="font-mono text-xs text-[#c084fc] px-2 select-none">
-            [ 0{activeIndex + 1} / 0{total} ]
+            0{activeIndex + 1} / 0{total}
           </span>
           <button
             onClick={nextCard}
@@ -123,11 +123,11 @@ export const CoverFlowCarousel: React.FC = () => {
               <div className="flex flex-col gap-3 sm:gap-4">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs text-[rgba(246,219,192,0.65)]">
-                    [ ID: {project.id} ]
+                    {project.id}
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 font-mono text-xs text-[#10B981] border border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
-                    [ {project.status} ]
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
+                    {project.status}
                   </span>
                 </div>
 
@@ -174,7 +174,7 @@ export const CoverFlowCarousel: React.FC = () => {
                       key={tag}
                       className="px-2 py-0.5 rounded bg-[rgba(39,27,43,0.8)] border border-[rgba(147,80,115,0.25)]"
                     >
-                      [ {tag} ]
+                      {tag}
                     </span>
                   ))}
                 </div>
@@ -187,14 +187,14 @@ export const CoverFlowCarousel: React.FC = () => {
                     }}
                     className="py-2 px-3 rounded bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-semibold transition-all text-center flex items-center justify-center gap-1 cursor-pointer shadow-md active:scale-95"
                   >
-                    <span>[ Inspeccionar ]</span>
+                    <span>Abrir sandbox</span>
                   </button>
                   <a
                     href={project.demoUrl}
                     onClick={(e) => e.stopPropagation()}
                     className="py-2 px-3 rounded bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-mono text-xs transition-all text-center flex items-center justify-center gap-1 active:scale-95"
                   >
-                    <span>Demo App ↗</span>
+                    <span>Ver demo</span>
                   </a>
                 </div>
               </div>
@@ -205,7 +205,7 @@ export const CoverFlowCarousel: React.FC = () => {
 
       {/* Tip below 3D Carousel */}
       <div className="flex items-center justify-center gap-2 text-[rgba(246,219,192,0.65)] font-mono text-[11px] sm:text-xs text-center px-4">
-        <span>// Desliza lateralmente con el dedo ↔ o usa &lt; &gt; para rotar</span>
+        <span>Desliza lateralmente con el dedo o usa &lt; &gt; para explorar</span>
       </div>
     </section>
   );

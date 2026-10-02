@@ -3,54 +3,40 @@
 ---
 
 <section class="flex flex-col items-start gap-6 pt-4" id="sobre-mi">
-  {/* Terminal Tag Eyebrow */}
+  {/* Status Indicator */}
   <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[rgba(80,45,85,0.24)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md">
-    <span class="inline-block w-2 h-2 rounded-full bg-[#10B981] animate-ping"></span>
-    <span class="font-mono text-xs text-[#c084fc] tracking-wider">// PERFIL INGENIERO: DAARICK SYSTEMS</span>
-    <span class="font-mono text-xs text-[rgba(246,219,192,0.65)]">|</span>
-    <span class="font-mono text-xs text-[#10B981]">[ ● DISPONIBLE PARA NUEVOS RETOS ]</span>
+    <span class="inline-block w-2 h-2 rounded-full bg-[#10B981]"></span>
+    <span class="font-mono text-xs text-[#10B981]">[ Disponible para proyectos de automatización ]</span>
   </div>
 
   {/* Two-Column Grid */}
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full items-stretch">
     {/* Left Narrative Block */}
-    <div class="lg:col-span-7 flex flex-col justify-between gap-4">
-      <div class="flex flex-col gap-2">
-        <div class="font-mono text-xs text-[#ddb8ff] flex items-center gap-1">
-          <span>&gt; whoami --detailed</span>
-        </div>
-        <h1 class="text-3xl sm:text-5xl lg:text-5xl font-semibold text-[#F8F4E9] tracking-tight leading-tight">
-          Hola, soy <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#ddb8ff] via-[#D8B4FE] to-[#ffafd5]">Daarick</span>.<br />
-          Ingeniero de Sistemas de IA &amp; Automatización.
+    <div class="lg:col-span-7 flex flex-col justify-between gap-5">
+      <div class="flex flex-col gap-3">
+        <h1 class="text-3xl sm:text-5xl font-semibold text-[#F8F4E9] tracking-tight leading-tight">
+          Sistemas de gestión y automatización inteligente con IA
         </h1>
-        <p class="text-base sm:text-lg text-[#F6DBC0] leading-relaxed mt-2">
-          Me apasiona erradicar la fricción y el tedio de las operaciones corporativas. Transformo flujos lentos y propensos al error humano en <span class="text-[#F8F4E9] font-medium border-b border-[#ddb8ff]/40">arquitecturas autónomas, limpias y deterministas</span> con FastAPI, Python y React.
+        <p class="text-base sm:text-lg text-[#F6DBC0] leading-relaxed max-w-2xl">
+          Hola, soy <strong class="text-[#F8F4E9] font-medium">Daarick</strong>. Ayudo a empresas a transformar tareas manuales lentas y propensas al error humano en sistemas autónomos, limpios y confiables construidos a medida con FastAPI, Python y React.
         </p>
       </div>
 
       {/* Action Buttons */}
-      <div class="flex flex-wrap items-center gap-4 mt-2">
+      <div class="flex flex-wrap items-center gap-3 mt-1">
         <a
           href="#proyectos"
-          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-semibold backdrop-blur-md transition-all duration-200 shadow-lg shadow-[#c084fc]/20 cursor-pointer"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-semibold backdrop-blur-md transition-all duration-200 shadow-md cursor-pointer active:scale-95"
         >
-          <span>+</span>
-          <span>[ Explorar Proyectos 3D ↓ ]</span>
-          <span>+</span>
+          <span>[ Explorar proyectos ]</span>
         </a>
 
         <button
           id="hero-open-sandbox-btn"
-          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.4)] text-[#F6DBC0] hover:text-[#F8F4E9] font-mono text-xs backdrop-blur-md transition-all duration-200 cursor-pointer"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.4)] text-[#F6DBC0] hover:text-[#F8F4E9] font-mono text-xs backdrop-blur-md transition-all duration-200 cursor-pointer active:scale-95"
         >
-          <span class="text-[#ddb8ff]">⚡</span>
-          <span>[ Probar Ventana Sandbox ]</span>
+          <span>[ Abrir simulador de procesos ]</span>
         </button>
-
-        <div class="flex items-center gap-1 font-mono text-xs text-[rgba(246,219,192,0.65)] pl-1">
-          <span>// RUNTIME:</span>
-          <span class="text-[#c084fc]">v3.4.12-prod</span>
-        </div>
       </div>
     </div>
 
@@ -61,24 +47,23 @@
           <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></span>
           <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></span>
           <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></span>
-          <span class="ml-2 text-[#ddb8ff]">runtime://daarick-profile</span>
+          <span class="ml-2 text-[#ddb8ff]">enfoque-operativo</span>
         </div>
-        <span class="text-[#10B981]">[ ACTIVE ]</span>
+        <span class="text-[#10B981]">[ PRODUCCIÓN ]</span>
       </div>
 
-      <div class="my-auto py-4 flex flex-col gap-3">
-        <div class="font-mono text-xs text-[#ddb8ff] flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-[#ddb8ff] animate-pulse"></span>
-          <span>// QUÉ HAGO A DIARIO:</span>
+      <div class="my-auto py-4 flex flex-col gap-2.5">
+        <div class="font-mono text-xs text-[#ddb8ff]">
+          <span>// PROPÓSITO:</span>
         </div>
         <p class="text-sm text-[#F6DBC0] leading-relaxed bg-[rgba(21,10,25,0.6)] p-4 rounded-lg border border-[rgba(147,80,115,0.2)]">
-          Diseño pipelines con LLMs/RAG sin alucinaciones, sincronizaciones en tiempo real con ERPs y paneles de control que ahorran cientos de horas al mes a equipos de compras, operaciones y finanzas.
+          Diseño integraciones de IA aplicada que resuelven problemas concretos de negocio: triaje de solicitudes, procesamiento de facturas y sincronización de inventarios sin alucinaciones.
         </p>
       </div>
 
       <div class="pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between font-mono text-xs text-[rgba(246,219,192,0.65)]">
-        <span>STACK: FastAPI · Python · React</span>
-        <span class="text-[#c084fc]">99.9% Determinista</span>
+        <span>FastAPI · Python · React</span>
+        <span class="text-[#c084fc]">Determinista</span>
       </div>
     </div>
   </div>
