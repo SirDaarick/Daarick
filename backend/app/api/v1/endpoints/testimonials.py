@@ -49,7 +49,8 @@ async def submit_testimonial(payload: TestimonialCreate):
         author_role=role,
         before=payload.before,
         after=payload.after,
-        headline=headline
+        headline=headline,
+        extra_comments=payload.extra_comments or ""
     )
     return saved
 
