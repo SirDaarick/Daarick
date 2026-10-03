@@ -67,13 +67,13 @@ export const CoverFlowCarousel: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 font-mono text-xs text-[#c084fc]">
-            <span>[ Proyectos en producción ]</span>
+            <span>[ Casos reales en producción ]</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-semibold text-[#F8F4E9] mt-2">
-            Casos de estudio interactivos
+          <h2 className="text-2xl sm:text-3xl font-semibold text-[#F8F4E9] mt-1.5">
+            Mis proyectos
           </h2>
-          <p className="text-sm text-[#F6DBC0] mt-1 max-w-xl leading-relaxed">
-            Sistemas reales con integración de IA. Desliza con el ratón o pulsa cualquier tarjeta para traerla al frente.
+          <p className="text-sm text-[#F6DBC0] mt-1.5 max-w-2xl leading-relaxed">
+            Presento algunos de los sistemas reales con Integración de IA que más disfruté realizar. Mi objetivo con ellos siempre fue resolver u optimizar un proceso o problema.
           </p>
         </div>
 
@@ -104,7 +104,7 @@ export const CoverFlowCarousel: React.FC = () => {
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
-        className="relative w-full h-[560px] sm:h-[490px] my-2 sm:my-4 perspective-stage flex items-center justify-center py-4 select-none touch-pan-y cursor-grab active:cursor-grabbing"
+        className="relative w-full h-[620px] sm:h-[570px] my-2 sm:my-4 perspective-stage flex items-center justify-center py-4 select-none touch-pan-y cursor-grab active:cursor-grabbing"
       >
         {PROJECTS.map((project, index) => {
           const diff = (index - activeIndex + total) % total;
@@ -134,7 +134,7 @@ export const CoverFlowCarousel: React.FC = () => {
               onMouseLeave={() => {
                 if (isCenter) setIsPaused(false);
               }}
-              className={`carousel-3d-card ${positionClass} absolute w-[92%] sm:w-full max-w-[380px] sm:max-w-[480px] p-4 sm:p-5 rounded-2xl bg-[rgba(26,15,30,0.97)] border border-[rgba(147,80,115,0.4)] backdrop-blur-xl flex flex-col justify-between transition-all shadow-[0_20px_50px_rgba(0,0,0,0.6)]`}
+              className={`carousel-3d-card ${positionClass} absolute w-[92%] sm:w-full max-w-[390px] sm:max-w-[490px] p-5 sm:p-6 rounded-2xl bg-[rgba(26,15,30,0.97)] border border-[rgba(147,80,115,0.4)] backdrop-blur-xl flex flex-col justify-between transition-all shadow-[0_25px_60px_rgba(0,0,0,0.6)] min-h-[440px] sm:min-h-[460px]`}
             >
               {/* Corner Crosshairs */}
               <div className="absolute top-2 left-2 font-mono text-xs text-[#c084fc] select-none">+</div>
@@ -142,10 +142,10 @@ export const CoverFlowCarousel: React.FC = () => {
               <div className="absolute bottom-2 left-2 font-mono text-xs text-[#c084fc] select-none">+</div>
               <div className="absolute bottom-2 right-2 font-mono text-xs text-[#c084fc] select-none">+</div>
 
-              {/* Card Body: Pure GIF + Title + Description */}
-              <div className="flex flex-col gap-3">
-                {/* Hero GIF Showcase (Full, Unobstructed, Crisp) */}
-                <div className="relative w-full h-52 sm:h-64 rounded-xl overflow-hidden border border-[rgba(147,80,115,0.35)] bg-[rgba(15,7,18,0.95)] shadow-md group">
+              {/* Card Body: Pure GIF + Title + Full Description */}
+              <div className="flex flex-col gap-3.5">
+                {/* Hero GIF Showcase */}
+                <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border border-[rgba(147,80,115,0.35)] bg-[rgba(15,7,18,0.95)] shadow-md group">
                   <img
                     src={project.gifUrl}
                     alt={`Demostración de ${project.title}`}
@@ -155,18 +155,18 @@ export const CoverFlowCarousel: React.FC = () => {
                 </div>
 
                 {/* Title & Human-Friendly Summary */}
-                <div className="px-1 mt-1">
+                <div className="px-1">
                   <h3 className="text-xl sm:text-2xl font-semibold text-[#F8F4E9]">
                     {project.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-[#F6DBC0] mt-1.5 leading-relaxed line-clamp-2">
+                  <p className="text-xs sm:text-sm text-[#F6DBC0] mt-1.5 leading-relaxed">
                     {project.shortDesc}
                   </p>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)]">
+              <div className="grid grid-cols-2 gap-3 mt-4 pt-3.5 border-t border-[rgba(147,80,115,0.2)]">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
