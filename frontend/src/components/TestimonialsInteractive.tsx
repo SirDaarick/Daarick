@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 
 interface Testimonial {
   id: string;
@@ -78,9 +78,74 @@ const SEED_TESTIMONIALS: Testimonial[] = [
 
 export default function TestimonialsInteractive() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>(SEED_TESTIMONIALS);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Lista circular infinita: 3 bloques (clones antes, originales centro, clones después)
+  const [displayIndex, setDisplayIndex] = useState(SEED_TESTIMONIALS.length);
+  const [isTransitioning, setIsTransitioning] = useState(true);
+  const [cardStep, setCardStep] = useState(410);
   const [isPaused, setIsPaused] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const trackRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const N = testimonials.length;
+  const activeIndex = N > 0 ? ((displayIndex % N) + N) % N : 0;
+
+  // Triplicar lista para buffer circular continuo
+  const displayItems = useMemo(() => {
+    if (testimonials.length === 0) return [];
+    return [
+      ...testimonials.map((t) => ({ ...t, _virtualKey: `set0-${t.id}` })),
+      ...testimonials.map((t) => ({ ...t, _virtualKey: `set1-${t.id}` })),
+      ...testimonials.map((t) => ({ ...t, _virtualKey: `set2-${t.id}` }))
+    ];
+  }, [testimonials]);
+
+  // Medir ancho dinámico de la tarjeta + gap (20px) en cualquier dispositivo
+  useEffect(() => {
+    const updateCardStep = () => {
+      if (cardRef.current) {
+        const width = cardRef.current.getBoundingClientRect().width;
+        if (width > 0) {
+          setCardStep(width + 20);
+        }
+      }
+    };
+    updateCardStep();
+    window.addEventListener("resize", updateCardStep);
+    return () => window.removeEventListener("resize", updateCardStep);
+  }, [testimonials]);
+
+  // Reposicionamiento silencioso al terminar la animación CSS
+  const handleTransitionEnd = (e: React.TransitionEvent<HTMLDivElement>) => {
+    // Solo atender transiciones del track contenedor, ignorar eventos de tarjetas internas
+    if (e.target !== trackRef.current) return;
+
+    if (N <= 1) return;
+
+    // Si cruzamos al set 2 (clones derechos)
+    if (displayIndex >= 2 * N) {
+      setIsTransitioning(false);
+      setDisplayIndex((prev) => prev - N);
+    }
+    // Si cruzamos al set 0 (clones izquierdos)
+    else if (displayIndex < N) {
+      setIsTransitioning(false);
+      setDisplayIndex((prev) => prev + N);
+    }
+  };
+
+  // Re-activar la transición en el frame siguiente tras el salto invisible
+  useEffect(() => {
+    if (!isTransitioning) {
+      const r1 = requestAnimationFrame(() => {
+        const r2 = requestAnimationFrame(() => {
+          setIsTransitioning(true);
+        });
+      });
+      return () => cancelAnimationFrame(r1);
+    }
+  }, [isTransitioning]);
 
   // Modales
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
@@ -111,6 +176,7 @@ export default function TestimonialsInteractive() {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
           setTestimonials(data);
+          setDisplayIndex(data.length);
         }
       }
     } catch {
@@ -124,21 +190,28 @@ export default function TestimonialsInteractive() {
 
   // Intervalo de auto-avance con pausa (Slide -> Pausa de 4.5s -> Slide)
   useEffect(() => {
-    if (isPaused || expandedId !== null) return;
+    if (isPaused || expandedId !== null || !isTransitioning || N <= 1) return;
 
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+      setDisplayIndex((prev) => prev + 1);
     }, 4500);
 
     return () => clearInterval(timer);
-  }, [isPaused, expandedId, testimonials.length]);
+  }, [isPaused, expandedId, isTransitioning, N]);
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+    if (!isTransitioning || N <= 1) return;
+    setDisplayIndex((prev) => prev + 1);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    if (!isTransitioning || N <= 1) return;
+    setDisplayIndex((prev) => prev - 1);
+  };
+
+  const goToSlide = (targetIndex: number) => {
+    if (!isTransitioning || N <= 1) return;
+    setDisplayIndex(N + targetIndex);
   };
 
   // Envío del nuevo veredicto
@@ -271,19 +344,25 @@ export default function TestimonialsInteractive() {
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
-        {/* Contenedor del riel con desplazamiento suave por paso */}
+        {/* Contenedor del riel con desplazamiento circular infinito */}
         <div
-          className="flex items-start gap-5 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+          ref={trackRef}
+          onTransitionEnd={handleTransitionEnd}
+          className="flex items-start gap-5 will-change-transform"
           style={{
-            transform: `translateX(calc(-${currentIndex} * (min(100%, 390px) + 20px)))`
+            transform: `translateX(-${displayIndex * cardStep}px)`,
+            transition: isTransitioning
+              ? "transform 650ms cubic-bezier(0.16, 1, 0.3, 1)"
+              : "none"
           }}
         >
-          {testimonials.map((item) => {
+          {displayItems.map((item, idx) => {
             const isExpanded = expandedId === item.id;
 
             return (
               <div
-                key={item.id}
+                key={item._virtualKey}
+                ref={idx === 0 ? cardRef : undefined}
                 onMouseEnter={() => {
                   setExpandedId(item.id);
                   setIsPaused(true);
@@ -380,7 +459,7 @@ export default function TestimonialsInteractive() {
               →
             </button>
             <span className="ml-2 text-[11px]">
-              {isPaused ? "[ ⏸ En pausa ]" : `[ 0${currentIndex + 1} / 0${testimonials.length} ]`}
+              {isPaused ? "[ ⏸ En pausa ]" : `[ 0${activeIndex + 1} / 0${testimonials.length} ]`}
             </span>
           </div>
 
@@ -389,9 +468,9 @@ export default function TestimonialsInteractive() {
             {testimonials.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setCurrentIndex(i)}
+                onClick={() => goToSlide(i)}
                 className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                  currentIndex === i ? "w-6 bg-[#c084fc]" : "w-2 bg-[rgba(147,80,115,0.4)] hover:bg-[#c084fc]/50"
+                  activeIndex === i ? "w-6 bg-[#c084fc]" : "w-2 bg-[rgba(147,80,115,0.4)] hover:bg-[#c084fc]/50"
                 }`}
               />
             ))}
