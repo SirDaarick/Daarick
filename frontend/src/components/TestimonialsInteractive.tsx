@@ -338,9 +338,9 @@ export default function TestimonialsInteractive() {
         </div>
       </div>
 
-      {/* Riel con Avance por Pasos (con contenedor extendido para evitar cortes laterales en tarjetas de los extremos) */}
+      {/* Riel con Avance por Pasos (con contenedor simétrico para evitar cortes laterales en tarjetas de ambos extremos) */}
       <div
-        className="relative w-full overflow-hidden -mx-4 lg:-mx-8 py-6 sm:py-8 -my-2 sm:-my-3"
+        className="relative w-[calc(100%+2rem)] lg:w-[calc(100%+4rem)] overflow-hidden -mx-4 lg:-mx-8 py-6 sm:py-8 -my-2 sm:-my-3"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
@@ -375,7 +375,7 @@ export default function TestimonialsInteractive() {
                     setIsPaused(false);
                   }}
                   onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                  className={`w-[330px] sm:w-[390px] shrink-0 p-5 rounded-2xl backdrop-blur-md flex flex-col justify-between transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center group cursor-pointer relative ${
+                  className={`w-[315px] sm:w-[360px] lg:w-[375px] shrink-0 p-5 rounded-2xl backdrop-blur-md flex flex-col justify-between transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center group cursor-pointer relative ${
                     isExpanded
                       ? "scale-[1.02] sm:scale-[1.04] z-30 border-[#c084fc] shadow-[0_14px_36px_rgba(0,0,0,0.55),0_0_20px_rgba(192,132,252,0.18)] bg-[rgba(38,20,46,0.98)] ring-1 ring-[#c084fc]/40 opacity-100"
                       : isDimmed
