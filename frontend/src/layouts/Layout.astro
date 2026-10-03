@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { AsciiCanvas } from '../components/AsciiCanvas';
 import { SandboxModal } from '../components/SandboxModal';
+import { CopilotAssistant } from '../components/CopilotAssistant';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 
@@ -53,5 +54,8 @@ const {
 
     {/* Interactive Modal Island (Loaded on Idle) */}
     <SandboxModal client:idle />
+
+    {/* Floating AI Copilot Assistant (Loaded on Idle) */}
+    <CopilotAssistant client:idle />
   </body>
 </html>
