@@ -4,9 +4,125 @@ import json
 import asyncio
 import httpx
 from typing import List, Dict, Any, Optional, Tuple
-from app.schemas.assistant import ChatMessage, ChatResponse
+from app.schemas.assistant import ChatMessage, ChatResponse, ContactAction, ProjectAction
 
 from dotenv import load_dotenv
+
+CONTACT_BUTTONS: List[ContactAction] = [
+    ContactAction(
+        type="whatsapp",
+        label="WhatsApp Directo",
+        url="https://wa.me/525578666313?text=Hola%20Erick,%20vi%20tu%20portafolio%20y%20me%20gustar%C3%ADa%20platicar%20sobre%20un%20proyecto"
+    ),
+    ContactAction(
+        type="linkedin",
+        label="LinkedIn",
+        url="https://www.linkedin.com/in/erickgarcia-ai/"
+    ),
+    ContactAction(
+        type="email",
+        label="Enviar Correo",
+        url="mailto:e.danielgrz10@gmail.com?subject=Consulta%20desde%20Portafolio"
+    )
+]
+
+PROJECT_ACTIONS_CATALOG: Dict[str, ProjectAction] = {
+    "graphito": ProjectAction(
+        id="graphito",
+        title="Graphito",
+        tagline="Detección inteligente de plagio semántico y similitud en código (Tree-sitter + LoRA)",
+        demo_url="https://graphito-escom.vercel.app/",
+        github_url="https://github.com/SirDaarick/Graphito",
+        action_label="Ver Demo de Graphito"
+    ),
+    "tetring": ProjectAction(
+        id="tetring",
+        title="Tetring",
+        tagline="Motor combinatorio de satisfacción de restricciones (CSP 42ms) sin empalmes",
+        demo_url="https://tetring.vercel.app/",
+        github_url="https://github.com/SirDaarick/Tetring",
+        action_label="Ver Demo de Tetring"
+    ),
+    "paidea": ProjectAction(
+        id="paidea",
+        title="PAIDEA",
+        tagline="Arquitectura multi-agente con RAG sobre documentos y rúbricas (ChromaDB)",
+        demo_url="https://paidea-reloaded-xi.vercel.app/",
+        github_url="https://github.com/SirDaarick/paidea-reloaded",
+        action_label="Ver Demo de PAIDEA"
+    ),
+    "paralel": ProjectAction(
+        id="paralel",
+        title="Paralel",
+        tagline="Motor de IA heurística multihilo en C++ para decisiones en tiempo real (<12ms)",
+        demo_url="https://paralel-iota.vercel.app/",
+        github_url="https://github.com/SirDaarick/Paralel",
+        action_label="Ver Demo de Paralel"
+    ),
+    "invoicing": ProjectAction(
+        id="invoicing",
+        title="Extractor de Facturas & Documentos",
+        tagline="Extracción OCR multimodal con esquemas matemáticos y validación determinista",
+        demo_url="/demo/invoicing",
+        action_label="Probar Sandbox de Facturas"
+    )
+}
+
+def detect_contact_intent(text: str) -> List[ContactAction]:
+    """Detecta si la consulta del usuario se relaciona con contactar, contratar, agendar o hablar con Erick."""
+    q = text.lower()
+    contact_keywords = [
+        "contacto", "contactar", "whatsapp", "linkedin", "correo", "email",
+        "telefono", "teléfono", "agendar", "llamada", "reunion", "reunión",
+        "contratar", "contratacion", "contratación", "precio", "cotizacion",
+        "cotización", "cuanto cuesta", "presupuesto", "hablar con erick",
+        "trabajar con erick", "escribir a erick", "diagnostico", "diagnóstico"
+    ]
+    if any(k in q for k in contact_keywords):
+        return CONTACT_BUTTONS
+    return []
+
+def detect_analogous_project(text: str) -> Optional[ProjectAction]:
+    """
+    Detecta si el usuario está describiendo un problema técnico u operativo que guarda
+    analogía directa con los sistemas creados por Erick.
+    """
+    q = text.lower()
+    
+    # 1. Tetring: Horarios, turnos, cuadrantes, empalmes, asignación, combinatoria
+    if any(k in q for k in ["horario", "horarios", "turno", "turnos", "empalme", "empalmes", "cuadrante", "cuadrantes", "calendario", "asignacion", "asignación", "rutas", "combinatori", "branch and bound", "csp", "saes"]):
+        return PROJECT_ACTIONS_CATALOG["tetring"]
+
+    # 2. Facturas / Invoicing: facturas, tickets, recibos, ocr, albaranes, pdfs contables
+    if any(k in q for k in ["factura", "facturas", "recibo", "recibos", "ticket", "tickets", "albaran", "albaranes", "ocr", "comprobante", "sat", "extraer documento", "extraer pdf"]):
+        return PROJECT_ACTIONS_CATALOG["invoicing"]
+
+    # 3. PAIDEA: RAG, agentes, soporte, dudas repetitivas, educación, manuales, chromadb
+    if any(k in q for k in ["paidea", "soporte", "atencion al cliente", "atención al cliente", "atención", "chatbot", "agente", "agentes", "multiagente", "multi-agente", "faq", "preguntas frecuentes", "dudas", "tutor", "profesor", "alumno", "rubrica", "rúbrica", "rag", "chromadb", "manuales"]):
+        return PROJECT_ACTIONS_CATALOG["paidea"]
+
+    # 4. Graphito: Código, similitud, plagio, ast, ofuscación, tree-sitter
+    if any(k in q for k in ["graphito", "plagio", "copia", "copias", "trampa", "código", "codigo", "ast", "tree-sitter", "similaridad", "comparar codigo", "ofuscacion", "ofuscado", "graphcodebert"]):
+        return PROJECT_ACTIONS_CATALOG["graphito"]
+
+    # 5. Paralel: C++, OpenMP, tiempo real, latencia, multihilo, juegos, simulacion
+    if any(k in q for k in ["paralel", "latencia", "baja latencia", "tiempo real", "multihilo", "concurrencia", "c++", "openmp", "speedup", "simulacion", "simulación", "tetris", "minimax"]):
+        return PROJECT_ACTIONS_CATALOG["paralel"]
+
+    return None
+
+def enrich_response_actions(response: ChatResponse, query: str) -> ChatResponse:
+    """Enriquece una respuesta con botones de contacto y proyectos análogos si no estaban presentes."""
+    contact_acts = detect_contact_intent(query) or detect_contact_intent(response.reply)
+    if contact_acts and not response.contact_actions:
+        response.contact_actions = contact_acts
+
+    proj_act = detect_analogous_project(query) or detect_analogous_project(response.reply)
+    if proj_act and not response.project_action:
+        response.project_action = proj_act
+
+    return response
+
 
 def get_env_config() -> Dict[str, str]:
     """Carga dinámicamente las variables de entorno para detectar cambios en .env sin reiniciar."""
@@ -101,15 +217,29 @@ Tu personalidad y propósito:
   1. Tu rol está acotado a asesorar sobre los proyectos construidos por Erick (Graphito, Tetring, PAIDEA, Paralel, extractor de facturas), la viabilidad de automatizaciones para empresas/clientes y la consultoría técnica.
   2. NUNCA actúes como un generador de código genérico para tareas personales o externas del usuario (por ejemplo: 'hazme un script para limpiar csv', 'crea un bot de discord', 'resuelve mi tarea escolar').
   3. Si te piden código o scripts para tareas ajenas al portafolio, NIÉGATE amablemente: explica que tu función es evaluar arquitecturas y orientar sobre viabilidad y proyectos de Erick, y redirige a cómo enfocarías ese problema como parte de una solución de automatización profesional o cómo contactar a Erick.
+- VINCULACIÓN ANÁLOGA CON PROYECTOS DE ERICK (MANDATORIO):
+  Cuando el usuario plantee un problema operativo, técnico o de automatización (ej. optimizar turnos u horarios, procesar facturas/documentos, atender dudas o soporte repetitivo, auditar código o decisiones en tiempo real):
+  1. Identifica el proyecto análogo de Erick:
+     • Tetring: para problemas combinatorios, horarios, turnos, cuadrantes y rutas con 0 empalmes en 42ms (usando CSP determinista en vez de LLM).
+     • Extractor de Facturas: para procesar facturas, tickets y recibos con OCR multimodal + schemas Pydantic deterministas.
+     • PAIDEA: para resolver preguntas repetitivas, educación y soporte con RAG contextual sobre ChromaDB y multi-agentes.
+     • Graphito: para análisis de código, AST semántico con Tree-sitter y GraphCodeBERT resistente a ofuscación.
+     • Paralel: para cuellos de botella de latencia crítica, evaluación de árboles y cómputo paralelo en C++ con OpenMP.
+  2. Estructura tu respuesta abordando:
+     • CÓMO SE RESOLVIÓ EN EL SISTEMA DE ERICK: Qué reto técnico existía y qué arquitectura concreta se empleó.
+     • CÓMO SE APLICARÍA AL CASO DEL USUARIO: Cómo extrapolar ese mismo principio a su proceso, datos o empresa.
+     • Concluye invitando a explorar la demo o sandbox del proyecto correspondiente (la interfaz mostrará la tarjeta de acceso).
+- CANALES DE CONTACTO DIRECTO:
+  Si el usuario pregunta cómo contactar a Erick, contratarlo, agendar una llamada de diagnóstico o pedir cotización, indícale cordialmente que puede escribir directamente vía WhatsApp, LinkedIn o correo electrónico, y que abajo en el chat se le habilitan botones de acceso directo.
 - Honestidad radical en viabilidad:
   1. Si alguien pregunta si puede usar un LLM para contabilidad/balances matemáticos: Explícale por qué los LLMs son probabilísticos y NUNCA deben sumar o calcular impuestos directamente. Recomienda una arquitectura híbrida (LLM para extraer los datos + motor Python/SQL para el cálculo matemático exacto).
   2. Si preguntan sobre extracción de documentos, soporte WhatsApp, análisis de código, optimización o agentes: Explica la viabilidad (VIABLE), los retos reales (calidad de datos, latencia, costos) y la arquitectura recomendada.
   3. Si preguntan sobre Erick: Menciona su formación en ESCOM - IPN, sus proyectos (Graphito, Tetring, PAIDEA, Paralel) y su enfoque de ahorro de tiempo y costes mediante automatización a medida.
 
 Respuestas estructuradas:
-- Comienza con una respuesta clara y directa.
-- Usa analogías sencillas cuando el concepto sea abstracto.
-- Termina con 2 o 3 sugerencias accionables de preguntas siguientes orientadas a proyectos o consultoría.
+- Comienza con una respuesta clara y pedagógica.
+- Explica el concepto arquitectónico de fondo.
+- Termina con sugerencias de preguntas siguientes orientadas a proyectos o consultoría.
 """
 
 def is_out_of_scope(text: str) -> bool:
@@ -442,181 +572,158 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             strategy="feasibility_eval"
         )
 
-    if any(k in q for k in ["graphito", "plagio de codigo", "deteccion de plagio", "ofuscad", "ofuscacion", "tree-sitter", "graphcodebert"]):
+    if any(k in q for k in ["graphito", "plagio", "copia", "copias", "trampa", "código", "codigo", "ast", "tree-sitter", "similaridad", "comparar codigo", "ofuscacion", "ofuscado", "graphcodebert"]):
         proj = KNOWLEDGE_BASE["projects"]["graphito"]
         reply = (
-            f"**Graphito // Detección de Plagio Semántico con Deep Learning**\n\n"
-            f"Los detectores habituales (como Moss) comparan secuencias de tokens simples. Si un estudiante cambia `for` por `while` o renombra variables de `x` a `contador`, Moss se confunde.\n\n"
-            f"**¿Cómo lo resolvió Erick?**\n"
-            f"• Construyó un pipeline con **Tree-sitter** que compila el código en un Grafo de Flujo de Datos (DFG).\n"
-            f"• Aplica **GraphCodeBERT con LoRA** para extraer la intención lógica del algoritmo, independientemente de la sintaxis.\n"
-            f"• Incorpora estilometría con **CharCNN** para identificar patrones del autor.\n\n"
-            f"**Resultado:** **{proj['accuracy']}** de efectividad incluso contra código intencionalmente ofuscado."
+            "**Problema análogo resuelto en Graphito // Detección Semántica de Código (96.8%)**\n\n"
+            "**1. Cómo se resolvió en el sistema de Erick:**\n"
+            "Detectores tradicionales como JPlag o Moss quedan ciegos cuando alguien altera nombres de variables o intercambia bucles `for` por `while`. "
+            "Erick desarrolló **Graphito**, un pipeline que compila código en **Grafos de Flujo de Datos (DFG)** con gramáticas **Tree-sitter** y extrae representaciones vectoriales profundas con **GraphCodeBERT + LoRA**. "
+            "Esto permite detectar similitudes algorítmicas genuinas con un **96.8% de precisión** incluso ante código fuertemente ofuscado.\n\n"
+            "**2. Cómo se aplicaría a tu problema:**\n"
+            "Si necesitas auditar código, detectar duplicidades en grandes bases de repositorios o verificar la originalidad de entregas técnicas, podemos parsear el AST/DFG semántico. "
+            "Tu solución dejará de depender de comparaciones superficiales de texto y evaluará la lógica real del código de forma robusta e inmune a cambios cosméticos.\n\n"
+            "Explora la arquitectura y demo interactiva con el botón a continuación:"
         )
         return ChatResponse(
             reply=reply,
             suggestions=[
-                "✦ ¿Cómo funciona Tetring para horarios?",
-                "💬 ¿Cómo se despliega un modelo con FastAPI?",
-                "📋 Ver GitHub de Graphito"
+                "✦ ¿Cómo funciona Tree-sitter para AST?",
+                "💬 ¿Cómo desplegar este modelo en FastAPI?",
+                "📋 Ver Demo en vivo de Graphito"
             ],
             feasibility_verdict="CASO_DE_ÉXITO",
             tech_recommendations=["GraphCodeBERT", "Tree-sitter", "PyTorch", "FastAPI"],
+            project_action=PROJECT_ACTIONS_CATALOG["graphito"],
             source="local_knowledge_engine",
             strategy="predefined_canon"
         )
 
-    if any(k in q for k in ["script", "libreria", "funcion", "ayudame a programar", "crear codigo", "escribir codigo"]):
-        reply = (
-            "**¡Con gusto te oriento en el diseño y arquitectura de tu código!**\n\n"
-            "Como principio arquitectónico fundamental (**CONCEPTS > CODE**):\n"
-            "• Para procesamiento de datos y scripts de automatización: Recomendamos **Python con Pandas o Polars**, tipado estricto con **Pydantic** y manejo robusto de excepciones.\n"
-            "• Para APIs y microservicios: **FastAPI** con validación asíncrona.\n"
-            "• Para lógica intensiva en rendimiento o tiempo real: Módulos compilados en **C++** o concurrencia multihilo.\n\n"
-            "¿Qué objetivo específico buscas resolver en tu script (ej. procesar un archivo CSV, consumir una API o automatizar un flujo de datos)?"
-        )
-        return ChatResponse(
-            reply=reply,
-            suggestions=[
-                "✦ Limpiar y procesar un archivo CSV",
-                "💬 Crear una API asíncrona con FastAPI",
-                "📋 Automatizar extracción de datos con Python",
-                "⚡ ¿Cómo estructura Erick sus arquitecturas?"
-            ],
-            source="local_knowledge_engine",
-            strategy="standard"
-        )
-
-    if any(k in q for k in ["tetring", "horario", "saes", "empalme", "combinatori"]):
+    if any(k in q for k in ["tetring", "horario", "horarios", "turno", "turnos", "saes", "empalme", "empalmes", "cuadrante", "cuadrantes", "asignacion", "asignación", "rutas", "combinatori"]):
         proj = KNOWLEDGE_BASE["projects"]["tetring"]
         reply = (
-            f"**Tetring // Optimizador Combinatorio de Horarios (42ms)**\n\n"
-            f"Muchos creen que para resolver un horario se necesita IA generativa. En realidad, usar un LLM aquí sería ineficiente y costoso.\n\n"
-            f"Erick implementó un motor de **Satisfacción de Restricciones (CSP)** con poda *branch-and-bound*:\n"
-            f"• Evalúa **14,200 combinaciones por segundo** en el navegador.\n"
-            f"• Aplica restricciones duras (cero empalmes de materia) y restricciones blandas (minimizar huecos entre clases, balance de días).\n"
-            f"• Resuelve el horario ideal en solo **{proj['speed']}** con compatibilidad directa para SAES IPN."
+            "**Problema análogo resuelto en Tetring // Optimizador Combinatorio CSP (42ms)**\n\n"
+            "**1. Cómo se resolvió en el sistema de Erick:**\n"
+            "Organizar horarios o turnos suele parecer una tarea para LLMs, pero un modelo de lenguaje es probabilístico y alucina ante combinatoria dura. "
+            "En **Tetring**, Erick desarrolló un motor determinista de **Satisfacción de Restricciones (CSP)** con algoritmos de poda *branch-and-bound*. "
+            "El motor evalúa **14,200 combinaciones por segundo**, aplicando restricciones duras (cero empalmes, límites de horas) y blandas (minimizar huecos muertos) para resolver el horario ideal en solo **42 milisegundos**.\n\n"
+            "**2. Cómo se aplicaría a tu problema:**\n"
+            "Modelamos las reglas de tu negocio (disponibilidad de tu personal, descansos obligatorios por ley, máximos de horas consecutivas o rotación de áreas) "
+            "como restricciones CSP en un microservicio en Python o TypeScript. La IA generativa se aprovecha únicamente para recibir las preferencias del equipo en lenguaje natural, mientras el motor determinista calcula la asignación matemática perfecta en segundos y sin riesgo de error humano.\n\n"
+            "Puedes probar la demo interactiva en vivo con el botón a continuación:"
         )
         return ChatResponse(
             reply=reply,
             suggestions=[
-                "✦ ¿Qué es PAIDEA y cómo usa RAG?",
-                "💬 ¿Qué es Paralel en C++?",
-                "📋 Probar la demo de Tetring"
+                "✦ ¿Cómo agendar una sesión de diagnóstico?",
+                "💬 ¿Qué diferencia hay entre CSP y un LLM?",
+                "📋 Ver la demo de Tetring en vivo"
             ],
             feasibility_verdict="CASO_DE_ÉXITO",
-            tech_recommendations=["CSP (Constraint Satisfaction)", "Algoritmos Combinatorios", "TypeScript"],
+            tech_recommendations=["CSP (Constraint Satisfaction)", "Poda Branch & Bound", "TypeScript / Python", "FastAPI"],
+            project_action=PROJECT_ACTIONS_CATALOG["tetring"],
             source="local_knowledge_engine",
             strategy="predefined_canon"
         )
 
-    if any(k in q for k in ["paidea", "rag", "tecnoburro", "multiagente", "multi-agente", "docente", "profesor"]):
+    if any(k in q for k in ["paidea", "soporte", "atencion al cliente", "atención al cliente", "atención", "chatbot", "agente", "agentes", "multiagente", "multi-agente", "faq", "preguntas frecuentes", "dudas", "tutor", "profesor", "alumno", "rubrica", "rúbrica", "rag", "chromadb", "manuales"]):
         proj = KNOWLEDGE_BASE["projects"]["paidea"]
         reply = (
-            f"**PAIDEA // Ecosistema Multi-Agente Educativo con RAG**\n\n"
-            f"Es una plataforma diseñada para liberar a los profesores de responder 50 veces la misma pregunta sobre criterios y rúbricas.\n\n"
-            f"**Arquitectura:**\n"
-            f"• Orquestador **TecnoBurro** que clasifica el rol del usuario (alumno vs docente).\n"
-            f"• Memoria vectorial con **ChromaDB** que recupera fragmentos exactos del reglamento y del temario.\n"
-            f"• Herramientas modulares (`alumno_tools`, `rubric_evaluator`) que ejecutan acciones como validar si un archivo ZIP cumple la nomenclatura exigida.\n\n"
-            f"Precisión en recuperación de contexto: **95.4%**."
+            "**Problema análogo resuelto en PAIDEA // Ecosistema Multi-Agente con RAG**\n\n"
+            "**1. Cómo se resolvió en el sistema de Erick:**\n"
+            "Los profesores universitarios perdían horas contestando una y otra vez las mismas consultas sobre criterios de evaluación. "
+            "Erick construyó **PAIDEA**, una plataforma multi-agente (*TecnoBurro*) conectada a una base de conocimiento vectorial en **ChromaDB**. "
+            "Mediante recuperación semántica (RAG) y herramientas especializadas (`alumno_tools`), el agente consulta los fragmentos oficiales exactos antes de responder, "
+            "alcanzando un **95.4% de precisión** sin alucinaciones y validando archivos entregados de manera automática.\n\n"
+            "**2. Cómo se aplicaría a tu problema:**\n"
+            "Podemos indexar tus manuales operativos, políticas de servicio, catálogos de productos o bases de conocimiento en una base vectorial. "
+            "El agente responderá las dudas repetitivas de tus clientes o colaboradores en WhatsApp o web con fidelidad garantizada (*grounding*), "
+            "y si la solicitud requiere ejecutar una acción (como consultar el estado de una orden o generar un ticket), el agente dispara la herramienta hacia tu CRM o ERP.\n\n"
+            "Descubre la arquitectura y demo en vivo con el botón inferior:"
         )
         return ChatResponse(
             reply=reply,
             suggestions=[
-                "✦ ¿Cómo evitar alucinaciones en RAG?",
-                "💬 ¿Qué diferencia hay entre RAG y Fine-Tuning?",
-                "📋 ¿Quién es Erick Daniel?"
+                "✦ ¿Cómo evitar alucinaciones en un RAG?",
+                "💬 ¿Es viable conectarlo a WhatsApp oficial?",
+                "📋 Ver la demo de PAIDEA en vivo"
             ],
             feasibility_verdict="CASO_DE_ÉXITO",
-            tech_recommendations=["LangChain", "ChromaDB", "FastAPI", "Multi-Agent System"],
+            tech_recommendations=["LangChain", "ChromaDB", "FastAPI", "Multi-Agent System", "RAG Grounding"],
+            project_action=PROJECT_ACTIONS_CATALOG["paidea"],
             source="local_knowledge_engine",
             strategy="predefined_canon"
         )
 
-    if any(k in q for k in ["paralel", "c++", "openmp", "tetris", "paralelo", "rendimiento", "multithread"]):
+    if any(k in q for k in ["paralel", "latencia", "baja latencia", "tiempo real", "multihilo", "concurrencia", "c++", "openmp", "speedup", "simulacion", "simulación", "tetris", "minimax", "rendimiento"]):
         proj = KNOWLEDGE_BASE["projects"]["paralel"]
         reply = (
-            f"**Paralel // Motor de IA Heurística de Alto Rendimiento en C++**\n\n"
-            f"Para decisiones de ultra-baja latencia (como un juego en tiempo real), Python suele tener sobrecarga por el GIL (Global Interpreter Lock).\n\n"
-            f"Erick construyó este motor directamente en **C++ con OpenMP**:\n"
-            f"• Despacha 8 hilos trabajadores en paralelo que evalúan árboles de decisión futuros.\n"
-            f"• Procesa **68,000 nodos por segundo** con poda alfa-beta.\n"
-            f"• Logró un **speedup de 7.4x** comparado con la ejecución monohilo, jugando partidas de Tetris automáticas de más de 15,000 líneas."
+            "**Problema análogo resuelto en Paralel // Motor de IA Heurística en C++ (OpenMP)**\n\n"
+            "**1. Cómo se resolvió en el sistema de Erick:**\n"
+            "Al evaluar jugadas futuras con lookahead profundo, los bucles en Python provocan explosión combinatoria y bloqueos por el GIL. "
+            "Erick implementó **Paralel** directamente en **C++ moderno**, repartiendo la búsqueda en 8 hilos trabajadores con **OpenMP** y poda alfa-beta. "
+            "El sistema evalúa **68,000 nodos por segundo** con un **speedup de 7.4x** y latencias menores a 12 milisegundos por decisión.\n\n"
+            "**2. Cómo se aplicaría a tu problema:**\n"
+            "Si tu sistema tiene cuellos de botella en simulaciones numéricas, cálculo de riesgos o procesamiento masivo de datos en tiempo real, separamos la capa crítica en módulos multihilo optimizados en bajo nivel (C++ / Rust), manteniendo FastAPI y la web como interfaces ágiles sin retrasos.\n\n"
+            "Conoce la demo interactiva y el código en el botón inferior:"
         )
         return ChatResponse(
             reply=reply,
             suggestions=[
-                "✦ Ver proyectos en el portafolio",
-                "💬 ¿Haces automatizaciones para empresas?",
-                "📋 ¿Cómo contactar a Erick?"
+                "✦ ¿Qué es la poda alfa-beta?",
+                "💬 ¿Cómo conectar C++ con APIs de Python?",
+                "📋 Ver Demo en vivo de Paralel"
             ],
             feasibility_verdict="CASO_DE_ÉXITO",
-            tech_recommendations=["C++ Moderno", "OpenMP", "Algoritmos Heurísticos", "Alpha-Beta Pruning"],
+            tech_recommendations=["C++ Moderno", "OpenMP Multithreading", "FastAPI", "Algoritmos Heurísticos"],
+            project_action=PROJECT_ACTIONS_CATALOG["paralel"],
             source="local_knowledge_engine",
             strategy="predefined_canon"
         )
 
-    if any(k in q for k in ["factura", "whatsapp", "soporte", "crm", "mi negocio", "automatizar mi", "empresa", "ahorrar tiempo", "proceso"]):
+    if any(k in q for k in ["factura", "facturas", "recibo", "recibos", "ticket", "tickets", "albaran", "albaranes", "ocr", "documento", "documentos", "pdf", "pdfs", "comprobante", "sat"]):
         reply = (
-            "**¡Es totalmente viable! Y tiene un retorno de inversión muy alto si se hace bien.**\n\n"
-            "En automatización de procesos empresariales solemos abordar tres pilares:\n"
-            "1. **Extracción y Validación de Documentos:** Procesar facturas, albaranes o recibos en segundos, sincronizándolos con tu base de datos o ERP.\n"
-            "2. **Asistentes de WhatsApp / CRM:** Respuestas inmediatas a clientes 24/7 conectadas a tu inventario o agenda (vía WhatsApp Cloud API oficial).\n"
-            "3. **Eliminación de Tareas Repetitivas:** Notificaciones automáticas, reportes ejecutivos en PDF/Excel y sincronización entre plataformas.\n\n"
-            "**El método de trabajo de Erick:**\n"
-            "Analizamos juntos tus cuellos de botella actuales, diseñamos la solución técnica a medida, e implementamos un piloto funcional en semanas."
+            "**Problema análogo resuelto en el Extractor Inteligente de Facturas y Documentos**\n\n"
+            "**1. Cómo se resolvió en el sistema de Erick:**\n"
+            "La captura y cotejo manual de facturas y albaranes suele generar errores de digitación y demoras en cuentas por pagar. "
+            "Erick diseñó un pipeline de extracción estructurada que combina **modelos multimodales de visión / OCR** con esquemas de validación estricta en **Pydantic**. "
+            "El sistema extrae emisor, RFC, ítems y totales, pero los cálculos matemáticos (subtotal, IVA, retenciones) se recalculan con código determinista para garantizar cero errores contables.\n\n"
+            "**2. Cómo se aplicaría a tu problema:**\n"
+            "Configuramos un pipeline que reciba automáticamente tus PDFs o imágenes (vía correo o carpeta compartida), extraiga la información estructurada en segundos, "
+            "valide las sumas y las coteje contra tus órdenes de compra en tu base de datos o ERP, alertando a tu equipo únicamente cuando exista una discrepancia real.\n\n"
+            "Puedes probar el sandbox interactivo de facturas aquí mismo en el portafolio:"
         )
         return ChatResponse(
             reply=reply,
             suggestions=[
-                "✦ ¿Cómo agendar una llamada de diagnóstico?",
-                "💬 ¿Qué costo o tiempos tiene un desarrollo?",
-                "📋 Probar la demo de Facturación en vivo"
+                "✦ ¿Cómo agendar una sesión de diagnóstico?",
+                "💬 ¿Por qué no dejar que el LLM sume los totales?",
+                "📋 Probar el Sandbox de Facturas en vivo"
             ],
             feasibility_verdict="ALTA_VIABILIDAD",
-            tech_recommendations=["FastAPI", "WhatsApp Cloud API", "OCR / Multimodal", "PostgreSQL", "React"],
+            tech_recommendations=["FastAPI", "Vision Models / OCR", "Pydantic Schemas", "PostgreSQL"],
+            project_action=PROJECT_ACTIONS_CATALOG["invoicing"],
             source="local_knowledge_engine",
             strategy="feasibility_eval"
         )
 
-    if any(k in q for k in ["erick", "quien eres", "autor", "daarick", "experiencia", "estudios", "escom", "ipn"]):
+    if any(k in q for k in ["contacto", "contratar", "precio", "cuanto cuesta", "agendar", "correo", "telefono", "teléfono", "whatsapp", "llamada", "reunion", "reunión"]):
         reply = (
-            "**Erick Daniel (Daarick)** es Ingeniero en Sistemas Computacionales egresado de **ESCOM - IPN** (México).\n\n"
-            "Se especializa en **Ingeniería de Sistemas de IA y Automatización**, con un enfoque radical en arquitecturas limpias, modulares y de alto rendimiento. "
-            "No se limita a envoltorios de APIs; diseña desde pipelines de Deep Learning con PyTorch y Tree-sitter hasta APIs asíncronas con FastAPI y microservicios paralelos en C++.\n\n"
-            "Su objetivo con cada cliente o equipo es eliminar trabajo manual repetitivo y dotar de sistemas autónomos confiables y medibles."
+            "**¿Listo para automatizar tus procesos o evaluar un proyecto con Erick?**\n\n"
+            "El proceso de colaboración técnica es ágil, transparente y directo:\n"
+            "1. **Diagnóstico inicial sin costo:** Evaluamos tus cuellos de botella operativos, volumen de datos y stack actual.\n"
+            "2. **Propuesta técnica & arquitectura:** Definimos la solución óptima (motores deterministas, RAG o agentes), tiempos de entrega y presupuesto exacto.\n"
+            "3. **Entrega iterativa:** Demos funcionales probadas desde las primeras semanas con métricas claras de ahorro de tiempo.\n\n"
+            "Puedes iniciar contacto inmediato a través de los botones directos que aparecen a continuación (WhatsApp, LinkedIn o Correo):"
         )
         return ChatResponse(
             reply=reply,
             suggestions=[
-                "✦ ¿Qué proyectos ha construido?",
-                "💬 Ver información de contacto",
-                "📋 ¿Cómo ayuda a empresas y startups?"
-            ],
-            source="local_knowledge_engine",
-            strategy="predefined_canon"
-        )
-
-    if any(k in q for k in ["contacto", "contratar", "precio", "cuanto cuesta", "agendar", "correo", "telefono", "whatsapp", "llamada"]):
-        reply = (
-            "**¿Listo para automatizar tus procesos?**\n\n"
-            "El proceso de colaboración es transparente y sin fricción:\n"
-            "1. **Diagnóstico inicial:** Evaluamos tus cuellos de botella operativos y los datos con los que cuentas.\n"
-            "2. **Propuesta técnica & arquitectura:** Definimos el stack, alcance, tiempos y presupuesto exacto.\n"
-            "3. **Implementación ágil:** Entregables iterativos con demostraciones funcionales desde las primeras semanas.\n\n"
-            "Puedes contactar a Erick directamente a través de:\n"
-            "• **WhatsApp:** Botón directo disponible en el encabezado y pie de página\n"
-            "• **Correo:** [erick.daarick@gmail.com](mailto:erick.daarick@gmail.com)\n"
-            "• **GitHub:** [github.com/SirDaarick](https://github.com/SirDaarick)"
-        )
-        return ChatResponse(
-            reply=reply,
-            suggestions=[
-                "✦ ¿Es viable automatizar mi soporte?",
+                "✦ ¿Es viable automatizar mi soporte o facturas?",
                 "💬 Ver demos interactivas en vivo",
                 "📋 ¿Qué proyectos ha creado Erick?"
             ],
+            contact_actions=CONTACT_BUTTONS,
             source="local_knowledge_engine",
             strategy="predefined_canon"
         )
@@ -626,7 +733,7 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
         "Desde la perspectiva de arquitectura de IA, cualquier solución debe evaluarse por su **viabilidad técnica**, **fidelidad de datos** y **retorno de inversión**.\n\n"
         "¿Te gustaría que evaluemos cómo aplicar una arquitectura de IA a un caso de uso particular (por ejemplo, procesamiento de documentos, agentes de soporte, o sincronización de bases de datos), o prefieres conocer los detalles de alguno de los proyectos de Erick?"
     )
-    return ChatResponse(
+    res = ChatResponse(
         reply=reply,
         suggestions=[
             "✦ ¿Es viable automatizar mi negocio?",
@@ -639,6 +746,7 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
         source="local_knowledge_engine",
         strategy="standard"
     )
+    return enrich_response_actions(res, latest_msg)
 
 # ==============================================================================
 # ORQUESTADOR PRINCIPAL MULTI-TIER
@@ -777,7 +885,7 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
     if needs_heavy:
         heavy_reply, heavy_source = await call_gemini_heavy(messages, canonical_context=canonical_context)
         if heavy_reply:
-            return ChatResponse(
+            res = ChatResponse(
                 reply=heavy_reply,
                 suggestions=[
                     "✦ ¿Cómo agendar una llamada de diagnóstico?",
@@ -789,12 +897,13 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
                 source=heavy_source,
                 strategy="heavy_reasoning"
             )
+            return enrich_response_actions(res, latest_text)
 
     # 6. TIER B: Pregunta ágil / Asesoría directa (Gemini Flash - Google AI Pro directo)
     # Aprovecha la suscripción Google AI Pro para velocidad (<400ms) y costo cero en OpenRouter
     fast_reply, fast_source = await call_gemini_fast(messages, canonical_context=canonical_context)
     if fast_reply:
-        return ChatResponse(
+        res = ChatResponse(
             reply=fast_reply,
             suggestions=[
                 "✦ ¿Es viable automatizar mi soporte o facturas?",
@@ -807,9 +916,10 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
             source=fast_source,
             strategy="fast_response"
         )
+        return enrich_response_actions(res, latest_text)
 
     # 7. TIER C: Respaldo garantizado: Motor Semántico Local de Alta Fidelidad (0 tokens, 100% determinista)
-    return generate_local_response(messages)
+    return enrich_response_actions(generate_local_response(messages), latest_text)
 
 async def stream_chat_sse(request_data: Dict[str, Any]):
     """
@@ -849,7 +959,9 @@ async def stream_chat_sse(request_data: Dict[str, Any]):
             "feasibility_verdict": response.feasibility_verdict,
             "tech_recommendations": response.tech_recommendations,
             "source": response.source,
-            "strategy": response.strategy
+            "strategy": response.strategy,
+            "contact_actions": [c.model_dump() for c in response.contact_actions] if response.contact_actions else [],
+            "project_action": response.project_action.model_dump() if response.project_action else None
         }
         yield f"data: {json.dumps(final_data, ensure_ascii=False)}\n\n"
     except Exception as e:

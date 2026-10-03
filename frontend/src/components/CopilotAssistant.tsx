@@ -15,8 +15,24 @@ import {
   CheckCircle2,
   AlertTriangle,
   Lightbulb,
-  ExternalLink
+  ExternalLink,
+  Mail
 } from 'lucide-react';
+
+export interface ContactAction {
+  type: 'whatsapp' | 'linkedin' | 'email' | string;
+  label: string;
+  url: string;
+}
+
+export interface ProjectAction {
+  id: string;
+  title: string;
+  tagline: string;
+  demo_url?: string | null;
+  github_url?: string | null;
+  action_label?: string | null;
+}
 
 interface ChatMessage {
   id: string;
@@ -26,7 +42,27 @@ interface ChatMessage {
   feasibility_verdict?: string | null;
   tech_recommendations?: string[];
   suggestions?: string[];
+  contact_actions?: ContactAction[];
+  project_action?: ProjectAction | null;
 }
+
+const WhatsAppIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg className={`fill-current ${className}`} viewBox="0 0 24 24">
+    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+  </svg>
+);
+
+const LinkedInIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg className={`fill-current ${className}`} viewBox="0 0 24 24">
+    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+  </svg>
+);
+
+const GitHubIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg className={`fill-current ${className}`} viewBox="0 0 24 24">
+    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+  </svg>
+);
 
 const API_BASE = import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
@@ -207,7 +243,9 @@ export const CopilotAssistant: React.FC = () => {
     fullText: string,
     suggestions?: string[],
     verdict?: string | null,
-    tech?: string[]
+    tech?: string[],
+    contactActions?: ContactAction[],
+    projectAction?: ProjectAction | null
   ) => {
     const tokens = fullText.split(/(\s+)/);
     let current = '';
@@ -228,6 +266,8 @@ export const CopilotAssistant: React.FC = () => {
               content: fullText,
               feasibility_verdict: verdict,
               tech_recommendations: tech,
+              contact_actions: contactActions || [],
+              project_action: projectAction || null,
               suggestions: suggestions && suggestions.length > 0 ? suggestions : INITIAL_SUGGESTIONS
             }
           : m
@@ -342,6 +382,8 @@ export const CopilotAssistant: React.FC = () => {
                         content: data.reply || accumulated,
                         feasibility_verdict: data.feasibility_verdict,
                         tech_recommendations: data.tech_recommendations,
+                        contact_actions: data.contact_actions || [],
+                        project_action: data.project_action || null,
                         suggestions:
                           data.suggestions && data.suggestions.length > 0
                             ? data.suggestions
@@ -358,12 +400,88 @@ export const CopilotAssistant: React.FC = () => {
       }
     } catch (err) {
       console.warn('Fallback a respuesta local asistida progresiva:', err);
+      const isContact = /contacto|whatsapp|correo|agendar|contratar|precio|llamada|reunion/i.test(text);
+      const fallbackContactActions: ContactAction[] = isContact
+        ? [
+            {
+              type: 'whatsapp',
+              label: 'WhatsApp Directo',
+              url: 'https://wa.me/525578666313?text=Hola%20Erick,%20vi%20tu%20portafolio%20y%20me%20gustar%C3%ADa%20platicar%20sobre%20un%20proyecto'
+            },
+            {
+              type: 'linkedin',
+              label: 'LinkedIn',
+              url: 'https://www.linkedin.com/in/erickgarcia-ai/'
+            },
+            {
+              type: 'email',
+              label: 'Enviar Correo',
+              url: 'mailto:e.danielgrz10@gmail.com?subject=Consulta%20desde%20Portafolio'
+            }
+          ]
+        : [];
+
+      let fallbackProjectAction: ProjectAction | null = null;
+      if (/horario|turno|empalme|cuadrante|saes|tetring/i.test(text)) {
+        fallbackProjectAction = {
+          id: 'tetring',
+          title: 'Tetring',
+          tagline: 'Motor combinatorio de satisfacción de restricciones (CSP 42ms) sin empalmes',
+          demo_url: 'https://tetring.vercel.app/',
+          github_url: 'https://github.com/SirDaarick/Tetring',
+          action_label: 'Ver Demo de Tetring'
+        };
+      } else if (/factura|recibo|ticket|albaran|ocr/i.test(text)) {
+        fallbackProjectAction = {
+          id: 'invoicing',
+          title: 'Extractor de Facturas & Documentos',
+          tagline: 'Extracción OCR multimodal con esquemas matemáticos y validación determinista',
+          demo_url: '/demo/invoicing',
+          action_label: 'Probar Sandbox de Facturas'
+        };
+      } else if (/paidea|soporte|atencion|alumno|rubrica|rag/i.test(text)) {
+        fallbackProjectAction = {
+          id: 'paidea',
+          title: 'PAIDEA',
+          tagline: 'Arquitectura multi-agente con RAG sobre documentos y rúbricas (ChromaDB)',
+          demo_url: 'https://paidea-reloaded-xi.vercel.app/',
+          github_url: 'https://github.com/SirDaarick/paidea-reloaded',
+          action_label: 'Ver Demo de PAIDEA'
+        };
+      } else if (/graphito|plagio|copia|ast|tree-sitter/i.test(text)) {
+        fallbackProjectAction = {
+          id: 'graphito',
+          title: 'Graphito',
+          tagline: 'Detección inteligente de plagio semántico y similitud en código (Tree-sitter + LoRA)',
+          demo_url: 'https://graphito-escom.vercel.app/',
+          github_url: 'https://github.com/SirDaarick/Graphito',
+          action_label: 'Ver Demo de Graphito'
+        };
+      } else if (/paralel|latencia|openmp|c\+\+/i.test(text)) {
+        fallbackProjectAction = {
+          id: 'paralel',
+          title: 'Paralel',
+          tagline: 'Motor de IA heurística multihilo en C++ para decisiones en tiempo real (<12ms)',
+          demo_url: 'https://paralel-iota.vercel.app/',
+          github_url: 'https://github.com/SirDaarick/Paralel',
+          action_label: 'Ver Demo de Paralel'
+        };
+      }
+
       const fallbackText =
         '**Nota técnica:** No pude conectar con el gateway de FastAPI en este instante, pero te adelanto:\n\n' +
         '• **Proyectos clave:** Graphito (Tree-sitter + Deep Learning contra plagio), Tetring (CSP 42ms), PAIDEA (RAG con ChromaDB) y Paralel (C++ OpenMP).\n' +
-        '• **Contacto directo:** Puedes escribir a Erick vía WhatsApp o al correo **erick.daarick@gmail.com**.';
+        '• **Contacto directo:** Puedes escribir a Erick directamente vía WhatsApp, LinkedIn o correo electrónico.';
 
-      await streamPremeditatedText(botMsgId, fallbackText, INITIAL_SUGGESTIONS);
+      await streamPremeditatedText(
+        botMsgId,
+        fallbackText,
+        INITIAL_SUGGESTIONS,
+        null,
+        [],
+        fallbackContactActions,
+        fallbackProjectAction
+      );
     } finally {
       setIsLoading(false);
     }
@@ -623,6 +741,86 @@ export const CopilotAssistant: React.FC = () => {
                                   {t}
                                 </span>
                               ))}
+                            </div>
+                          )}
+
+                          {/* TARJETA INTERACTIVA DE PROYECTO ANÁLOGO */}
+                          {msg.project_action && (
+                            <div className="mt-3.5 p-3.5 rounded-xl bg-[rgba(30,15,35,0.85)] border border-[#c084fc]/40 shadow-md flex flex-col gap-2.5">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="p-1 rounded bg-[#c084fc]/20 text-[#c084fc]">
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                  </span>
+                                  <span className="font-mono text-xs font-bold text-[#F8F4E9] tracking-tight">
+                                    {msg.project_action.title}
+                                  </span>
+                                </div>
+                                <span className="font-mono text-[10px] uppercase px-2 py-0.5 rounded bg-[rgba(192,132,252,0.15)] text-[#c084fc] font-semibold border border-[#c084fc]/30">
+                                  Caso Análogo
+                                </span>
+                              </div>
+
+                              <p className="font-sans text-xs text-[#F6DBC0]/90 leading-relaxed">
+                                {msg.project_action.tagline}
+                              </p>
+
+                              <div className="flex flex-wrap items-center gap-2 pt-1">
+                                {msg.project_action.demo_url && (
+                                  <a
+                                    href={msg.project_action.demo_url}
+                                    target={msg.project_action.demo_url.startsWith('http') ? '_blank' : '_self'}
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-semibold text-xs transition-all shadow-md active:scale-95 cursor-pointer group"
+                                  >
+                                    <span>{msg.project_action.action_label || 'Ver Proyecto'}</span>
+                                    <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                  </a>
+                                )}
+                                {msg.project_action.github_url && (
+                                  <a
+                                    href={msg.project_action.github_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[rgba(80,45,85,0.4)] hover:bg-[rgba(80,45,85,0.7)] border border-[rgba(147,80,115,0.4)] text-[#F6DBC0] hover:text-[#F8F4E9] text-xs font-mono transition-all active:scale-95 cursor-pointer"
+                                  >
+                                    <GitHubIcon className="w-3.5 h-3.5 text-[#ddb8ff]" />
+                                    <span>Código</span>
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* BOTONES DE ACCIÓN DE CONTACTO DIRECTO */}
+                          {msg.contact_actions && msg.contact_actions.length > 0 && (
+                            <div className="mt-3 pt-2.5 border-t border-[rgba(147,80,115,0.35)] flex flex-col gap-2">
+                              <span className="font-mono text-[10px] text-[#F6DBC0]/70 uppercase tracking-wider font-semibold">
+                                Canales directos con Erick:
+                              </span>
+                              <div className="flex flex-wrap items-center gap-2">
+                                {msg.contact_actions.map((act, aIdx) => (
+                                  <a
+                                    key={aIdx}
+                                    href={act.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-medium transition-all shadow-sm active:scale-95 cursor-pointer ${
+                                      act.type === 'whatsapp'
+                                        ? 'bg-[rgba(16,185,129,0.15)] hover:bg-[rgba(16,185,129,0.25)] border border-[#10B981]/40 hover:border-[#10B981] text-[#10B981] hover:text-[#6ee7b7]'
+                                        : act.type === 'linkedin'
+                                        ? 'bg-[rgba(192,132,252,0.15)] hover:bg-[rgba(192,132,252,0.25)] border border-[#c084fc]/40 hover:border-[#c084fc] text-[#c084fc] hover:text-[#e9d5ff]'
+                                        : 'bg-[rgba(255,175,213,0.15)] hover:bg-[rgba(255,175,213,0.25)] border border-[#ffafd5]/40 hover:border-[#ffafd5] text-[#ffafd5] hover:text-[#ffe4e6]'
+                                    }`}
+                                  >
+                                    {act.type === 'whatsapp' && <WhatsAppIcon className="w-3.5 h-3.5 text-[#10B981]" />}
+                                    {act.type === 'linkedin' && <LinkedInIcon className="w-3.5 h-3.5 text-[#c084fc]" />}
+                                    {act.type === 'email' && <Mail className="w-3.5 h-3.5 text-[#ffafd5]" />}
+                                    <span>{act.label}</span>
+                                    <ExternalLink className="w-3 h-3 opacity-60" />
+                                  </a>
+                                ))}
+                              </div>
                             </div>
                           )}
                         </div>
