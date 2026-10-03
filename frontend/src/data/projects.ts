@@ -22,6 +22,7 @@ export interface ProjectData {
   solution: string;
   demoUrl: string;
   githubUrl: string;
+  gifUrl: string;
   sparklineColor: string;
   metricLabel: string;
   metricValue: string;
@@ -51,6 +52,7 @@ export const PROJECTS: ProjectData[] = [
     solution: 'Pipeline de deep learning que combina GraphCodeBERT con adaptadores LoRA, grafos de flujo de datos (DFG) extraídos con Tree-sitter y estilometría de caracteres (CharCNN), alcanzando un 96.8% de precisión en código ofuscado.',
     demoUrl: 'https://graphito-escom.vercel.app/',
     githubUrl: 'https://github.com/SirDaarick/Graphito',
+    gifUrl: '/demos/graphito.gif',
     sparklineColor: '#c084fc',
     metricLabel: 'Precisión F1 en DFG',
     metricValue: '96.8%',
@@ -92,6 +94,7 @@ export const PROJECTS: ProjectData[] = [
     solution: 'Motor de satisfacción de restricciones (CSP) que evalúa miles de combinaciones viables en tiempo real, priorizando profesores mejor calificados, eliminando horas muertas y asegurando 0 empalmes.',
     demoUrl: 'https://tetring.vercel.app/',
     githubUrl: 'https://github.com/SirDaarick/Tetring',
+    gifUrl: '/demos/tetring.gif',
     sparklineColor: '#38bdf8',
     metricLabel: 'Tiempo de Optimización',
     metricValue: '42ms',
@@ -133,6 +136,7 @@ export const PROJECTS: ProjectData[] = [
     solution: 'Arquitectura de agentes coordinados (TecnoBurro) con herramientas especializadas (alumno_tools, profesor_tools) y memoria contextual sobre ChromaDB que asiste en tutorías y validación de criterios.',
     demoUrl: 'https://paidea-reloaded-xi.vercel.app/',
     githubUrl: 'https://github.com/SirDaarick/paidea-reloaded',
+    gifUrl: '/demos/paidea.gif',
     sparklineColor: '#f59e0b',
     metricLabel: 'Resolución Agéntica',
     metricValue: '94.1%',
@@ -174,6 +178,7 @@ export const PROJECTS: ProjectData[] = [
     solution: 'Motor multihilo desarrollado en C++ y paralelizado con OpenMP/multiprocessing que evalúa decenas de miles de ramas de tablero por segundo mediante heurísticas optimizadas de altura, huecos y rugosidad.',
     demoUrl: 'https://paralel-iota.vercel.app/',
     githubUrl: 'https://github.com/SirDaarick/Paralel',
+    gifUrl: '/demos/paralel.gif',
     sparklineColor: '#10b981',
     metricLabel: 'Throughput Evaluado',
     metricValue: '68,000/s',

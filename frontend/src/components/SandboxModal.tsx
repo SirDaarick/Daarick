@@ -160,29 +160,35 @@ export const SandboxModal: React.FC = () => {
               </div>
             </div>
 
-            {/* Metrics 4-Box */}
-            <div className="lg:col-span-5 flex flex-col justify-between p-4 rounded-lg bg-[rgba(35,23,39,0.5)] border border-[rgba(147,80,115,0.25)]">
-              <span className="font-mono text-xs text-[#c084fc] mb-2">
-                // ACTIVIDAD AUDITADA [ 100% VALIDADA ]
-              </span>
+            {/* Visual Feed & Metrics */}
+            <div className="lg:col-span-5 flex flex-col justify-between gap-3 p-4 rounded-lg bg-[rgba(35,23,39,0.5)] border border-[rgba(147,80,115,0.25)]">
+              <div className="relative w-full h-32 sm:h-36 rounded-md overflow-hidden border border-[rgba(147,80,115,0.35)] bg-black/60 shadow-inner">
+                <img
+                  src={currentProject.gifUrl}
+                  alt={`Feed de telemetría de ${currentProject.title}`}
+                  className="w-full h-full object-cover object-top"
+                />
+                <div className="absolute top-1.5 left-1.5 flex items-center gap-1 font-mono text-[10px] text-[#c084fc] bg-[rgba(15,7,18,0.85)] px-2 py-0.5 rounded border border-[rgba(147,80,115,0.3)] backdrop-blur-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>MONITOR DE TELEMETRÍA</span>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 {currentProject.metrics.map((m) => (
                   <div
                     key={m.label}
-                    className="p-2.5 rounded bg-[rgba(26,15,30,0.8)] border border-[rgba(147,80,115,0.2)]"
+                    className="p-2 rounded bg-[rgba(26,15,30,0.8)] border border-[rgba(147,80,115,0.2)]"
                   >
-                    <span className="text-[11px] text-[rgba(246,219,192,0.65)] block">
+                    <span className="text-[10px] text-[rgba(246,219,192,0.65)] block">
                       {m.label}
                     </span>
-                    <span className={`font-mono text-base font-bold ${m.color}`}>
+                    <span className={`font-mono text-sm font-bold ${m.color}`}>
                       {m.val}
                     </span>
                   </div>
                 ))}
               </div>
-              <p className="font-mono text-[11px] text-[rgba(246,219,192,0.65)] mt-3">
-                ✓ Rendimiento mantenido en producción continua.
-              </p>
             </div>
           </div>
 

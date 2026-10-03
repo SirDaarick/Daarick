@@ -104,7 +104,7 @@ export const CoverFlowCarousel: React.FC = () => {
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
-        className="relative w-full h-[520px] sm:h-[450px] my-2 sm:my-4 perspective-stage flex items-center justify-center py-4 select-none touch-pan-y cursor-grab active:cursor-grabbing"
+        className="relative w-full h-[560px] sm:h-[490px] my-2 sm:my-4 perspective-stage flex items-center justify-center py-4 select-none touch-pan-y cursor-grab active:cursor-grabbing"
       >
         {PROJECTS.map((project, index) => {
           const diff = (index - activeIndex + total) % total;
@@ -163,29 +163,32 @@ export const CoverFlowCarousel: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Metric Sparkline */}
-                <div className="p-2.5 sm:p-3 rounded-lg bg-[rgba(21,10,25,0.85)] border border-[rgba(147,80,115,0.25)] flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="font-mono text-[10px] sm:text-[11px] text-[rgba(246,219,192,0.65)]">
-                      {project.metricLabel}
+                {/* Live GIF Demo Preview Frame */}
+                <div className="relative w-full h-36 sm:h-40 rounded-lg overflow-hidden border border-[rgba(147,80,115,0.35)] bg-[rgba(15,7,18,0.95)] group">
+                  <img
+                    src={project.gifUrl}
+                    alt={`Demo de ${project.title}`}
+                    className="w-full h-full object-cover object-top opacity-90 group-hover:opacity-100 transition-opacity"
+                    loading="lazy"
+                  />
+                  {/* Glass overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[rgba(21,10,25,0.95)] via-transparent to-black/25 pointer-events-none" />
+
+                  {/* Top status indicator */}
+                  <div className="absolute top-2 left-2 flex items-center gap-1.5 font-mono text-[10px] text-[#c084fc] bg-[rgba(15,7,18,0.85)] px-2 py-0.5 rounded border border-[rgba(147,80,115,0.3)] backdrop-blur-sm pointer-events-none">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>DEMO PREVIEW</span>
+                  </div>
+
+                  {/* Bottom metrics overlay */}
+                  <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between font-mono text-[11px] pointer-events-none">
+                    <span className="px-2 py-0.5 rounded bg-[rgba(21,10,25,0.88)] text-[#F8F4E9] border border-[rgba(147,80,115,0.25)] backdrop-blur-sm text-[10px] sm:text-[11px]">
+                      {project.metricLabel}: <strong className="text-emerald-400 font-bold">{project.metricValue}</strong>
                     </span>
-                    <span className="font-mono text-sm sm:text-base text-[#F8F4E9] font-semibold">
-                      {project.metricValue}{' '}
-                      <span className="text-xs text-[#10B981]">
-                        {project.metricDelta}
-                      </span>
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] border border-emerald-500/20 backdrop-blur-sm">
+                      {project.metricDelta}
                     </span>
                   </div>
-                  <svg className="w-20 sm:w-24 h-7 sm:h-8" fill="none" viewBox="0 0 96 32">
-                    <path
-                      d="M0 26 L16 22 L32 25 L48 14 L64 18 L80 8 L96 4"
-                      stroke={project.sparklineColor}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                    />
-                    <circle cx="96" cy="4" fill={project.sparklineColor} r="3" />
-                  </svg>
                 </div>
               </div>
 
