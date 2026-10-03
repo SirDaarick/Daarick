@@ -1,9 +1,27 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PROJECTS } from '../data/projects';
 
 export const CoverFlowCarousel: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const total = PROJECTS.length;
+  const autoPlayIntervalMs = 4600; // ~4.6s: suficiente para leer y apreciar la rotación
+
+  // Auto-play / Rotación lenta continua
+  useEffect(() => {
+    if (isPaused) return;
+
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      if (document.hidden) return;
+      setActiveIndex((prev) => (prev + 1) % total);
+    }, autoPlayIntervalMs);
+
+    return () => clearInterval(interval);
+  }, [isPaused, total]);
 
   // Touch Swipe Gesture State
   const touchStartX = useRef<number | null>(null);
@@ -90,9 +108,17 @@ export const CoverFlowCarousel: React.FC = () => {
 
       {/* 3D Stage Wrapper with Touch Handlers */}
       <div
-        onTouchStart={onTouchStart}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={(e) => {
+          setIsPaused(true);
+          onTouchStart(e);
+        }}
         onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
+        onTouchEnd={() => {
+          setIsPaused(false);
+          onTouchEnd();
+        }}
         className="relative w-full h-[500px] sm:h-[440px] my-2 sm:my-4 perspective-stage flex items-center justify-center overflow-hidden py-4 select-none touch-pan-y"
       >
         {PROJECTS.map((project, index) => {
@@ -205,27 +231,6 @@ export const CoverFlowCarousel: React.FC = () => {
                 </div>
               </div>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Interactive Project Quick-Select Pills */}
-      <div className="flex flex-wrap items-center justify-center gap-2 mt-1 px-4">
-        {PROJECTS.map((project, idx) => {
-          const isActive = idx === activeIndex;
-          return (
-            <button
-              key={project.id}
-              onClick={() => setActiveIndex(idx)}
-              className={`px-3 py-1 rounded-full font-mono text-xs transition-all cursor-pointer flex items-center gap-1.5 ${
-                isActive
-                  ? 'bg-[#c084fc] text-[#500989] font-bold shadow-[0_0_15px_rgba(192,132,252,0.4)] scale-105'
-                  : 'bg-[rgba(80,45,85,0.25)] hover:bg-[rgba(80,45,85,0.45)] text-[rgba(246,219,192,0.8)] border border-[rgba(147,80,115,0.25)]'
-              }`}
-            >
-              <span className={isActive ? 'text-[#500989]' : 'text-[#c084fc]'}>{project.code}.</span>
-              <span>{project.title.split(' · ')[0]}</span>
-            </button>
           );
         })}
       </div>
