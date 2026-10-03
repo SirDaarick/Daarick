@@ -142,92 +142,49 @@ export const CoverFlowCarousel: React.FC = () => {
               <div className="absolute bottom-2 left-2 font-mono text-xs text-[#c084fc] select-none">+</div>
               <div className="absolute bottom-2 right-2 font-mono text-xs text-[#c084fc] select-none">+</div>
 
-              {/* Card Top: Header & Prominent Hero GIF */}
+              {/* Card Body: Pure GIF + Title + Description */}
               <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between px-1">
-                  <span className="font-mono text-xs text-[rgba(246,219,192,0.7)] flex items-center gap-1.5">
-                    <span className="text-[#c084fc] font-bold">{project.id}</span>
-                    <span>·</span>
-                    <span>{project.filename}</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 font-mono text-[11px] text-[#10B981] border border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
-                    {project.status}
-                  </span>
-                </div>
-
-                {/* Hero GIF Showcase Frame (Dominant Visual Element) */}
-                <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border border-[rgba(147,80,115,0.4)] bg-[rgba(15,7,18,0.95)] shadow-inner group">
+                {/* Hero GIF Showcase (Full, Unobstructed, Crisp) */}
+                <div className="relative w-full h-52 sm:h-64 rounded-xl overflow-hidden border border-[rgba(147,80,115,0.35)] bg-[rgba(15,7,18,0.95)] shadow-md group">
                   <img
                     src={project.gifUrl}
-                    alt={`Demo interactiva de ${project.title}`}
-                    className="w-full h-full object-cover object-top opacity-95 group-hover:opacity-100 transition-opacity"
+                    alt={`Demostración de ${project.title}`}
+                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
                     loading="lazy"
                   />
-                  {/* Subtle cinema gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[rgba(21,10,25,0.95)] via-transparent to-black/20 pointer-events-none" />
-
-                  {/* Top-left Live badge */}
-                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 font-mono text-[10px] text-[#c084fc] bg-[rgba(15,7,18,0.85)] px-2.5 py-0.5 rounded-full border border-[rgba(147,80,115,0.35)] backdrop-blur-sm pointer-events-none">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>INTERACTIVE DEMO</span>
-                  </div>
-
-                  {/* Bottom Metric Pill inside Frame */}
-                  <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between font-mono text-[11px] pointer-events-none">
-                    <span className="px-2.5 py-1 rounded-md bg-[rgba(21,10,25,0.9)] text-[#F8F4E9] border border-[rgba(147,80,115,0.3)] backdrop-blur-sm text-[10px] sm:text-[11px]">
-                      {project.metricLabel}: <strong className="text-emerald-400 font-bold">{project.metricValue}</strong>
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[10px] font-semibold border border-emerald-500/25 backdrop-blur-sm">
-                      {project.metricDelta}
-                    </span>
-                  </div>
                 </div>
 
-                {/* Title & Concise Summary */}
+                {/* Title & Human-Friendly Summary */}
                 <div className="px-1 mt-1">
-                  <h3 className="text-lg sm:text-xl font-medium text-[#F8F4E9]">
+                  <h3 className="text-xl sm:text-2xl font-semibold text-[#F8F4E9]">
                     {project.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-[#F6DBC0] mt-1 leading-relaxed line-clamp-2">
+                  <p className="text-xs sm:text-sm text-[#F6DBC0] mt-1.5 leading-relaxed line-clamp-2">
                     {project.shortDesc}
                   </p>
                 </div>
               </div>
 
-              {/* Tags & Action Buttons */}
-              <div className="flex flex-col gap-2.5 sm:gap-3 mt-3 pt-2 border-t border-[rgba(147,80,115,0.2)]">
-                <div className="flex flex-wrap gap-1 font-mono text-[11px] text-[#F6DBC0]">
-                  {project.tags.slice(0, 3).map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-0.5 rounded bg-[rgba(39,27,43,0.8)] border border-[rgba(147,80,115,0.25)] text-[10px]"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mt-0.5">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openInspectModal(project.key);
-                    }}
-                    className="py-2.5 px-3 rounded-lg bg-[rgba(80,45,85,0.35)] hover:bg-[rgba(80,45,85,0.55)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-mono text-xs font-medium transition-all text-center flex items-center justify-center gap-1 cursor-pointer active:scale-95"
-                  >
-                    <span>Más detalles</span>
-                  </button>
-                  <a
-                    href={project.demoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="py-2.5 px-3 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
-                  >
-                    <span>Probar demo ↗</span>
-                  </a>
-                </div>
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)]">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openInspectModal(project.key);
+                  }}
+                  className="py-2.5 px-4 rounded-lg bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-mono text-xs font-medium transition-all text-center flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                >
+                  <span>Más detalles</span>
+                </button>
+                <a
+                  href={project.demoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="py-2.5 px-4 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
+                >
+                  <span>Probar demo ↗</span>
+                </a>
               </div>
             </div>
           );
