@@ -340,7 +340,7 @@ export default function TestimonialsInteractive() {
 
       {/* Riel con Avance por Pasos (Slide -> Pausa de 4.5s -> Slide) */}
       <div
-        className="relative w-full overflow-hidden py-4"
+        className="relative w-full overflow-hidden py-8 sm:py-10 -my-4 sm:-my-6"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
@@ -358,6 +358,8 @@ export default function TestimonialsInteractive() {
         >
           {displayItems.map((item, idx) => {
             const isExpanded = expandedId === item.id;
+            const isAnyExpanded = expandedId !== null;
+            const isDimmed = isAnyExpanded && !isExpanded;
 
             return (
               <div
@@ -372,12 +374,19 @@ export default function TestimonialsInteractive() {
                   setIsPaused(false);
                 }}
                 onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                className={`w-[330px] sm:w-[390px] shrink-0 p-5 rounded-2xl bg-[rgba(35,23,39,0.88)] border border-[rgba(147,80,115,0.35)] backdrop-blur-md flex flex-col justify-between transition-all duration-300 group cursor-pointer relative ${
+                className={`w-[330px] sm:w-[390px] shrink-0 p-5 rounded-2xl backdrop-blur-md flex flex-col justify-between transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center group cursor-pointer relative ${
                   isExpanded
-                    ? "border-[#c084fc] shadow-[0_12px_40px_rgba(192,132,252,0.22)] bg-[rgba(40,20,50,0.95)] z-20"
-                    : "hover:border-[#c084fc]/60 hover:shadow-[0_8px_30px_rgba(192,132,252,0.12)]"
+                    ? "scale-[1.05] sm:scale-[1.12] z-30 border-[#c084fc] shadow-[0_25px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(192,132,252,0.3)] bg-[rgba(42,20,54,0.98)] ring-1 ring-[#c084fc]/50 opacity-100"
+                    : isDimmed
+                    ? "scale-[0.94] opacity-25 filter blur-[1.5px] grayscale-[40%] border-[rgba(147,80,115,0.15)] bg-[rgba(25,14,29,0.6)] z-0"
+                    : "scale-100 opacity-100 hover:border-[#c084fc]/60 hover:shadow-[0_8px_30px_rgba(192,132,252,0.12)] border-[rgba(147,80,115,0.35)] bg-[rgba(35,23,39,0.88)] z-10"
                 }`}
               >
+                {/* Resplandor ambiental para la tarjeta expandida en primer plano */}
+                {isExpanded && (
+                  <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[#c084fc]/25 via-[#10B981]/15 to-[#c084fc]/25 blur-md -z-10 pointer-events-none animate-pulse" />
+                )}
+
                 {/* Cabecera */}
                 <div className="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs">
                   <span className="px-2.5 py-0.5 rounded bg-[rgba(16,185,129,0.12)] text-[#10B981] font-semibold border border-[rgba(16,185,129,0.3)]">
@@ -395,8 +404,8 @@ export default function TestimonialsInteractive() {
 
                 {/* Contenido expandible SOLO al hacer Hover o Toque */}
                 <div
-                  className={`overflow-hidden transition-all duration-300 ease-out flex flex-col gap-2.5 ${
-                    isExpanded ? "max-h-96 opacity-100 my-2 pt-2 border-t border-[rgba(147,80,115,0.2)]" : "max-h-0 opacity-0"
+                  className={`overflow-hidden transition-all duration-400 ease-out flex flex-col gap-2.5 ${
+                    isExpanded ? "max-h-[500px] opacity-100 my-2 pt-2 border-t border-[rgba(147,80,115,0.2)]" : "max-h-0 opacity-0"
                   }`}
                 >
                   <div className="p-3 rounded-lg bg-[rgba(255,95,86,0.08)] border border-[rgba(255,95,86,0.25)] text-xs text-[#F6DBC0]">
