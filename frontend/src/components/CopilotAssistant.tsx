@@ -42,40 +42,42 @@ export const CopilotAssistant: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
-  const getInitialMessages = (): ChatMessage[] => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = sessionStorage.getItem('daarick_copilot_history');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-      } catch (e) {
-        console.error('Error reading copilot session:', e);
-      }
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 'init-1',
+      role: 'assistant',
+      content:
+        '¡Hola! Soy **Daverick Assistant**, el copiloto técnico del portafolio.\n\n' +
+        'Puedo resolver dudas sobre la trayectoria y proyectos de Erick (**Graphito**, **Tetring**, **PAIDEA**, **Paralel**), ' +
+        'o evaluar con total honestidad la **viabilidad técnica y arquitectura** de lo que quieras automatizar en tu negocio.\n\n' +
+        '¿En qué te puedo asesorar hoy?',
+      timestamp: '10:00 AM',
+      suggestions: INITIAL_SUGGESTIONS
     }
-
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    return [
-      {
-        id: 'init-1',
-        role: 'assistant',
-        content:
-          '¡Hola! Soy **Daverick Assistant**, el copiloto técnico del portafolio.\n\n' +
-          'Puedo resolver dudas sobre la trayectoria y proyectos de Erick (**Graphito**, **Tetring**, **PAIDEA**, **Paralel**), ' +
-          'o evaluar con total honestidad la **viabilidad técnica y arquitectura** de lo que quieras automatizar en tu negocio.\n\n' +
-          '¿En qué te puedo asesorar hoy?',
-        timestamp: timeStr,
-        suggestions: INITIAL_SUGGESTIONS
-      }
-    ];
-  };
-
-  const [messages, setMessages] = useState<ChatMessage[]>(getInitialMessages);
+  ]);
   const streamEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Hidratación segura del almacenamiento de sesión en cliente
+  useEffect(() => {
+    try {
+      const cached = sessionStorage.getItem('daarick_copilot_history');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+          return;
+        }
+      }
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      setMessages((prev) =>
+        prev.map((m) => (m.id === 'init-1' ? { ...m, timestamp: timeStr } : m))
+      );
+    } catch (e) {
+      console.error('Error restaurando sesión del copiloto:', e);
+    }
+  }, []);
 
   // Guardar en sessionStorage
   useEffect(() => {
@@ -259,7 +261,7 @@ export const CopilotAssistant: React.FC = () => {
       {isOpen && (
         <div
           id="chat-window"
-          className={`fixed z-50 rounded-2xl bg-[#160B1A]/95 border border-[rgba(147,80,115,0.45)] backdrop-blur-xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out ${
+          className={`fixed z-[9999] rounded-2xl bg-[#160B1A]/95 border border-[rgba(147,80,115,0.45)] backdrop-blur-xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out ${
             isExpanded
               ? 'bottom-4 right-4 sm:bottom-8 sm:right-8 w-[calc(100vw-32px)] sm:w-[680px] md:w-[760px] h-[calc(100vh-64px)] sm:h-[720px] max-h-[92vh]'
               : 'bottom-24 right-4 sm:right-6 w-[calc(100vw-32px)] sm:w-[460px] md:w-[490px] h-[580px] max-h-[82vh]'
@@ -520,27 +522,28 @@ export const CopilotAssistant: React.FC = () => {
       )}
 
       {/* 2. BOTÓN LANZADOR FLOTANTE (FAB) CON GLOW & MICRO-TOOLTIP (Stitch Spec) */}
-      <aside className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+      <aside className="fixed bottom-6 right-6 z-[9998] flex items-center gap-3">
         {/* Micro-Tooltip / Noticia discreta antes de interactuar */}
         {!isOpen && !hasInteracted && (
-          <div
+          <button
+            type="button"
             onClick={() => setIsOpen(true)}
-            className="cursor-pointer hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[rgba(30,15,35,0.9)] border border-[rgba(147,80,115,0.35)] text-[#F6DBC0] shadow-xl font-mono text-xs hover:border-[#c084fc]/60 transition-all animate-bounce"
+            className="cursor-pointer hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[rgba(30,15,35,0.95)] border border-[rgba(147,80,115,0.35)] text-[#F6DBC0] shadow-xl font-mono text-xs hover:border-[#c084fc]/60 transition-all animate-bounce"
           >
             <span className="inline-block w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
             <span>¿Dudas sobre IA? Habla conmigo</span>
-          </div>
+          </button>
         )}
 
         {/* Botón Circular con Resplandor Ambiental */}
         <div className="relative group">
-          <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#c084fc] to-[#d8b4fe] opacity-60 blur-md group-hover:opacity-100 transition duration-300"></div>
+          <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#c084fc] to-[#d8b4fe] opacity-60 blur-md group-hover:opacity-100 transition duration-300 pointer-events-none"></div>
 
           <button
             type="button"
             aria-label={isOpen ? 'Cerrar asistente' : 'Abrir asistente de chat'}
-            onClick={() => setIsOpen(!isOpen)}
-            className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-[#935073] via-[#a855f7] to-[#c084fc] text-[#160B1A] flex items-center justify-center shadow-2xl transition-transform duration-200 group-hover:scale-105 active:scale-95"
+            onClick={() => setIsOpen((prev) => !prev)}
+            className="relative z-10 w-14 h-14 rounded-full bg-gradient-to-tr from-[#935073] via-[#a855f7] to-[#c084fc] text-[#160B1A] flex items-center justify-center shadow-2xl transition-transform duration-200 group-hover:scale-105 active:scale-95 cursor-pointer"
           >
             {isOpen ? (
               <X className="w-6 h-6 text-[#160B1A]" />
@@ -549,7 +552,7 @@ export const CopilotAssistant: React.FC = () => {
             )}
 
             {/* Indicador de estado en vivo */}
-            <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-[#10B981] shadow-sm ring-2 ring-[#160B1A]"></span>
+            <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-[#10B981] shadow-sm ring-2 ring-[#160B1A] pointer-events-none"></span>
           </button>
         </div>
       </aside>
