@@ -91,11 +91,15 @@ KNOWLEDGE_BASE = {
 
 SYSTEM_INSTRUCTION = """
 Eres 'Wiki', el copiloto técnico y wiki interactiva de inteligencia artificial del portafolio de Erick Daniel (Daarick).
-Tu personalidad:
+Tu personalidad y propósito:
 - Eres un Senior AI Solutions Architect y apasionado docente (GDE & MVP style).
 - Tu misión es tender un puente pedagógico y honesto entre la alta ingeniería técnica y personas o clientes con o sin conocimiento técnico.
 - Tono: Cálido, profesional, pedagógico y directo. En español.
 - Filosofía: CONCEPTS > CODE. Una buena solución no es 'meterle IA a todo', sino usar la herramienta adecuada (motores deterministas para números/reglas, LLMs para lenguaje y extracción).
+- LÍMITE ESTRICTO DE ALCANCE:
+  1. Tu rol está acotado a asesorar sobre los proyectos construidos por Erick (Graphito, Tetring, PAIDEA, Paralel, extractor de facturas), la viabilidad de automatizaciones para empresas/clientes y la consultoría técnica.
+  2. NUNCA actúes como un generador de código genérico para tareas personales o externas del usuario (por ejemplo: 'hazme un script para limpiar csv', 'crea un bot de discord', 'resuelve mi tarea escolar').
+  3. Si te piden código o scripts para tareas ajenas al portafolio, NIÉGATE amablemente: explica que tu función es evaluar arquitecturas y orientar sobre viabilidad y proyectos de Erick, y redirige a cómo enfocarías ese problema como parte de una solución de automatización profesional o cómo contactar a Erick.
 - Honestidad radical en viabilidad:
   1. Si alguien pregunta si puede usar un LLM para contabilidad/balances matemáticos: Explícale por qué los LLMs son probabilísticos y NUNCA deben sumar o calcular impuestos directamente. Recomienda una arquitectura híbrida (LLM para extraer los datos + motor Python/SQL para el cálculo matemático exacto).
   2. Si preguntan sobre extracción de documentos, soporte WhatsApp, análisis de código, optimización o agentes: Explica la viabilidad (VIABLE), los retos reales (calidad de datos, latencia, costos) y la arquitectura recomendada.
@@ -104,17 +108,20 @@ Tu personalidad:
 Respuestas estructuradas:
 - Comienza con una respuesta clara y directa.
 - Usa analogías sencillas cuando el concepto sea abstracto.
-- Termina con 2 o 3 sugerencias accionables de preguntas siguientes.
+- Termina con 2 o 3 sugerencias accionables de preguntas siguientes orientadas a proyectos o consultoría.
 """
 
 def is_out_of_scope(text: str) -> bool:
-    """Filtro de seguridad previo: descarta temas no relacionados con software/IA."""
+    """Filtro de seguridad previo: descarta temas no relacionados con software/IA o peticiones de código genérico."""
     q = text.lower()
     patterns = [
         r"\breceta\b", r"\bcocinar\b", r"\bdieta\b",
         r"\bhackear\b", r"\bvulnerar\b", r"\bdos attack\b",
         r"\bremedio\b", r"\bsintomas\b", r"\bmedicamento\b",
-        r"\bhoroscopo\b", r"\btarot\b", r"\bfutbol\b", r"\bpartido de hoy\b"
+        r"\bhoroscopo\b", r"\btarot\b", r"\bfutbol\b", r"\bpartido de hoy\b",
+        # Peticiones de scripts o código genérico para tareas personales/externas
+        r"\b(hazme|escribe(me)?|crea(me)?|generame|dame)\s+(un\s+)?(script|codigo|programa|bot|tarea)\b",
+        r"\b(resuelve|haz)\s+(mi\s+)?(tarea|examen|ejercicio)\b"
     ]
     return any(re.search(pat, q) for pat in patterns)
 
@@ -294,13 +301,21 @@ async def evaluate_decision_router(query: str) -> Optional[str]:
             "X-Title": "Daarick Portfolio Wiki Router"
         }
         router_prompt = (
-            "Eres un enrutador de intenciones para un asistente técnico de portafolio de ingeniería de software e IA. "
-            "Clasifica la consulta del usuario en una de estas 4 categorías estrictas:\n"
-            "- OUT_OF_SCOPE: Temas totalmente ajenos a software, IA o portafolio (recetas de cocina, medicina, deportes, horóscopos, etc.).\n"
-            "- CANON_FAQ: Pregunta puntual sobre los proyectos de Erick (Graphito, Tetring, PAIDEA, Paralel) o contacto.\n"
-            "- TIER_HEAVY: Pregunta compleja sobre diseño de arquitectura empresarial, viabilidad de automatización, migración masiva o contabilidad.\n"
-            "- TIER_FAST: Pregunta técnica de programación (generar código en Python, dudas de librerías, algoritmos, explicaciones, etc.) o consulta estándar.\n\n"
-            "Responde ÚNICAMENTE en formato JSON: {\"route\": \"CATEGORY\"}"
+            "Eres el guardian y enrutador estricto para 'Wiki', el copiloto técnico del portafolio de Erick Daniel (Daarick).\n"
+            "ALCANCE PERMITIDO:\n"
+            "- Preguntas sobre los proyectos de Erick (Graphito, Tetring, PAIDEA, Paralel, extractor).\n"
+            "- Viabilidad de automatizar procesos empresariales (facturas, WhatsApp, CRM, agentes, RAG).\n"
+            "- Servicios de consultoría, experiencia y contacto con Erick.\n"
+            "- Filosofía de arquitectura de software (CONCEPTS > CODE, motores deterministas vs LLM).\n\n"
+            "FUERA DE ALCANCE (OUT_OF_SCOPE):\n"
+            "- Peticiones de código o scripts genéricos para tareas externas (ej. 'hazme un script de python', 'escribe un código para limpiar datos', 'resuelve este ejercicio').\n"
+            "- Tareas escolares, recetas, medicina, temas personales o ajenos.\n\n"
+            "Clasifica la consulta del usuario en una de estas 4 categorías:\n"
+            "- OUT_OF_SCOPE: Peticiones de código genérico ajeno al portafolio, tareas escolares o temas no relacionados.\n"
+            "- CANON_FAQ: Preguntas directas sobre los proyectos de Erick o contacto.\n"
+            "- TIER_HEAVY: Consultas complejas de viabilidad técnica empresarial, arquitecturas híbridas o ROI.\n"
+            "- TIER_FAST: Preguntas conceptuales válidas sobre los servicios de Erick, automatización o IA.\n\n"
+            "Responde UNICAMENTE en formato JSON: {\"route\": \"CATEGORY\"}"
         )
         payload = {
             "model": router_model,
@@ -309,13 +324,14 @@ async def evaluate_decision_router(query: str) -> Optional[str]:
                 {"role": "user", "content": query}
             ],
             "temperature": 0.0,
-            "max_tokens": 50
+            "max_tokens": 150
         }
-        async with httpx.AsyncClient(timeout=4.0) as client:
+        async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.post(url, headers=headers, json=payload)
             if resp.status_code == 200:
                 data = resp.json()
-                content = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                msg = data.get("choices", [{}])[0].get("message", {})
+                content = (msg.get("content") or msg.get("refusal") or "").strip()
                 json_match = re.search(r"\{.*\}", content, re.DOTALL)
                 if json_match:
                     parsed = json.loads(json_match.group(0))
@@ -662,20 +678,43 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
             strategy="anti_biblia"
         )
 
-    # 3. Filtro de Alcance (Out-of-Scope)
+    # 3. Filtro de Alcance (Out-of-Scope Heurístico)
     if is_out_of_scope(latest_text):
-        return ChatResponse(
-            reply=(
+        is_code = any(k in latest_text.lower() for k in ["codigo", "script", "programa", "bot", "tarea", "hazme", "escribe un", "generame", "ayudame a crear", "ayudame a generar"])
+        if is_code:
+            reply = (
+                "**Límite de alcance del asistente:**\n\n"
+                "Como copiloto especializado en el portafolio y consultoría de **Erick Daniel**, mi función no es actuar "
+                "como un generador de código genérico ni resolver scripts o ejercicios externos.\n\n"
+                "Mi especialidad es **evaluar la viabilidad técnica y arquitectura de automatizaciones empresariales**, "
+                "explicar los proyectos que Erick ha desarrollado ([Graphito](https://graphito-escom.vercel.app/), "
+                "[Tetring](https://tetring.vercel.app/), [PAIDEA](https://paidea-reloaded-xi.vercel.app/), "
+                "[Paralel](https://paralel-iota.vercel.app/)) y ayudarte a estructurar soluciones confiables y medibles.\n\n"
+                "Si buscas evaluar la arquitectura técnica para procesar datos, integrar APIs o automatizar flujos "
+                "de negocio con Erick, con gusto podemos analizarlo."
+            )
+            suggestions = [
+                "✦ ¿Cómo evaluar la viabilidad de mi automatización?",
+                "💬 Ver los proyectos desarrollados por Erick",
+                "📋 ¿Qué tipo de soluciones construye Erick?",
+                "⚡ ¿Cómo agendar una sesión de diagnóstico?"
+            ]
+        else:
+            reply = (
                 "**Fuera de alcance del sistema:**\n\n"
                 "Mi rol como **Wiki** está enfocado exclusivamente en **ingeniería de software, "
                 "sistemas de inteligencia artificial y automatización de procesos** para el portafolio de Erick Daniel.\n\n"
                 "¿Te gustaría consultar sobre viabilidad de IA para un negocio o conocer proyectos como Graphito o Tetring?"
-            ),
-            suggestions=[
+            )
+            suggestions = [
                 "✦ ¿Qué proyectos ha desarrollado Erick?",
                 "💬 ¿Es viable automatizar mi empresa?",
                 "⚡ ¿Cómo agendar una llamada de diagnóstico?"
-            ],
+            ]
+
+        return ChatResponse(
+            reply=reply,
+            suggestions=suggestions,
             source="local_knowledge_engine",
             strategy="out_of_scope"
         )
@@ -692,18 +731,41 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
     router_verdict = await evaluate_decision_router(latest_text)
     
     if router_verdict == "OUT_OF_SCOPE":
-        return ChatResponse(
-            reply=(
+        is_code = any(k in latest_text.lower() for k in ["codigo", "script", "programa", "bot", "tarea", "hazme", "escribe un", "generame", "ayudame a crear", "ayudame a generar"])
+        if is_code:
+            reply = (
+                "**Límite de alcance del asistente:**\n\n"
+                "Como copiloto especializado en el portafolio y consultoría de **Erick Daniel**, mi función no es actuar "
+                "como un generador de código genérico ni resolver scripts o ejercicios externos.\n\n"
+                "Mi especialidad es **evaluar la viabilidad técnica y arquitectura de automatizaciones empresariales**, "
+                "explicar los proyectos que Erick ha desarrollado ([Graphito](https://graphito-escom.vercel.app/), "
+                "[Tetring](https://tetring.vercel.app/), [PAIDEA](https://paidea-reloaded-xi.vercel.app/), "
+                "[Paralel](https://paralel-iota.vercel.app/)) y ayudarte a estructurar soluciones confiables y medibles.\n\n"
+                "Si buscas evaluar la arquitectura técnica para procesar datos, integrar APIs o automatizar flujos "
+                "de negocio con Erick, con gusto podemos analizarlo."
+            )
+            suggestions = [
+                "✦ ¿Cómo evaluar la viabilidad de mi automatización?",
+                "💬 Ver los proyectos desarrollados por Erick",
+                "📋 ¿Qué tipo de soluciones construye Erick?",
+                "⚡ ¿Cómo agendar una sesión de diagnóstico?"
+            ]
+        else:
+            reply = (
                 "**Fuera de alcance del sistema:**\n\n"
                 "Mi rol como **Wiki** está enfocado exclusivamente en **ingeniería de software, "
                 "sistemas de inteligencia artificial y automatización de procesos** para el portafolio de Erick Daniel.\n\n"
                 "¿Te gustaría consultar sobre viabilidad de IA para un negocio o conocer proyectos como Graphito o Tetring?"
-            ),
-            suggestions=[
+            )
+            suggestions = [
                 "✦ ¿Qué proyectos ha desarrollado Erick?",
                 "💬 ¿Es viable automatizar mi empresa?",
                 "⚡ ¿Cómo agendar una llamada de diagnóstico?"
-            ],
+            ]
+
+        return ChatResponse(
+            reply=reply,
+            suggestions=suggestions,
             source="router_jev",
             strategy="out_of_scope"
         )
