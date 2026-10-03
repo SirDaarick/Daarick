@@ -1,5 +1,60 @@
 ---
 // TechStack.astro
+const PILLARS = [
+  {
+    num: "01",
+    title: "Inteligencia Artificial y Agentes",
+    description: "Cerebros de IA y grafos autónomos (LangGraph/LangChain) para procesar documentos, razonar flujos y ejecutar tareas sin alucinar.",
+    borderColor: "hover:border-[#c084fc]/50",
+    badgeBg: "bg-[rgba(192,132,252,0.15)] text-[#c084fc]",
+    tools: [
+      { name: "LangChain", icon: "/icons/langchain.svg" },
+      { name: "LangGraph", icon: "/icons/langgraph.svg" },
+      { name: "Python", icon: "/icons/python.svg" },
+      { name: "PyTorch", icon: "/icons/pytorch.svg" },
+      { name: "Hugging Face", icon: "/icons/huggingface.svg" }
+    ]
+  },
+  {
+    num: "02",
+    title: "Automatización y Lógica Rápida",
+    description: "Motores que conectan sistemas, optimizan procesos pesados y resuelven cálculos o tareas repetitivas en milisegundos.",
+    borderColor: "hover:border-emerald-500/50",
+    badgeBg: "bg-emerald-500/15 text-emerald-400",
+    tools: [
+      { name: "Python", icon: "/icons/python.svg" },
+      { name: "FastAPI", icon: "/icons/fastapi.svg" },
+      { name: "C++", icon: "/icons/cplusplus.svg" },
+      { name: "Docker", icon: "/icons/docker.svg" }
+    ]
+  },
+  {
+    num: "03",
+    title: "Pantallas y Experiencia de Usuario",
+    description: "Páginas web y tableros interactivos claros y sencillos donde cualquier persona puede ver sus resultados y usar el sistema.",
+    borderColor: "hover:border-sky-500/50",
+    badgeBg: "bg-sky-500/15 text-sky-400",
+    tools: [
+      { name: "React", icon: "/icons/react.svg" },
+      { name: "Astro", icon: "/icons/astro.svg" },
+      { name: "TypeScript", icon: "/icons/typescript.svg" },
+      { name: "Tailwind CSS", icon: "/icons/tailwindcss.svg" }
+    ]
+  },
+  {
+    num: "04",
+    title: "Datos y Servidores Seguros",
+    description: "Almacenamiento protegido, bases de datos confiables y servidores configurados para que la aplicación funcione siempre.",
+    borderColor: "hover:border-amber-400/50",
+    badgeBg: "bg-amber-500/15 text-amber-300",
+    tools: [
+      { name: "PostgreSQL", icon: "/icons/postgresql.svg" },
+      { name: "Supabase", icon: "/icons/supabase.svg" },
+      { name: "Docker", icon: "/icons/docker.svg" },
+      { name: "Vercel", icon: "/icons/vercel.svg" }
+    ]
+  }
+];
 ---
 
 <section class="flex flex-col gap-5 rounded-2xl p-6 sm:p-8 bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md" id="habilidades">
@@ -20,253 +75,39 @@
 
   {/* 4 Functional Pillars Grid */}
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
-    {/* Pilar 1: IA y Agentes */}
-    <div class="flex flex-col justify-between p-5 rounded-xl bg-[rgba(80,45,85,0.2)] border border-[rgba(147,80,115,0.25)] hover:border-[#c084fc]/50 transition-all">
-      <div class="flex flex-col gap-2.5">
-        <div class="w-10 h-10 rounded-lg bg-[rgba(192,132,252,0.15)] flex items-center justify-center text-[#c084fc] font-mono text-sm font-bold">
-          01
-        </div>
-        <h3 class="text-base font-semibold text-[#F8F4E9]">
-          Inteligencia Artificial y Agentes
-        </h3>
-        <p class="text-xs text-[#F6DBC0] leading-relaxed">
-          Cerebros de IA y grafos autónomos (LangGraph/LangChain) para procesar documentos, razonar flujos y ejecutar tareas sin alucinar.
-        </p>
-      </div>
-
-      <div class="mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center gap-2 flex-wrap">
-        {/* LangChain */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#2BD576] hover:bg-[#2BD576]/10 transition-all cursor-pointer" title="LangChain">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#2BD576]">
-            <path d="M7.5 3A4.5 4.5 0 0 0 3 7.5c0 2.1 1.45 3.86 3.42 4.34l-1.35 4.04a1 1 0 0 0 .95 1.32h.96l-.88 2.65a1 1 0 0 0 1.27 1.27l7.24-2.41a1 1 0 0 0 .69-.95v-4.14c2.8-.75 4.7-3.3 4.7-6.12A7.5 7.5 0 0 0 12.5 0h-5zm0 2h5A5.5 5.5 0 0 1 18 10.5c0 2.22-1.33 4.14-3.23 4.96a1 1 0 0 0-.67.94v3.52l-4.76 1.59.57-1.72a1 1 0 0 0-.95-1.32H8.38l.94-2.83a1 1 0 0 0-.64-1.24A2.5 2.5 0 0 1 7.5 5z"/>
-            <circle cx="9" cy="7" r="1"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            LangChain
-          </span>
+    {PILLARS.map((pillar) => (
+      <div class={`flex flex-col justify-between p-5 rounded-xl bg-[rgba(80,45,85,0.2)] border border-[rgba(147,80,115,0.25)] ${pillar.borderColor} transition-all`}>
+        <div class="flex flex-col gap-2.5">
+          <div class={`w-10 h-10 rounded-lg ${pillar.badgeBg} flex items-center justify-center font-mono text-sm font-bold`}>
+            {pillar.num}
+          </div>
+          <h3 class="text-base font-semibold text-[#F8F4E9]">
+            {pillar.title}
+          </h3>
+          <p class="text-xs text-[#F6DBC0] leading-relaxed">
+            {pillar.description}
+          </p>
         </div>
 
-        {/* LangGraph */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#c084fc] hover:bg-[#c084fc]/10 transition-all cursor-pointer" title="LangGraph">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current text-[#c084fc] stroke-2 stroke-linecap-round stroke-linejoin-round">
-            <circle cx="6" cy="6" r="2.5" class="fill-[#c084fc]/20"/>
-            <circle cx="18" cy="6" r="2.5" class="fill-[#c084fc]/20"/>
-            <circle cx="12" cy="18" r="2.5" class="fill-[#c084fc]/20"/>
-            <path d="M8.5 6h7"/>
-            <path d="M7.5 8.2l3 7.6"/>
-            <path d="M16.5 8.2l-3 7.6"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            LangGraph
-          </span>
-        </div>
-
-        {/* Python */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#3776AB] hover:bg-[#3776AB]/10 transition-all cursor-pointer" title="Python">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#3776AB]">
-            <path d="M11.91 0c-1.94.02-3.79.18-4.9.46-3.27.81-3.87 2.52-3.87 5.64v2.53h7.82v1.01H3.14c-3.13 0-5.14 1.88-5.14 5.48 0 3.6 2.06 5.34 5.14 5.34h2.15v-3.08c0-3.3 2.8-6.19 6.22-6.19h5.45V8.62c0-3.12-2.12-5.48-5.26-5.48h-1.8v3.08H7.07V0h4.84zm-2.73 1.7a1.18 1.18 0 1 1 0 2.36 1.18 1.18 0 0 1 0-2.36z"/>
-            <path d="M12.09 24c1.94-.02 3.79-.18 4.9-.46 3.27-.81 3.87-2.52 3.87-5.64v-2.53H13.04v-1.01h7.82c3.13 0 5.14-1.88 5.14-5.48 0-3.6-2.06-5.34-5.14-5.34h-2.15v3.08c0 3.3-2.8 6.19-6.22 6.19H6.94v2.57c0 3.12 2.12 5.48 5.26 5.48h1.8v-3.08h2.83V24h-4.74zm2.73-1.7a1.18 1.18 0 1 1 0-2.36 1.18 1.18 0 0 1 0 2.36z" class="text-[#FFD43B] fill-current"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            Python
-          </span>
-        </div>
-
-        {/* PyTorch */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#EE4C2C] hover:bg-[#EE4C2C]/10 transition-all cursor-pointer" title="PyTorch">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#EE4C2C]">
-            <path d="M12.001 0a12.001 12.001 0 0 0-1.936 23.844c.488-.235 1.026-.593 1.405-.972l1.69-1.688c.378-.379.627-.958.627-1.493a2.11 2.11 0 0 0-2.112-2.113h-.002a2.113 2.113 0 0 0-1.494.62l-1.677 1.676c-1.353-1.053-2.383-2.483-2.946-4.112a9.889 9.889 0 0 1 10.638-13.06 9.89 9.89 0 0 1 8.016 7.828c.433 2.197.106 4.464-.932 6.442l1.839 1.838a12.002 12.002 0 0 0-12.21-20.81zM15.578 3.74a1.355 1.355 0 1 0 0 2.71 1.355 1.355 0 0 0 0-2.71z"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            PyTorch
-          </span>
-        </div>
-
-        {/* Hugging Face */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#FFD21E] hover:bg-[#FFD21E]/10 transition-all cursor-pointer" title="Hugging Face">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#FFD21E]">
-            <path d="M12 2C6.477 2 2 6.477 2 12c0 5.524 4.477 10 10 10s10-4.476 10-10c0-5.523-4.477-10-10-10zm-3.5 6a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm7 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-7 7.5a4.5 4.5 0 0 0 7 0h-7z"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            Hugging Face
-          </span>
+        <div class="mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center gap-2 flex-wrap">
+          {pillar.tools.map((tool) => (
+            <div
+              class="group relative flex items-center justify-center w-10 h-10 p-2 rounded-xl bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#c084fc] hover:bg-[rgba(45,20,55,0.9)] hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer shadow-sm"
+              title={tool.name}
+            >
+              <img
+                src={tool.icon}
+                alt={tool.name}
+                class="w-5 h-5 object-contain"
+                loading="lazy"
+              />
+              <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
+                {tool.name}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
-
-    {/* Pilar 2: Automatización y Procesos */}
-    <div class="flex flex-col justify-between p-5 rounded-xl bg-[rgba(80,45,85,0.2)] border border-[rgba(147,80,115,0.25)] hover:border-emerald-500/50 transition-all">
-      <div class="flex flex-col gap-2.5">
-        <div class="w-10 h-10 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-400 font-mono text-sm font-bold">
-          02
-        </div>
-        <h3 class="text-base font-semibold text-[#F8F4E9]">
-          Automatización y Lógica Rápida
-        </h3>
-        <p class="text-xs text-[#F6DBC0] leading-relaxed">
-          Motores que conectan sistemas, optimizan procesos pesados y resuelven cálculos o tareas repetitivas en milisegundos.
-        </p>
-      </div>
-
-      <div class="mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center gap-2 flex-wrap">
-        {/* Python */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#3776AB] hover:bg-[#3776AB]/10 transition-all cursor-pointer" title="Python">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#3776AB]">
-            <path d="M11.91 0c-1.94.02-3.79.18-4.9.46-3.27.81-3.87 2.52-3.87 5.64v2.53h7.82v1.01H3.14c-3.13 0-5.14 1.88-5.14 5.48 0 3.6 2.06 5.34 5.14 5.34h2.15v-3.08c0-3.3 2.8-6.19 6.22-6.19h5.45V8.62c0-3.12-2.12-5.48-5.26-5.48h-1.8v3.08H7.07V0h4.84zm-2.73 1.7a1.18 1.18 0 1 1 0 2.36 1.18 1.18 0 0 1 0-2.36z"/>
-            <path d="M12.09 24c1.94-.02 3.79-.18 4.9-.46 3.27-.81 3.87-2.52 3.87-5.64v-2.53H13.04v-1.01h7.82c3.13 0 5.14-1.88 5.14-5.48 0-3.6-2.06-5.34-5.14-5.34h-2.15v3.08c0 3.3-2.8 6.19-6.22 6.19H6.94v2.57c0 3.12 2.12 5.48 5.26 5.48h1.8v-3.08h2.83V24h-4.74zm2.73-1.7a1.18 1.18 0 1 1 0-2.36 1.18 1.18 0 0 1 0 2.36z" class="text-[#FFD43B] fill-current"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            Python
-          </span>
-        </div>
-
-        {/* FastAPI */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#05998B] hover:bg-[#05998B]/10 transition-all cursor-pointer" title="FastAPI">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#05998B]">
-            <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm1.09 3.51a.63.63 0 0 1 .59.84l-2.07 5.56h4.35a.63.63 0 0 1 .49 1.02l-6.52 9.56a.63.63 0 0 1-1.12-.52l2.05-6.52H6.55a.63.63 0 0 1-.49-1.02l6.52-8.56a.63.63 0 0 1 .51-.36z"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            FastAPI
-          </span>
-        </div>
-
-        {/* C++ */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#00599C] hover:bg-[#00599C]/10 transition-all cursor-pointer" title="C++">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#00599C]">
-            <path d="M22.394 6.745l-9.176-5.3a2.44 2.44 0 0 0-2.436 0l-9.176 5.3A2.434 2.434 0 0 0 .39 8.855v10.598a2.434 2.434 0 0 0 1.216 2.11l9.176 5.3a2.44 2.44 0 0 0 2.436 0l9.176-5.3a2.434 2.434 0 0 0 1.216-2.11V8.855a2.434 2.434 0 0 0-1.216-2.11zm-10.97 12.39a5.135 5.135 0 1 1 0-10.27 5.116 5.116 0 0 1 3.63 1.507l-1.455 1.455a3.076 3.076 0 1 0 0 4.346l1.455 1.455a5.116 5.116 0 0 1-3.63 1.507zm6.654-4.103h-.995v.995h-.995v-.995h-.995v-.995h.995v-.995h.995v.995h.995v.995zm3.32 0h-.995v.995h-.995v-.995h-.995v-.995h.995v-.995h.995v.995h.995v.995z"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            C++
-          </span>
-        </div>
-
-        {/* Docker */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#2496ED] hover:bg-[#2496ED]/10 transition-all cursor-pointer" title="Docker">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#2496ED]">
-            <path d="M13.983 11.078h2.119a.186.186 0 0 0 .186-.185V9.006a.186.186 0 0 0-.186-.186h-2.119a.185.185 0 0 0-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 0 0 .186-.186V3.574a.186.186 0 0 0-.186-.185h-2.118a.185.185 0 0 0-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 0 0 .186-.186V6.29a.186.186 0 0 0-.186-.185h-2.118a.185.185 0 0 0-.185.185v1.887c0 .102.082.186.185.186m-2.93 0h2.12a.186.186 0 0 0 .184-.186V6.29a.185.185 0 0 0-.185-.185H8.1a.185.185 0 0 0-.185.185v1.887c0 .102.083.186.185.186m-2.964 0h2.119a.186.186 0 0 0 .185-.186V6.29a.185.185 0 0 0-.185-.185H5.136a.186.186 0 0 0-.186.185v1.887c0 .102.084.186.186.186m5.893 2.715h2.119a.186.186 0 0 0 .186-.186V9.006a.186.186 0 0 0-.186-.186h-2.119a.185.185 0 0 0-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 0 0 .184-.186V9.006a.185.185 0 0 0-.184-.186h-2.12a.185.185 0 0 0-.185.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 0 0 .185-.186V9.006a.185.185 0 0 0-.185-.186h-2.12a.186.186 0 0 0-.185.186v1.888c0 .102.084.185.186.185m-2.928 0h2.119a.185.185 0 0 0 .185-.186V9.006a.185.185 0 0 0-.185-.186H2.208a.186.186 0 0 0-.186.186v1.888c0 .102.084.185.186.185m21.848.332c-.407-.272-1.353-.385-2.261-.318-.135-.572-.44-1.077-.872-1.488-.138-.13-.284-.249-.44-.352l-.184-.122-.162.152c-.637.595-1.026 1.39-1.078 2.253a6.837 6.837 0 0 0-3.327-.92H.732a.732.732 0 0 0-.732.732 11.23 11.23 0 0 0 1.258 5.176 11.83 11.83 0 0 0 7.426 6.002 12.39 12.39 0 0 0 4.673.228 11.66 11.66 0 0 0 7.155-4.229 11.08 11.08 0 0 0 2.215-4.57 6.64 6.64 0 0 0 1.58-.291.606.606 0 0 0 .39-.564c0-.18-.088-.352-.25-.461z"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            Docker
-          </span>
-        </div>
-      </div>
-    </div>
-
-    {/* Pilar 3: Aplicaciones Web */}
-    <div class="flex flex-col justify-between p-5 rounded-xl bg-[rgba(80,45,85,0.2)] border border-[rgba(147,80,115,0.25)] hover:border-[#38bdf8]/50 transition-all">
-      <div class="flex flex-col gap-2.5">
-        <div class="w-10 h-10 rounded-lg bg-sky-500/15 flex items-center justify-center text-sky-400 font-mono text-sm font-bold">
-          03
-        </div>
-        <h3 class="text-base font-semibold text-[#F8F4E9]">
-          Pantallas y Experiencia de Usuario
-        </h3>
-        <p class="text-xs text-[#F6DBC0] leading-relaxed">
-          Páginas web y tableros interactivos claros y sencillos donde cualquier persona puede ver sus resultados y usar el sistema.
-        </p>
-      </div>
-
-      <div class="mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center gap-2 flex-wrap">
-        {/* React */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#61DAFB] hover:bg-[#61DAFB]/10 transition-all cursor-pointer" title="React">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current text-[#61DAFB] stroke-1.5">
-            <ellipse cx="12" cy="12" rx="10" ry="4.2"/>
-            <ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(60 12 12)"/>
-            <ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(120 12 12)"/>
-            <circle cx="12" cy="12" r="1.8" class="fill-[#61DAFB]"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            React
-          </span>
-        </div>
-
-        {/* Astro */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#BC52EE] hover:bg-[#BC52EE]/10 transition-all cursor-pointer" title="Astro">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#BC52EE]">
-            <path d="M8.358 20.162c-1.187-1.4-1.637-2.91-1.39-4.148.248-1.238 1.187-2.022 2.14-2.583.952-.56 1.905-.9 2.892-1.237v-4.19c-1.782.336-3.414 1.12-4.54 2.353C6.333 11.59 5.6 13.383 5.6 15.35c0 1.967.733 3.76 1.86 4.992a6.837 6.837 0 0 0 .898.793v-.973zm7.284 0v.973c.31-.237.611-.504.898-.793 1.127-1.232 1.86-3.025 1.86-4.992 0-1.967-.733-3.76-1.86-4.993-1.126-1.232-2.758-2.016-4.54-2.352v4.19c.987.337 1.94.677 2.892 1.237.953.56 1.892 1.345 2.14 2.583.247 1.237-.203 2.747-1.39 4.147zM12 2.5a.75.75 0 0 0-.75.75v14.475a2.25 2.25 0 1 0 1.5 0V3.25A.75.75 0 0 0 12 2.5z"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            Astro
-          </span>
-        </div>
-
-        {/* TypeScript */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#3178C6] hover:bg-[#3178C6]/10 transition-all cursor-pointer" title="TypeScript">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#3178C6]">
-            <path d="M1.125 0C.502 0 0 .502 0 1.125v21.75C0 23.498.502 24 1.125 24h21.75c.623 0 1.125-.502 1.125-1.125V1.125C24 .502 23.498 0 22.875 0H1.125zM12.35 12.39h-3.6v9.36H6.15v-9.36H2.55V9.99h9.8v2.4zm10.5 5.61c0 1.2-.45 2.13-1.35 2.79-.9.66-2.1.99-3.6.99-1.26 0-2.37-.21-3.33-.63v-2.52c.99.54 2.01.81 3.06.81.72 0 1.26-.12 1.62-.36.36-.24.54-.57.54-.99 0-.36-.15-.66-.45-.9-.3-.24-.84-.48-1.62-.72-1.32-.42-2.25-.96-2.79-1.62-.54-.66-.81-1.53-.81-2.61 0-1.14.45-2.04 1.35-2.7.9-.66 2.07-.99 3.51-.99 1.14 0 2.19.18 3.15.54v2.43a5.52 5.52 0 0 0-2.88-.72c-.66 0-1.17.12-1.53.36-.36.24-.54.54-.54.9 0 .36.15.63.45.84.3.21.84.42 1.62.63 1.35.42 2.31.96 2.88 1.62.57.66.86 1.56.86 2.7z"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            TypeScript
-          </span>
-        </div>
-
-        {/* Tailwind CSS */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#38BDF8] hover:bg-[#38BDF8]/10 transition-all cursor-pointer" title="Tailwind CSS">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#38BDF8]">
-            <path d="M12.001 4.8c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624C13.666 10.618 15.027 12 18.001 12c3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C16.337 6.182 14.976 4.8 12.001 4.8zm-6 7.2c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624 1.177 1.194 2.538 2.576 5.512 2.576 3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C10.337 13.382 8.976 12 6.001 12z"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            Tailwind CSS
-          </span>
-        </div>
-      </div>
-    </div>
-
-    {/* Pilar 4: Datos y Nube */}
-    <div class="flex flex-col justify-between p-5 rounded-xl bg-[rgba(80,45,85,0.2)] border border-[rgba(147,80,115,0.25)] hover:border-amber-400/50 transition-all">
-      <div class="flex flex-col gap-2.5">
-        <div class="w-10 h-10 rounded-lg bg-amber-500/15 flex items-center justify-center text-amber-300 font-mono text-sm font-bold">
-          04
-        </div>
-        <h3 class="text-base font-semibold text-[#F8F4E9]">
-          Datos y Servidores Seguros
-        </h3>
-        <p class="text-xs text-[#F6DBC0] leading-relaxed">
-          Almacenamiento protegido, bases de datos confiables y servidores configurados para que la aplicación funcione siempre.
-        </p>
-      </div>
-
-      <div class="mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center gap-2 flex-wrap">
-        {/* PostgreSQL */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#336791] hover:bg-[#336791]/10 transition-all cursor-pointer" title="PostgreSQL">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#336791]">
-            <path d="M12.007 0C5.378 0 0 5.378 0 12.007c0 4.148 2.102 7.807 5.293 9.98.053-.593.18-1.178.384-1.74a7.973 7.973 0 0 1-.77-3.456c0-4.42 3.58-8.002 8.002-8.002 4.42 0 8.001 3.582 8.001 8.002 0 1.246-.285 2.427-.79 3.486.205.56.331 1.144.384 1.734 3.18-2.174 5.289-5.83 5.289-9.974C23.993 5.378 18.614 0 12.007 0zm.892 4.092a3.91 3.91 0 0 0-3.91 3.91c0 2.16 1.75 3.91 3.91 3.91 2.16 0 3.91-1.75 3.91-3.91 0-2.16-1.75-3.91-3.91-3.91zm0 2.28a1.63 1.63 0 1 1 0 3.26 1.63 1.63 0 0 1 0-3.26z"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            PostgreSQL
-          </span>
-        </div>
-
-        {/* Supabase */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#3ECF8E] hover:bg-[#3ECF8E]/10 transition-all cursor-pointer" title="Supabase">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#3ECF8E]">
-            <path d="M21.362 9.354H12V.316a.316.316 0 0 0-.555-.205L.804 12.695a.316.316 0 0 0 .237.521H12v9.038a.316.316 0 0 0 .555.205l10.641-12.584a.316.316 0 0 0-.237-.521z"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            Supabase
-          </span>
-        </div>
-
-        {/* Docker */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#2496ED] hover:bg-[#2496ED]/10 transition-all cursor-pointer" title="Docker">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-[#2496ED]">
-            <path d="M13.983 11.078h2.119a.186.186 0 0 0 .186-.185V9.006a.186.186 0 0 0-.186-.186h-2.119a.185.185 0 0 0-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 0 0 .186-.186V3.574a.186.186 0 0 0-.186-.185h-2.118a.185.185 0 0 0-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 0 0 .186-.186V6.29a.186.186 0 0 0-.186-.185h-2.118a.185.185 0 0 0-.185.185v1.887c0 .102.082.186.185.186m-2.93 0h2.12a.186.186 0 0 0 .184-.186V6.29a.185.185 0 0 0-.185-.185H8.1a.185.185 0 0 0-.185.185v1.887c0 .102.083.186.185.186m-2.964 0h2.119a.186.186 0 0 0 .185-.186V6.29a.185.185 0 0 0-.185-.185H5.136a.186.186 0 0 0-.186.185v1.887c0 .102.084.186.186.186m5.893 2.715h2.119a.186.186 0 0 0 .186-.186V9.006a.186.186 0 0 0-.186-.186h-2.119a.185.185 0 0 0-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 0 0 .184-.186V9.006a.185.185 0 0 0-.184-.186h-2.12a.185.185 0 0 0-.185.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 0 0 .185-.186V9.006a.185.185 0 0 0-.185-.186h-2.12a.186.186 0 0 0-.185.186v1.888c0 .102.084.185.186.185m-2.928 0h2.119a.185.185 0 0 0 .185-.186V9.006a.185.185 0 0 0-.185-.186H2.208a.186.186 0 0 0-.186.186v1.888c0 .102.084.185.186.185m21.848.332c-.407-.272-1.353-.385-2.261-.318-.135-.572-.44-1.077-.872-1.488-.138-.13-.284-.249-.44-.352l-.184-.122-.162.152c-.637.595-1.026 1.39-1.078 2.253a6.837 6.837 0 0 0-3.327-.92H.732a.732.732 0 0 0-.732.732 11.23 11.23 0 0 0 1.258 5.176 11.83 11.83 0 0 0 7.426 6.002 12.39 12.39 0 0 0 4.673.228 11.66 11.66 0 0 0 7.155-4.229 11.08 11.08 0 0 0 2.215-4.57 6.64 6.64 0 0 0 1.58-.291.606.606 0 0 0 .39-.564c0-.18-.088-.352-.25-.461z"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            Docker
-          </span>
-        </div>
-
-        {/* Vercel */}
-        <div class="group relative flex items-center justify-center w-9 h-9 rounded-lg bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-white hover:bg-white/10 transition-all cursor-pointer" title="Vercel">
-          <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current text-[#F8F4E9]">
-            <path d="M24 22.525H0l12-21.05 12 21.05z"/>
-          </svg>
-          <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-            Vercel
-          </span>
-        </div>
-      </div>
-    </div>
+    ))}
   </div>
 </section>
