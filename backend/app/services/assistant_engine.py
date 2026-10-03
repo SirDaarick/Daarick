@@ -6,7 +6,7 @@ from app.schemas.assistant import ChatMessage, ChatResponse
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
-# Base de conocimiento estructurada
+# Base de conocimiento canónica inmutable
 KNOWLEDGE_BASE = {
     "profile": {
         "name": "Erick Daniel (Daarick)",
@@ -85,45 +85,16 @@ Respuestas estructuradas:
 - Termina con 2 o 3 sugerencias accionables de preguntas siguientes.
 """
 
-async def call_gemini_api(messages: List[ChatMessage]) -> Optional[str]:
-    """Llama a la API de Gemini si la clave está disponible."""
-    if not GEMINI_API_KEY:
-        return None
-    try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-        
-        # Formatear el historial de chat para Gemini
-        contents = []
-        for msg in messages:
-            role = "user" if msg.role == "user" else "model"
-            contents.append({
-                "role": role,
-                "parts": [{"text": msg.content}]
-            })
-            
-        payload = {
-            "contents": contents,
-            "systemInstruction": {
-                "parts": [{"text": SYSTEM_INSTRUCTION}]
-            },
-            "generationConfig": {
-                "temperature": 0.4,
-                "maxOutputTokens": 600
-            }
-        }
-        
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(url, json=payload)
-            if resp.status_code == 200:
-                data = resp.json()
-                candidates = data.get("candidates", [])
-                if candidates:
-                    text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                    if text:
-                        return text.strip()
-    except Exception:
-        pass
-    return None
+def is_out_of_scope(text: str) -> bool:
+    """Detecta si la consulta está completamente fuera del alcance del portafolio."""
+    q = text.lower()
+    out_of_scope_patterns = [
+        r"\breceta\b", r"\bcocinar\b", r"\bdieta\b",
+        r"\bhackear\b", r"\bvulnerar\b", r"\bdos attack\b",
+        r"\bremedio\b", r"\bsintomas\b", r"\bmedicamento\b",
+        r"\bhoroscopo\b", r"\btarot\b", r"\bfutbol\b", r"\bpartido de hoy\b"
+    ]
+    return any(re.search(pat, q) for pat in out_of_scope_patterns)
 
 def evaluate_feasibility(query_text: str) -> Tuple[Optional[str], List[str]]:
     """Evalúa la viabilidad técnica de una idea de automatización planteada por el usuario."""
@@ -166,10 +137,53 @@ def evaluate_feasibility(query_text: str) -> Tuple[Optional[str], List[str]]:
 
     return (None, [])
 
+async def call_gemini_api(messages: List[ChatMessage], canonical_context: str = "") -> Optional[str]:
+    """Llama a la API de Gemini aplicando ventana deslizante y contexto canónico."""
+    if not GEMINI_API_KEY:
+        return None
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+        
+        system_text = SYSTEM_INSTRUCTION
+        if canonical_context:
+            system_text += f"\n\n[HECHOS CANÓNICOS DEL PORTAFOLIO]:\n{canonical_context}\nAdapta estos hechos a la consulta del usuario sin inventar datos adicionales."
+
+        contents = []
+        for msg in messages:
+            role = "user" if msg.role == "user" else "model"
+            contents.append({
+                "role": role,
+                "parts": [{"text": msg.content}]
+            })
+            
+        payload = {
+            "contents": contents,
+            "systemInstruction": {
+                "parts": [{"text": system_text}]
+            },
+            "generationConfig": {
+                "temperature": 0.3,
+                "maxOutputTokens": 600
+            }
+        }
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(url, json=payload)
+            if resp.status_code == 200:
+                data = resp.json()
+                candidates = data.get("candidates", [])
+                if candidates:
+                    text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                    if text:
+                        return text.strip()
+    except Exception:
+        pass
+    return None
+
 def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
     """
     Motor semántico local de alta fidelidad pedagógica y técnica.
-    Garantiza funcionamiento offline/local sin necesidad de API externa.
+    Garantiza funcionamiento offline/local con cero dependencias externas.
     """
     if not messages:
         return ChatResponse(
@@ -180,7 +194,8 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
                 "🧠 ¿Por qué no usar IA para contabilidad directa?",
                 "📋 ¿Cómo es el proceso de consultoría e implementación?"
             ],
-            source="local_knowledge_engine"
+            source="local_knowledge_engine",
+            strategy="standard"
         )
         
     latest_msg = messages[-1].content.strip()
@@ -209,7 +224,8 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             ],
             feasibility_verdict="VIABLE_CON_RESTRICCIONES",
             tech_recommendations=["FastAPI", "Pydantic Schemas", "OCR / Multimodal", "PostgreSQL"],
-            source="local_knowledge_engine"
+            source="local_knowledge_engine",
+            strategy="feasibility_eval"
         )
 
     # 2. Dudas sobre Graphito / Plagio
@@ -233,7 +249,8 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             ],
             feasibility_verdict="CASO_DE_ÉXITO",
             tech_recommendations=["GraphCodeBERT", "Tree-sitter", "PyTorch", "FastAPI"],
-            source="local_knowledge_engine"
+            source="local_knowledge_engine",
+            strategy="predefined_canon"
         )
 
     # 3. Dudas sobre Tetring / Algoritmos / CSP
@@ -256,7 +273,8 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             ],
             feasibility_verdict="CASO_DE_ÉXITO",
             tech_recommendations=["CSP (Constraint Satisfaction)", "Algoritmos Combinatorios", "TypeScript"],
-            source="local_knowledge_engine"
+            source="local_knowledge_engine",
+            strategy="predefined_canon"
         )
 
     # 4. Dudas sobre PAIDEA / RAG / Multiagentes
@@ -280,7 +298,8 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             ],
             feasibility_verdict="CASO_DE_ÉXITO",
             tech_recommendations=["LangChain", "ChromaDB", "FastAPI", "Multi-Agent System"],
-            source="local_knowledge_engine"
+            source="local_knowledge_engine",
+            strategy="predefined_canon"
         )
 
     # 5. Dudas sobre Paralel / Computación de alto rendimiento
@@ -303,7 +322,8 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             ],
             feasibility_verdict="CASO_DE_ÉXITO",
             tech_recommendations=["C++ Moderno", "OpenMP", "Algoritmos Heurísticos", "Alpha-Beta Pruning"],
-            source="local_knowledge_engine"
+            source="local_knowledge_engine",
+            strategy="predefined_canon"
         )
 
     # 6. Viabilidad de automatizar procesos de negocio (Soporte, WhatsApp, Facturas, CRM)
@@ -326,7 +346,8 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             ],
             feasibility_verdict="ALTA_VIABILIDAD",
             tech_recommendations=["FastAPI", "WhatsApp Cloud API", "OCR / Multimodal", "PostgreSQL", "React"],
-            source="local_knowledge_engine"
+            source="local_knowledge_engine",
+            strategy="feasibility_eval"
         )
 
     # 7. Dudas sobre Erick (Quién es, experiencia, formación)
@@ -344,7 +365,8 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
                 "💬 Ver información de contacto",
                 "📋 ¿Cómo ayuda a empresas y startups?"
             ],
-            source="local_knowledge_engine"
+            source="local_knowledge_engine",
+            strategy="predefined_canon"
         )
 
     # 8. Contratación / Contacto / Servicios
@@ -367,7 +389,8 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
                 "💬 Ver demos interactivas en vivo",
                 "📋 ¿Qué proyectos ha creado Erick?"
             ],
-            source="local_knowledge_engine"
+            source="local_knowledge_engine",
+            strategy="predefined_canon"
         )
 
     # Default / Consulta general
@@ -386,29 +409,82 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
         ],
         feasibility_verdict=feasibility_verdict,
         tech_recommendations=tech_stack,
-        source="local_knowledge_engine"
+        source="local_knowledge_engine",
+        strategy="standard"
     )
 
 async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
-    """Orquestador de consultas: intenta Gemini y usa el motor semántico como base garantizada."""
+    """
+    Orquestador de consultas con arquitectura de 3 capas:
+    1. Guardrail de entrada: Anti-biblia (>1200 chars) y filtro de fuera de alcance.
+    2. Sliding Window Memory: toma sólo los últimos 6 turnos de conversación.
+    3. Model Multiplexing & Grounded Rewriter.
+    """
     raw_messages = request_data.get("messages", [])
+    if not raw_messages:
+        return generate_local_response([])
+
+    # 1. Ventana deslizante (Sliding Window de k=6)
+    windowed = raw_messages[-6:]
     messages = [
         ChatMessage(
             role=m.get("role", "user"),
             content=m.get("content", ""),
             timestamp=m.get("timestamp")
         )
-        for m in raw_messages
+        for m in windowed
     ]
-    
-    # Intentar Gemini si hay API Key configurada
+
+    latest_text = messages[-1].content.strip()
+
+    # 2. Escudo Anti-Biblia (> 1,200 caracteres)
+    if len(latest_text) > 1200:
+        return ChatResponse(
+            reply=(
+                "**Nota de optimización de contexto:**\n\n"
+                "Detecto un texto bastante extenso (más de 1,200 caracteres). Para mantener la precisión y evitar "
+                "dilución de contexto (*Lost in the Middle*), ¿podrías sintetizar en **2 o 3 líneas** cuál es el "
+                "objetivo o problema concreto que buscas evaluar?"
+            ),
+            suggestions=[
+                "✦ Resumir mi caso en 2 líneas",
+                "💬 ¿Qué proyectos ha creado Erick?",
+                "📋 ¿Cómo contactar a Erick para un diagnóstico?"
+            ],
+            source="local_knowledge_engine",
+            strategy="anti_biblia"
+        )
+
+    # 3. Filtro de Alcance (Out-of-Scope)
+    if is_out_of_scope(latest_text):
+        return ChatResponse(
+            reply=(
+                "**Fuera de alcance del sistema:**\n\n"
+                "Mi rol como **Daverick Assistant** está enfocado exclusivamente en **ingeniería de software, "
+                "sistemas de inteligencia artificial y automatización de procesos** para el portafolio de Erick Daniel.\n\n"
+                "¿Te gustaría consultar sobre viabilidad de IA para un negocio o conocer proyectos como Graphito o Tetring?"
+            ),
+            suggestions=[
+                "✦ ¿Qué proyectos ha desarrollado Erick?",
+                "💬 ¿Es viable automatizar mi empresa?",
+                "⚡ ¿Cómo agendar una llamada de diagnóstico?"
+            ],
+            source="local_knowledge_engine",
+            strategy="out_of_scope"
+        )
+
+    # 4. Contexto canónico para reescritura guiada
+    canonical_summary = (
+        f"Perfil: {KNOWLEDGE_BASE['profile']['name']}, {KNOWLEDGE_BASE['profile']['role']} (ESCOM-IPN). "
+        f"Filosofía: {KNOWLEDGE_BASE['profile']['philosophy']} "
+        f"Proyectos: Graphito (DFG, LoRA, Tree-sitter), Tetring (CSP 42ms), PAIDEA (RAG ChromaDB), Paralel (C++ OpenMP)."
+    )
+
+    # 5. Si hay Gemini API Key disponible, intentamos la reescritura guiada con contexto
     if GEMINI_API_KEY:
-        gemini_reply = await call_gemini_api(messages)
+        gemini_reply = await call_gemini_api(messages, canonical_context=canonical_summary)
         if gemini_reply:
-            latest_text = messages[-1].content if messages else ""
             feasibility, tech = evaluate_feasibility(latest_text)
-            
-            # Generar sugerencias dinámicas basadas en el tema
             suggestions = [
                 "✦ ¿Es viable automatizar mi soporte o facturas?",
                 "💬 ¿Cómo funciona Graphito contra plagio?",
@@ -420,8 +496,9 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
                 suggestions=suggestions,
                 feasibility_verdict=feasibility,
                 tech_recommendations=tech,
-                source="gemini"
+                source="gemini",
+                strategy="grounded_rewrite"
             )
 
-    # Motor Semántico Local de Alto Rendimiento
+    # 6. Fallback garantizado: Motor Semántico Local
     return generate_local_response(messages)

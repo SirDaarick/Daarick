@@ -3,11 +3,11 @@ from pydantic import BaseModel, Field
 
 class ChatMessage(BaseModel):
     role: str = Field(..., description="Rol del emisor: 'user' o 'assistant'")
-    content: str = Field(..., description="Contenido del mensaje")
+    content: str = Field(..., max_length=1500, description="Contenido del mensaje (máx 1500 caracteres)")
     timestamp: Optional[str] = Field(None, description="Hora de envío formateada (ej. 10:42 AM)")
 
 class ChatRequest(BaseModel):
-    messages: List[ChatMessage] = Field(..., description="Historial de mensajes de la conversación")
+    messages: List[ChatMessage] = Field(..., description="Historial de mensajes (se aplica sliding window en el servidor)")
     current_page: Optional[str] = Field("home", description="Contexto de la página actual")
 
 class ChatResponse(BaseModel):
@@ -16,3 +16,4 @@ class ChatResponse(BaseModel):
     feasibility_verdict: Optional[str] = Field(None, description="Veredicto de viabilidad técnica si aplica")
     tech_recommendations: Optional[List[str]] = Field(default_factory=list, description="Stack recomendado para el caso consultado")
     source: str = Field("engine", description="Motor de generación: 'gemini' o 'local_engine'")
+    strategy: Optional[str] = Field("standard", description="Estrategia aplicada: 'out_of_scope', 'predefined', 'grounded_rewrite', 'feasibility_eval'")
