@@ -10,6 +10,7 @@ OPENROUTER_ROUTER_MODEL = os.getenv("OPENROUTER_ROUTER_MODEL", "typesafe/jev").s
 OPENROUTER_CHEAP_MODEL = os.getenv("OPENROUTER_CHEAP_MODEL", "google/gemini-2.0-flash-lite:free").strip()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+GEMINI_FAST_MODEL = os.getenv("GEMINI_FAST_MODEL", "gemini-1.5-flash").strip()
 GEMINI_HEAVY_MODEL = os.getenv("GEMINI_HEAVY_MODEL", "gemini-1.5-pro").strip()
 
 # Base de conocimiento canónica inmutable
@@ -198,48 +199,123 @@ async def call_openrouter_api(
     return None
 
 # ==============================================================================
-# CLIENTE GEMINI (Razonamiento Complejo / Modelo Pesado)
+# CLIENTE GOOGLE AI (Gemini Flash & Gemini Pro vía Google AI Studio / Pro)
 # ==============================================================================
-async def call_gemini_heavy(messages: List[ChatMessage], canonical_context: str = "") -> Optional[str]:
-    """Invoca Gemini Pro para análisis profundos y razonamiento de arquitectura."""
-    # 1. Intento directo con Google AI Studio si hay GEMINI_API_KEY
-    if GEMINI_API_KEY:
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_HEAVY_MODEL}:generateContent?key={GEMINI_API_KEY}"
-            system_text = SYSTEM_INSTRUCTION
-            if canonical_context:
-                system_text += f"\n\n[HECHOS CANÓNICOS DEL PORTAFOLIO]:\n{canonical_context}\n"
+async def call_gemini_api(
+    messages: List[ChatMessage],
+    model: str,
+    system_text: str = SYSTEM_INSTRUCTION,
+    canonical_context: str = "",
+    max_tokens: int = 800
+) -> Optional[str]:
+    """Invoca la API de Google Generative Language directamente con la suscripción Google AI Pro."""
+    if not GEMINI_API_KEY:
+        return None
 
-            contents = []
-            for msg in messages:
-                role = "user" if msg.role == "user" else "model"
-                contents.append({
-                    "role": role,
-                    "parts": [{"text": msg.content}]
-                })
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
+        
+        full_system = system_text
+        if canonical_context:
+            full_system += f"\n\n[HECHOS CANÓNICOS DEL PORTAFOLIO]:\n{canonical_context}\n"
 
-            payload = {
-                "contents": contents,
-                "systemInstruction": {"parts": [{"text": system_text}]},
-                "generationConfig": {
-                    "temperature": 0.3,
-                    "maxOutputTokens": 800
-                }
+        contents = []
+        for msg in messages:
+            role = "user" if msg.role == "user" else "model"
+            contents.append({
+                "role": role,
+                "parts": [{"text": msg.content}]
+            })
+
+        payload = {
+            "contents": contents,
+            "systemInstruction": {"parts": [{"text": full_system}]},
+            "generationConfig": {
+                "temperature": 0.3,
+                "maxOutputTokens": max_tokens
             }
+        }
 
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                resp = await client.post(url, json=payload)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    candidates = data.get("candidates", [])
-                    if candidates:
-                        text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(url, json=payload)
+            if resp.status_code == 200:
+                data = resp.json()
+                candidates = data.get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    if parts:
+                        text = parts[0].get("text", "")
                         if text:
                             return text.strip()
-        except Exception as e:
-            print(f"[Gemini Direct Error] {e}")
+            else:
+                print(f"[Google AI Direct Error: {model}] Status {resp.status_code}: {resp.text}")
+    except Exception as e:
+        print(f"[Google AI Direct Exception: {model}] {e}")
 
-    # 2. Respaldo vía OpenRouter para Gemini Pro si hay OPENROUTER_API_KEY
+    return None
+
+async def evaluate_decision_router(query: str) -> Optional[str]:
+    """
+    Consulta a Jev o al router de decisiones de OpenRouter si está configurado.
+    Retorna la categoría: 'OUT_OF_SCOPE', 'CANON_FAQ', 'TIER_HEAVY', o 'TIER_FAST'.
+    """
+    if not OPENROUTER_API_KEY:
+        return None
+    try:
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:4321",
+            "X-Title": "Daarick Portfolio Wiki Router"
+        }
+        router_prompt = (
+            "Eres un enrutador de decisiones técnicas para un asistente de IA de portafolio. "
+            "Clasifica la consulta del usuario en una de estas categorías estrictas:\n"
+            "- OUT_OF_SCOPE: Temas ajenos a software, IA o portafolio (recetas, medicina, deportes, etc.).\n"
+            "- CANON_FAQ: Pregunta puntual sobre los proyectos de Erick (Graphito, Tetring, PAIDEA, Paralel) o contacto.\n"
+            "- TIER_HEAVY: Pregunta compleja de arquitectura, viabilidad profunda, cálculo contable o migración de sistemas.\n"
+            "- TIER_FAST: Duda general de desarrollo, aclaración técnica, charla o consulta estándar.\n\n"
+            "Responde ÚNICAMENTE en formato JSON: {\"route\": \"CATEGORY\"}"
+        )
+        payload = {
+            "model": OPENROUTER_ROUTER_MODEL,
+            "messages": [
+                {"role": "system", "content": router_prompt},
+                {"role": "user", "content": query}
+            ],
+            "temperature": 0.0,
+            "max_tokens": 50
+        }
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.post(url, headers=headers, json=payload)
+            if resp.status_code == 200:
+                data = resp.json()
+                content = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                json_match = re.search(r"\{.*\}", content, re.DOTALL)
+                if json_match:
+                    parsed = json.loads(json_match.group(0))
+                    route = parsed.get("route", "").strip().upper()
+                    if route in ["OUT_OF_SCOPE", "CANON_FAQ", "TIER_HEAVY", "TIER_FAST"]:
+                        return route
+    except Exception as e:
+        print(f"[Jev Router Fallback to Heuristic]: {e}")
+    return None
+
+async def call_gemini_heavy(messages: List[ChatMessage], canonical_context: str = "") -> Optional[str]:
+    """Invoca Gemini Pro (Google AI Pro directo) con respaldo en OpenRouter si está configurado."""
+    # 1. Llamada directa a Google AI Pro
+    res = await call_gemini_api(
+        messages=messages,
+        model=GEMINI_HEAVY_MODEL,
+        system_text=SYSTEM_INSTRUCTION,
+        canonical_context=canonical_context,
+        max_tokens=800
+    )
+    if res:
+        return res
+
+    # 2. Respaldo vía OpenRouter si existe
     if OPENROUTER_API_KEY:
         return await call_openrouter_api(
             messages,
@@ -247,7 +323,29 @@ async def call_gemini_heavy(messages: List[ChatMessage], canonical_context: str 
             system_text=SYSTEM_INSTRUCTION + (f"\n\n[HECHOS]: {canonical_context}" if canonical_context else ""),
             max_tokens=800
         )
+    return None
 
+async def call_gemini_fast(messages: List[ChatMessage], canonical_context: str = "") -> Optional[str]:
+    """Invoca Gemini Flash (Google AI Pro directo) con respaldo en OpenRouter si está configurado."""
+    # 1. Llamada directa a Google AI Pro
+    res = await call_gemini_api(
+        messages=messages,
+        model=GEMINI_FAST_MODEL,
+        system_text=SYSTEM_INSTRUCTION,
+        canonical_context=canonical_context,
+        max_tokens=500
+    )
+    if res:
+        return res
+
+    # 2. Respaldo vía OpenRouter si existe
+    if OPENROUTER_API_KEY:
+        return await call_openrouter_api(
+            messages,
+            model=OPENROUTER_CHEAP_MODEL,
+            system_text=SYSTEM_INSTRUCTION + (f"\n\n[HECHOS]: {canonical_context}" if canonical_context else ""),
+            max_tokens=500
+        )
     return None
 
 # ==============================================================================
@@ -536,10 +634,30 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
     )
     feasibility, tech = evaluate_feasibility(latest_text)
 
-    # 4. Decisión de Nivel: ¿Consulta compleja o simple?
+    # 4. Decisión de Nivel y Enrutador Inteligente (Jev / Heurística)
     needs_heavy = is_complex_query(latest_text)
+    router_verdict = await evaluate_decision_router(latest_text)
+    
+    if router_verdict == "OUT_OF_SCOPE":
+        return ChatResponse(
+            reply=(
+                "**Fuera de alcance del sistema:**\n\n"
+                "Mi rol como **Wiki** está enfocado exclusivamente en **ingeniería de software, "
+                "sistemas de inteligencia artificial y automatización de procesos** para el portafolio de Erick Daniel.\n\n"
+                "¿Te gustaría consultar sobre viabilidad de IA para un negocio o conocer proyectos como Graphito o Tetring?"
+            ),
+            suggestions=[
+                "✦ ¿Qué proyectos ha desarrollado Erick?",
+                "💬 ¿Es viable automatizar mi empresa?",
+                "⚡ ¿Cómo agendar una llamada de diagnóstico?"
+            ],
+            source="router_jev",
+            strategy="out_of_scope"
+        )
+    elif router_verdict == "TIER_HEAVY":
+        needs_heavy = True
 
-    # 5. TIER A: Razonamiento Complejo (Gemini Pro / Heavy Model)
+    # 5. TIER A: Razonamiento Complejo (Gemini Pro - Google AI Pro directo)
     if needs_heavy:
         heavy_reply = await call_gemini_heavy(messages, canonical_context=canonical_context)
         if heavy_reply:
@@ -552,32 +670,27 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
                 ],
                 feasibility_verdict=feasibility or "ALTA_VIABILIDAD",
                 tech_recommendations=tech or ["FastAPI", "Python", "RAG", "PostgreSQL"],
-                source="gemini_pro" if GEMINI_API_KEY else "openrouter_heavy",
+                source="google_ai_pro" if GEMINI_API_KEY else "openrouter_heavy",
                 strategy="heavy_reasoning"
             )
 
-    # 6. TIER B: Pregunta simple o reescritura ligera (OpenRouter Modelo Económico / Jev Router)
-    if OPENROUTER_API_KEY:
-        cheap_reply = await call_openrouter_api(
-            messages,
-            model=OPENROUTER_CHEAP_MODEL,
-            system_text=SYSTEM_INSTRUCTION + f"\n\n[CONTEXTO BASE]:\n{canonical_context}",
-            max_tokens=400
+    # 6. TIER B: Pregunta ágil / Asesoría directa (Gemini Flash - Google AI Pro directo)
+    # Aprovecha la suscripción Google AI Pro para velocidad (<400ms) y costo cero en OpenRouter
+    fast_reply = await call_gemini_fast(messages, canonical_context=canonical_context)
+    if fast_reply:
+        return ChatResponse(
+            reply=fast_reply,
+            suggestions=[
+                "✦ ¿Es viable automatizar mi soporte o facturas?",
+                "💬 ¿Cómo funciona Graphito contra plagio?",
+                "📋 ¿Por qué no usar IA para contabilidad directa?",
+                "⚡ ¿Cómo contactar a Erick para un proyecto?"
+            ],
+            feasibility_verdict=feasibility,
+            tech_recommendations=tech,
+            source="google_ai_flash" if GEMINI_API_KEY else "openrouter_cheap",
+            strategy="fast_response"
         )
-        if cheap_reply:
-            return ChatResponse(
-                reply=cheap_reply,
-                suggestions=[
-                    "✦ ¿Es viable automatizar mi soporte o facturas?",
-                    "💬 ¿Cómo funciona Graphito contra plagio?",
-                    "📋 ¿Por qué no usar IA para contabilidad directa?",
-                    "⚡ ¿Cómo contactar a Erick para un proyecto?"
-                ],
-                feasibility_verdict=feasibility,
-                tech_recommendations=tech,
-                source=f"openrouter_{OPENROUTER_CHEAP_MODEL.split('/')[-1]}",
-                strategy="cheap_paraphrase"
-            )
 
-    # 7. TIER C: Respaldo garantizado: Motor Semántico Local de Alta Fidelidad
+    # 7. TIER C: Respaldo garantizado: Motor Semántico Local de Alta Fidelidad (0 tokens, 100% determinista)
     return generate_local_response(messages)
