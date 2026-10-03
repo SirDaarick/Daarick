@@ -101,10 +101,12 @@ export const CoverFlowCarousel: React.FC = () => {
 
           if (diff === 0) {
             positionClass = 'card-center';
-          } else if (diff === 1 || (total === 2 && diff === 1)) {
+          } else if (diff === 1) {
             positionClass = 'card-right';
-          } else {
+          } else if (diff === total - 1) {
             positionClass = 'card-left';
+          } else {
+            positionClass = 'card-hidden';
           }
 
           return (
@@ -191,10 +193,12 @@ export const CoverFlowCarousel: React.FC = () => {
                   </button>
                   <a
                     href={project.demoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
                     className="py-2 px-3 rounded bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-mono text-xs transition-all text-center flex items-center justify-center gap-1 active:scale-95"
                   >
-                    <span>Ver demo</span>
+                    <span>Ver demo ↗</span>
                   </a>
                 </div>
               </div>

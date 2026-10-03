@@ -66,6 +66,13 @@
   transform: translate3d(32%, 0, -20px) rotateY(-12deg) scale(0.93);
 }
 
+.card-hidden {
+  transform: translate3d(0, 0, -120px) scale(0.7);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
 /* Mobile Responsiveness for 3D Carousel */
 @media (max-width: 640px) {
   .perspective-stage {

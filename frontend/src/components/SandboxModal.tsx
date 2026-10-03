@@ -115,12 +115,24 @@ export const SandboxModal: React.FC = () => {
               })}
             </div>
 
-            <a
-              href={currentProject.demoUrl}
-              className="px-3 py-1 rounded bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-semibold transition-all inline-flex items-center gap-1 shadow-sm"
-            >
-              <span>Acceder a la aplicación / Probar Demo en Vivo ↗</span>
-            </a>
+            <div className="flex items-center gap-2">
+              <a
+                href={currentProject.demoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1 rounded bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-semibold transition-all inline-flex items-center gap-1 shadow-sm active:scale-95"
+              >
+                <span>Probar Demo en Vercel ↗</span>
+              </a>
+              <a
+                href={currentProject.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1 rounded bg-[rgba(80,45,85,0.4)] hover:bg-[rgba(80,45,85,0.6)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] font-mono text-xs font-medium transition-all inline-flex items-center gap-1 active:scale-95"
+              >
+                <span>GitHub ↗</span>
+              </a>
+            </div>
           </div>
 
           {/* Problem & Solution Grid */}
