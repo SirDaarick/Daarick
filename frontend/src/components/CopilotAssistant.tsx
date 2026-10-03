@@ -64,7 +64,7 @@ const GitHubIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' })
   </svg>
 );
 
-const API_BASE = import.meta.env.PUBLIC_API_URL || 'http://127.0.0.1:8000';
+const API_BASE = import.meta.env.PUBLIC_API_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : '');
 
 const INITIAL_SUGGESTIONS = [
   '✦ ¿Qué proyectos ha creado Erick?',

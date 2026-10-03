@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 
+const API_BASE = import.meta.env.PUBLIC_API_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : '');
+
 interface Testimonial {
   id: string;
   system: string;
@@ -179,7 +181,7 @@ export default function TestimonialsInteractive() {
   // Cargar testimonios aprobados de la API
   const fetchApproved = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/testimonials");
+      const res = await fetch(`${API_BASE}/api/v1/testimonials`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -231,7 +233,7 @@ export default function TestimonialsInteractive() {
     setSubmitFeedback(null);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/testimonials", {
+      const res = await fetch(`${API_BASE}/api/v1/testimonials`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -269,7 +271,7 @@ export default function TestimonialsInteractive() {
     setAdminLoading(true);
     setAdminMsg(null);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/testimonials/admin", {
+      const res = await fetch(`${API_BASE}/api/v1/testimonials/admin`, {
         headers: { "X-Admin-Token": token }
       });
       if (res.ok) {
@@ -288,7 +290,7 @@ export default function TestimonialsInteractive() {
 
   const handleApprove = async (id: string, customHeadline?: string) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/testimonials/admin/${id}/approve`, {
+      const res = await fetch(`${API_BASE}/api/v1/testimonials/admin/${id}/approve`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -308,7 +310,7 @@ export default function TestimonialsInteractive() {
   const handleDelete = async (id: string) => {
     if (!confirm("¿Deseas descartar este veredicto?")) return;
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/testimonials/admin/${id}`, {
+      const res = await fetch(`${API_BASE}/api/v1/testimonials/admin/${id}`, {
         method: "DELETE",
         headers: { "X-Admin-Token": adminToken }
       });
