@@ -33,6 +33,7 @@ app.include_router(testimonials_router, prefix="/api/v1/testimonials", tags=["te
 app.include_router(assistant_router, prefix="/api/v1/assistant", tags=["assistant"])
 
 @app.get("/")
+@app.get("/api")
 async def root():
     return {
         "system": "Daarick AI Automation Gateway",
@@ -42,5 +43,6 @@ async def root():
     }
 
 @app.get("/health")
+@app.get("/api/health")
 async def health_check():
     return {"status": "healthy", "service": "api-gateway"}
