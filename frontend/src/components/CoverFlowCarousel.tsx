@@ -134,7 +134,7 @@ export const CoverFlowCarousel: React.FC = () => {
               onMouseLeave={() => {
                 if (isCenter) setIsPaused(false);
               }}
-              className={`carousel-3d-card ${positionClass} absolute w-[90%] sm:w-full max-w-[360px] sm:max-w-[450px] p-5 sm:p-6 rounded-xl bg-[rgba(26,15,30,0.96)] border border-[rgba(147,80,115,0.4)] backdrop-blur-xl flex flex-col justify-between transition-all`}
+              className={`carousel-3d-card ${positionClass} absolute w-[92%] sm:w-full max-w-[380px] sm:max-w-[480px] p-4 sm:p-5 rounded-2xl bg-[rgba(26,15,30,0.97)] border border-[rgba(147,80,115,0.4)] backdrop-blur-xl flex flex-col justify-between transition-all shadow-[0_20px_50px_rgba(0,0,0,0.6)]`}
             >
               {/* Corner Crosshairs */}
               <div className="absolute top-2 left-2 font-mono text-xs text-[#c084fc] select-none">+</div>
@@ -142,87 +142,90 @@ export const CoverFlowCarousel: React.FC = () => {
               <div className="absolute bottom-2 left-2 font-mono text-xs text-[#c084fc] select-none">+</div>
               <div className="absolute bottom-2 right-2 font-mono text-xs text-[#c084fc] select-none">+</div>
 
-              {/* Card Header & Content */}
-              <div className="flex flex-col gap-3 sm:gap-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs text-[rgba(246,219,192,0.65)]">
-                    {project.id}
+              {/* Card Top: Header & Prominent Hero GIF */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between px-1">
+                  <span className="font-mono text-xs text-[rgba(246,219,192,0.7)] flex items-center gap-1.5">
+                    <span className="text-[#c084fc] font-bold">{project.id}</span>
+                    <span>·</span>
+                    <span>{project.filename}</span>
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 font-mono text-xs text-[#10B981] border border-emerald-500/20">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 font-mono text-[11px] text-[#10B981] border border-emerald-500/20">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
                     {project.status}
                   </span>
                 </div>
 
-                <div>
-                  <h3 className="text-lg sm:text-xl font-medium text-[#F8F4E9]">
-                    {project.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#F6DBC0] mt-1.5 sm:mt-2 leading-relaxed line-clamp-3 sm:line-clamp-none">
-                    {project.shortDesc}
-                  </p>
-                </div>
-
-                {/* Live GIF Demo Preview Frame */}
-                <div className="relative w-full h-36 sm:h-40 rounded-lg overflow-hidden border border-[rgba(147,80,115,0.35)] bg-[rgba(15,7,18,0.95)] group">
+                {/* Hero GIF Showcase Frame (Dominant Visual Element) */}
+                <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border border-[rgba(147,80,115,0.4)] bg-[rgba(15,7,18,0.95)] shadow-inner group">
                   <img
                     src={project.gifUrl}
-                    alt={`Demo de ${project.title}`}
-                    className="w-full h-full object-cover object-top opacity-90 group-hover:opacity-100 transition-opacity"
+                    alt={`Demo interactiva de ${project.title}`}
+                    className="w-full h-full object-cover object-top opacity-95 group-hover:opacity-100 transition-opacity"
                     loading="lazy"
                   />
-                  {/* Glass overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[rgba(21,10,25,0.95)] via-transparent to-black/25 pointer-events-none" />
+                  {/* Subtle cinema gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[rgba(21,10,25,0.95)] via-transparent to-black/20 pointer-events-none" />
 
-                  {/* Top status indicator */}
-                  <div className="absolute top-2 left-2 flex items-center gap-1.5 font-mono text-[10px] text-[#c084fc] bg-[rgba(15,7,18,0.85)] px-2 py-0.5 rounded border border-[rgba(147,80,115,0.3)] backdrop-blur-sm pointer-events-none">
+                  {/* Top-left Live badge */}
+                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 font-mono text-[10px] text-[#c084fc] bg-[rgba(15,7,18,0.85)] px-2.5 py-0.5 rounded-full border border-[rgba(147,80,115,0.35)] backdrop-blur-sm pointer-events-none">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>DEMO PREVIEW</span>
+                    <span>INTERACTIVE DEMO</span>
                   </div>
 
-                  {/* Bottom metrics overlay */}
-                  <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between font-mono text-[11px] pointer-events-none">
-                    <span className="px-2 py-0.5 rounded bg-[rgba(21,10,25,0.88)] text-[#F8F4E9] border border-[rgba(147,80,115,0.25)] backdrop-blur-sm text-[10px] sm:text-[11px]">
+                  {/* Bottom Metric Pill inside Frame */}
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between font-mono text-[11px] pointer-events-none">
+                    <span className="px-2.5 py-1 rounded-md bg-[rgba(21,10,25,0.9)] text-[#F8F4E9] border border-[rgba(147,80,115,0.3)] backdrop-blur-sm text-[10px] sm:text-[11px]">
                       {project.metricLabel}: <strong className="text-emerald-400 font-bold">{project.metricValue}</strong>
                     </span>
-                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] border border-emerald-500/20 backdrop-blur-sm">
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-[10px] font-semibold border border-emerald-500/25 backdrop-blur-sm">
                       {project.metricDelta}
                     </span>
                   </div>
                 </div>
+
+                {/* Title & Concise Summary */}
+                <div className="px-1 mt-1">
+                  <h3 className="text-lg sm:text-xl font-medium text-[#F8F4E9]">
+                    {project.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#F6DBC0] mt-1 leading-relaxed line-clamp-2">
+                    {project.shortDesc}
+                  </p>
+                </div>
               </div>
 
               {/* Tags & Action Buttons */}
-              <div className="flex flex-col gap-2.5 sm:gap-3 mt-3 sm:mt-4">
+              <div className="flex flex-col gap-2.5 sm:gap-3 mt-3 pt-2 border-t border-[rgba(147,80,115,0.2)]">
                 <div className="flex flex-wrap gap-1 font-mono text-[11px] text-[#F6DBC0]">
-                  {project.tags.map((tag) => (
+                  {project.tags.slice(0, 3).map((tag) => (
                     <span
                       key={tag}
-                      className="px-2 py-0.5 rounded bg-[rgba(39,27,43,0.8)] border border-[rgba(147,80,115,0.25)]"
+                      className="px-2 py-0.5 rounded bg-[rgba(39,27,43,0.8)] border border-[rgba(147,80,115,0.25)] text-[10px]"
                     >
                       {tag}
                     </span>
                   ))}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 mt-1">
+                <div className="grid grid-cols-2 gap-2 mt-0.5">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       openInspectModal(project.key);
                     }}
-                    className="py-2 px-3 rounded bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-semibold transition-all text-center flex items-center justify-center gap-1 cursor-pointer shadow-md active:scale-95"
+                    className="py-2.5 px-3 rounded-lg bg-[rgba(80,45,85,0.35)] hover:bg-[rgba(80,45,85,0.55)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-mono text-xs font-medium transition-all text-center flex items-center justify-center gap-1 cursor-pointer active:scale-95"
                   >
-                    <span>Abrir sandbox</span>
+                    <span>Más detalles</span>
                   </button>
                   <a
                     href={project.demoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="py-2 px-3 rounded bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-mono text-xs transition-all text-center flex items-center justify-center gap-1 active:scale-95 cursor-pointer"
+                    className="py-2.5 px-3 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
                   >
-                    <span>Ver demo ↗</span>
+                    <span>Probar demo ↗</span>
                   </a>
                 </div>
               </div>
