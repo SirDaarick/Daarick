@@ -338,151 +338,148 @@ export default function TestimonialsInteractive() {
         </div>
       </div>
 
-      {/* Riel con Avance por Pasos (Slide -> Pausa de 4.5s -> Slide) */}
+      {/* Riel con Avance por Pasos (con contenedor extendido para evitar cortes laterales en tarjetas de los extremos) */}
       <div
-        className="relative w-full overflow-hidden py-8 sm:py-10 -my-4 sm:-my-6"
+        className="relative w-full overflow-hidden -mx-4 lg:-mx-8 py-6 sm:py-8 -my-2 sm:-my-3"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
-        {/* Contenedor del riel con desplazamiento circular infinito */}
-        <div
-          ref={trackRef}
-          onTransitionEnd={handleTransitionEnd}
-          className="flex items-start gap-5 will-change-transform"
-          style={{
-            transform: `translateX(-${displayIndex * cardStep}px)`,
-            transition: isTransitioning
-              ? "transform 650ms cubic-bezier(0.16, 1, 0.3, 1)"
-              : "none"
-          }}
-        >
-          {displayItems.map((item, idx) => {
-            const isExpanded = expandedId === item.id;
-            const isAnyExpanded = expandedId !== null;
-            const isDimmed = isAnyExpanded && !isExpanded;
+        <div className="px-4 lg:px-8 w-full">
+          {/* Contenedor del riel con desplazamiento circular infinito */}
+          <div
+            ref={trackRef}
+            onTransitionEnd={handleTransitionEnd}
+            className="flex items-start gap-5 will-change-transform"
+            style={{
+              transform: `translateX(-${displayIndex * cardStep}px)`,
+              transition: isTransitioning
+                ? "transform 650ms cubic-bezier(0.16, 1, 0.3, 1)"
+                : "none"
+            }}
+          >
+            {displayItems.map((item, idx) => {
+              const isExpanded = expandedId === item.id;
+              const isAnyExpanded = expandedId !== null;
+              const isDimmed = isAnyExpanded && !isExpanded;
 
-            return (
-              <div
-                key={item._virtualKey}
-                ref={idx === 0 ? cardRef : undefined}
-                onMouseEnter={() => {
-                  setExpandedId(item.id);
-                  setIsPaused(true);
-                }}
-                onMouseLeave={() => {
-                  setExpandedId(null);
-                  setIsPaused(false);
-                }}
-                onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                className={`w-[330px] sm:w-[390px] shrink-0 p-5 rounded-2xl backdrop-blur-md flex flex-col justify-between transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center group cursor-pointer relative ${
-                  isExpanded
-                    ? "scale-[1.05] sm:scale-[1.12] z-30 border-[#c084fc] shadow-[0_25px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(192,132,252,0.3)] bg-[rgba(42,20,54,0.98)] ring-1 ring-[#c084fc]/50 opacity-100"
-                    : isDimmed
-                    ? "scale-[0.94] opacity-25 filter blur-[1.5px] grayscale-[40%] border-[rgba(147,80,115,0.15)] bg-[rgba(25,14,29,0.6)] z-0"
-                    : "scale-100 opacity-100 hover:border-[#c084fc]/60 hover:shadow-[0_8px_30px_rgba(192,132,252,0.12)] border-[rgba(147,80,115,0.35)] bg-[rgba(35,23,39,0.88)] z-10"
-                }`}
-              >
-                {/* Resplandor ambiental para la tarjeta expandida en primer plano */}
-                {isExpanded && (
-                  <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[#c084fc]/25 via-[#10B981]/15 to-[#c084fc]/25 blur-md -z-10 pointer-events-none animate-pulse" />
-                )}
-
-                {/* Cabecera */}
-                <div className="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs">
-                  <span className="px-2.5 py-0.5 rounded bg-[rgba(16,185,129,0.12)] text-[#10B981] font-semibold border border-[rgba(16,185,129,0.3)]">
-                    [ Sistema: {item.system} ]
-                  </span>
-                  <span className="text-[#c084fc] font-bold text-sm">“</span>
-                </div>
-
-                {/* Titular ultra-resumido en formato veredicto */}
-                <div className="my-3">
-                  <h4 className="text-base sm:text-lg font-semibold text-[#F8F4E9] leading-snug group-hover:text-[#ddb8ff] transition-colors">
-                    "{item.headline}"
-                  </h4>
-                </div>
-
-                {/* Contenido expandible SOLO al hacer Hover o Toque */}
+              return (
                 <div
-                  className={`overflow-hidden transition-all duration-400 ease-out flex flex-col gap-2.5 ${
-                    isExpanded ? "max-h-[500px] opacity-100 my-2 pt-2 border-t border-[rgba(147,80,115,0.2)]" : "max-h-0 opacity-0"
+                  key={item._virtualKey}
+                  ref={idx === 0 ? cardRef : undefined}
+                  onMouseEnter={() => {
+                    setExpandedId(item.id);
+                    setIsPaused(true);
+                  }}
+                  onMouseLeave={() => {
+                    setExpandedId(null);
+                    setIsPaused(false);
+                  }}
+                  onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                  className={`w-[330px] sm:w-[390px] shrink-0 p-5 rounded-2xl backdrop-blur-md flex flex-col justify-between transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center group cursor-pointer relative ${
+                    isExpanded
+                      ? "scale-[1.02] sm:scale-[1.04] z-30 border-[#c084fc] shadow-[0_14px_36px_rgba(0,0,0,0.55),0_0_20px_rgba(192,132,252,0.18)] bg-[rgba(38,20,46,0.98)] ring-1 ring-[#c084fc]/40 opacity-100"
+                      : isDimmed
+                      ? "scale-[0.98] opacity-60 border-[rgba(147,80,115,0.2)] bg-[rgba(28,16,32,0.7)] z-0"
+                      : "scale-100 opacity-100 hover:border-[#c084fc]/60 hover:shadow-[0_8px_30px_rgba(192,132,252,0.12)] border-[rgba(147,80,115,0.35)] bg-[rgba(35,23,39,0.88)] z-10"
                   }`}
                 >
-                  <div className="p-3 rounded-lg bg-[rgba(255,95,86,0.08)] border border-[rgba(255,95,86,0.25)] text-xs text-[#F6DBC0]">
-                    <span className="font-mono text-[#ff5f56] font-bold block text-[10px] mb-1">
-                      [ 🔴 Cómo era el proceso antes ]
+                  {/* Cabecera */}
+                  <div className="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs">
+                    <span className="px-2.5 py-0.5 rounded bg-[rgba(16,185,129,0.12)] text-[#10B981] font-semibold border border-[rgba(16,185,129,0.3)]">
+                      [ Sistema: {item.system} ]
                     </span>
-                    <p className="leading-relaxed italic">"{item.before}"</p>
+                    <span className="text-[#c084fc] font-bold text-sm">“</span>
                   </div>
 
-                  <div className="p-3 rounded-lg bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.25)] text-xs text-[#F6DBC0]">
-                    <span className="font-mono text-[#10B981] font-bold block text-[10px] mb-1">
-                      [ 🟢 Cómo es ahora con la herramienta ]
-                    </span>
-                    <p className="leading-relaxed">"{item.after}"</p>
+                  {/* Titular ultra-resumido en formato veredicto */}
+                  <div className="my-3">
+                    <h4 className="text-base sm:text-lg font-semibold text-[#F8F4E9] leading-snug group-hover:text-[#ddb8ff] transition-colors">
+                      "{item.headline}"
+                    </h4>
                   </div>
 
-                  {item.extra_comments && (
-                    <div className="p-3 rounded-lg bg-[rgba(192,132,252,0.08)] border border-[rgba(192,132,252,0.25)] text-xs text-[#F8F4E9]">
-                      <span className="font-mono text-[#c084fc] font-bold block text-[10px] mb-1">
-                        [ ✦ Comentarios adicionales ]
+                  {/* Contenido expandible SOLO al hacer Hover o Toque */}
+                  <div
+                    className={`overflow-hidden transition-all duration-400 ease-out flex flex-col gap-2.5 ${
+                      isExpanded ? "max-h-[500px] opacity-100 my-2 pt-2 border-t border-[rgba(147,80,115,0.2)]" : "max-h-0 opacity-0"
+                    }`}
+                  >
+                    <div className="p-3 rounded-lg bg-[rgba(255,95,86,0.08)] border border-[rgba(255,95,86,0.25)] text-xs text-[#F6DBC0]">
+                      <span className="font-mono text-[#ff5f56] font-bold block text-[10px] mb-1">
+                        [ 🔴 Cómo era el proceso antes ]
                       </span>
-                      <p className="leading-relaxed">"{item.extra_comments}"</p>
+                      <p className="leading-relaxed italic">"{item.before}"</p>
                     </div>
-                  )}
-                </div>
 
-                {/* Pie de tarjeta */}
-                <div className="pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between text-xs mt-1">
-                  <div className="flex flex-col max-w-[70%]">
-                    <span className="font-semibold text-[#F8F4E9] truncate">{item.author_name}</span>
-                    <span className="text-[11px] text-[rgba(246,219,192,0.65)] font-mono truncate">
-                      {item.author_role}
-                    </span>
+                    <div className="p-3 rounded-lg bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.25)] text-xs text-[#F6DBC0]">
+                      <span className="font-mono text-[#10B981] font-bold block text-[10px] mb-1">
+                        [ 🟢 Cómo es ahora con la herramienta ]
+                      </span>
+                      <p className="leading-relaxed">"{item.after}"</p>
+                    </div>
+
+                    {item.extra_comments && (
+                      <div className="p-3 rounded-lg bg-[rgba(192,132,252,0.08)] border border-[rgba(192,132,252,0.25)] text-xs text-[#F8F4E9]">
+                        <span className="font-mono text-[#c084fc] font-bold block text-[10px] mb-1">
+                          [ ✦ Comentarios adicionales ]
+                        </span>
+                        <p className="leading-relaxed">"{item.extra_comments}"</p>
+                      </div>
+                    )}
                   </div>
 
-                  <span className="text-[10px] font-mono text-[#c084fc] opacity-80 group-hover:opacity-100 transition-opacity">
-                    {isExpanded ? "▲ plegar" : "▼ ver caso"}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                  {/* Pie de tarjeta */}
+                  <div className="pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between text-xs mt-1">
+                    <div className="flex flex-col max-w-[70%]">
+                      <span className="font-semibold text-[#F8F4E9] truncate">{item.author_name}</span>
+                      <span className="text-[11px] text-[rgba(246,219,192,0.65)] font-mono truncate">
+                        {item.author_role}
+                      </span>
+                    </div>
 
-        {/* Controles de navegación y estado de pausa */}
-        <div className="flex items-center justify-between pt-4 mt-2 font-mono text-xs text-[rgba(246,219,192,0.65)]">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={prevSlide}
-              className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] flex items-center justify-center cursor-pointer active:scale-95"
-              title="Anterior testimonio"
-            >
-              ←
-            </button>
-            <button
-              onClick={nextSlide}
-              className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] flex items-center justify-center cursor-pointer active:scale-95"
-              title="Siguiente testimonio"
-            >
-              →
-            </button>
-            <span className="ml-2 text-[11px]">
-              {isPaused ? "[ ⏸ En pausa ]" : `[ 0${activeIndex + 1} / 0${testimonials.length} ]`}
-            </span>
+                    <span className="text-[10px] font-mono text-[#c084fc] opacity-80 group-hover:opacity-100 transition-opacity">
+                      {isExpanded ? "▲ plegar" : "▼ ver caso"}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Dots indicadores */}
-          <div className="flex items-center gap-1.5">
-            {testimonials.map((_, i) => (
+          {/* Controles de navegación y estado de pausa */}
+          <div className="flex items-center justify-between pt-4 mt-2 font-mono text-xs text-[rgba(246,219,192,0.65)]">
+            <div className="flex items-center gap-2">
               <button
-                key={i}
-                onClick={() => goToSlide(i)}
-                className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                  activeIndex === i ? "w-6 bg-[#c084fc]" : "w-2 bg-[rgba(147,80,115,0.4)] hover:bg-[#c084fc]/50"
-                }`}
-              />
-            ))}
+                onClick={prevSlide}
+                className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] flex items-center justify-center cursor-pointer active:scale-95"
+                title="Anterior testimonio"
+              >
+                ←
+              </button>
+              <button
+                onClick={nextSlide}
+                className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] flex items-center justify-center cursor-pointer active:scale-95"
+                title="Siguiente testimonio"
+              >
+                →
+              </button>
+              <span className="ml-2 text-[11px]">
+                {isPaused ? "[ ⏸ En pausa ]" : `[ 0${activeIndex + 1} / 0${testimonials.length} ]`}
+              </span>
+            </div>
+
+            {/* Dots indicadores */}
+            <div className="flex items-center gap-1.5">
+              {testimonials.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => goToSlide(i)}
+                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                    activeIndex === i ? "w-6 bg-[#c084fc]" : "w-2 bg-[rgba(147,80,115,0.4)] hover:bg-[#c084fc]/50"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
