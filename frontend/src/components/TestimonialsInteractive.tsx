@@ -82,9 +82,11 @@ export default function TestimonialsInteractive() {
   const [displayIndex, setDisplayIndex] = useState(SEED_TESTIMONIALS.length);
   const [isTransitioning, setIsTransitioning] = useState(true);
   const [cardStep, setCardStep] = useState(410);
+  const [visibleCount, setVisibleCount] = useState(3);
   const [isPaused, setIsPaused] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -101,19 +103,25 @@ export default function TestimonialsInteractive() {
     ];
   }, [testimonials]);
 
-  // Medir ancho dinámico de la tarjeta + gap (20px) en cualquier dispositivo
+  // Medir ancho dinámico de la tarjeta y cuántas caben completas sin cortarse
   useEffect(() => {
-    const updateCardStep = () => {
+    const updateDimensions = () => {
       if (cardRef.current) {
         const width = cardRef.current.getBoundingClientRect().width;
         if (width > 0) {
-          setCardStep(width + 20);
+          const step = width + 20;
+          setCardStep(step);
+          if (containerRef.current) {
+            const containerWidth = containerRef.current.getBoundingClientRect().width;
+            const count = Math.max(1, Math.floor((containerWidth + 10) / step));
+            setVisibleCount(count);
+          }
         }
       }
     };
-    updateCardStep();
-    window.addEventListener("resize", updateCardStep);
-    return () => window.removeEventListener("resize", updateCardStep);
+    updateDimensions();
+    window.addEventListener("resize", updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
   }, [testimonials]);
 
   // Reposicionamiento silencioso al terminar la animación CSS
@@ -344,7 +352,7 @@ export default function TestimonialsInteractive() {
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
-        <div className="px-4 lg:px-8 w-full">
+        <div ref={containerRef} className="px-4 lg:px-8 w-full">
           {/* Contenedor del riel con desplazamiento circular infinito */}
           <div
             ref={trackRef}
@@ -361,44 +369,61 @@ export default function TestimonialsInteractive() {
               const isExpanded = expandedId === item.id;
               const isAnyExpanded = expandedId !== null;
               const isDimmed = isAnyExpanded && !isExpanded;
+              const isFullyVisible = idx >= displayIndex && idx < displayIndex + visibleCount;
 
               return (
                 <div
                   key={item._virtualKey}
                   ref={idx === 0 ? cardRef : undefined}
                   onMouseEnter={() => {
-                    setExpandedId(item.id);
+                    if (isFullyVisible) {
+                      setExpandedId(item.id);
+                    }
                     setIsPaused(true);
                   }}
                   onMouseLeave={() => {
-                    setExpandedId(null);
+                    if (isFullyVisible) {
+                      setExpandedId(null);
+                    }
                     setIsPaused(false);
                   }}
-                  onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                  className={`w-[315px] sm:w-[360px] lg:w-[375px] shrink-0 p-5 rounded-2xl backdrop-blur-md flex flex-col justify-between transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center group cursor-pointer relative ${
+                  onClick={() => {
+                    if (!isFullyVisible) {
+                      if (idx >= displayIndex + visibleCount) {
+                        nextSlide();
+                      } else if (idx < displayIndex) {
+                        prevSlide();
+                      }
+                      return;
+                    }
+                    setExpandedId(isExpanded ? null : item.id);
+                  }}
+                  className={`w-[315px] sm:w-[360px] lg:w-[375px] shrink-0 p-5 rounded-2xl backdrop-blur-md flex flex-col justify-between min-h-[220px] sm:min-h-[235px] transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center group cursor-pointer relative ${
                     isExpanded
                       ? "scale-[1.02] sm:scale-[1.04] z-30 border-[#c084fc] shadow-[0_14px_36px_rgba(0,0,0,0.55),0_0_20px_rgba(192,132,252,0.18)] bg-[rgba(38,20,46,0.98)] ring-1 ring-[#c084fc]/40 opacity-100"
                       : isDimmed
                       ? "scale-[0.98] opacity-60 border-[rgba(147,80,115,0.2)] bg-[rgba(28,16,32,0.7)] z-0"
+                      : !isFullyVisible
+                      ? "opacity-45 hover:opacity-80 scale-[0.97] border-[rgba(147,80,115,0.2)] bg-[rgba(26,14,30,0.6)] z-0"
                       : "scale-100 opacity-100 hover:border-[#c084fc]/60 hover:shadow-[0_8px_30px_rgba(192,132,252,0.12)] border-[rgba(147,80,115,0.35)] bg-[rgba(35,23,39,0.88)] z-10"
                   }`}
                 >
                   {/* Cabecera */}
-                  <div className="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs">
+                  <div className="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs shrink-0">
                     <span className="px-2.5 py-0.5 rounded bg-[rgba(16,185,129,0.12)] text-[#10B981] font-semibold border border-[rgba(16,185,129,0.3)]">
                       [ Sistema: {item.system} ]
                     </span>
                     <span className="text-[#c084fc] font-bold text-sm">“</span>
                   </div>
 
-                  {/* Titular ultra-resumido en formato veredicto */}
-                  <div className="my-3">
-                    <h4 className="text-base sm:text-lg font-semibold text-[#F8F4E9] leading-snug group-hover:text-[#ddb8ff] transition-colors">
+                  {/* Titular centrado verticalmente para altura uniforme */}
+                  <div className="my-auto py-2">
+                    <h4 className="text-base sm:text-lg font-semibold text-[#F8F4E9] leading-snug group-hover:text-[#ddb8ff] transition-colors line-clamp-3">
                       "{item.headline}"
                     </h4>
                   </div>
 
-                  {/* Contenido expandible SOLO al hacer Hover o Toque */}
+                  {/* Contenido expandible SOLO al hacer Hover o Toque en tarjetas 100% visibles */}
                   <div
                     className={`overflow-hidden transition-all duration-400 ease-out flex flex-col gap-2.5 ${
                       isExpanded ? "max-h-[500px] opacity-100 my-2 pt-2 border-t border-[rgba(147,80,115,0.2)]" : "max-h-0 opacity-0"
@@ -428,8 +453,8 @@ export default function TestimonialsInteractive() {
                     )}
                   </div>
 
-                  {/* Pie de tarjeta */}
-                  <div className="pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between text-xs mt-1">
+                  {/* Pie de tarjeta anclado siempre abajo para alineación horizontal perfecta */}
+                  <div className="pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between text-xs mt-auto shrink-0">
                     <div className="flex flex-col max-w-[70%]">
                       <span className="font-semibold text-[#F8F4E9] truncate">{item.author_name}</span>
                       <span className="text-[11px] text-[rgba(246,219,192,0.65)] font-mono truncate">
@@ -438,7 +463,7 @@ export default function TestimonialsInteractive() {
                     </div>
 
                     <span className="text-[10px] font-mono text-[#c084fc] opacity-80 group-hover:opacity-100 transition-opacity">
-                      {isExpanded ? "▲ plegar" : "▼ ver caso"}
+                      {isFullyVisible ? (isExpanded ? "▲ plegar" : "▼ ver caso") : (idx >= displayIndex + visibleCount ? "→ ver" : "← ver")}
                     </span>
                   </div>
                 </div>
