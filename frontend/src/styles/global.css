@@ -54,23 +54,42 @@
 }
 
 .card-right {
-  transform: translate3d(34%, 0, -40px) rotateY(-16deg) scale(0.9);
+  transform: translate3d(35%, 0, -35px) rotateY(-18deg) scale(0.88);
   z-index: 20;
-  opacity: 0.65;
-  filter: blur(0.6px);
+  opacity: 0.75;
+  filter: blur(0.4px);
   cursor: pointer;
 }
 
 .card-right:hover {
-  opacity: 0.85;
-  transform: translate3d(32%, 0, -20px) rotateY(-12deg) scale(0.93);
+  opacity: 0.9;
+  transform: translate3d(33%, 0, -20px) rotateY(-14deg) scale(0.91);
 }
 
-.card-hidden {
-  transform: translate3d(0, 0, -120px) scale(0.7);
-  opacity: 0;
-  pointer-events: none;
+.card-far-right {
+  transform: translate3d(68%, 0, -85px) rotateY(-28deg) scale(0.76);
   z-index: 10;
+  opacity: 0.45;
+  filter: blur(0.8px);
+  cursor: pointer;
+}
+
+.card-far-right:hover {
+  opacity: 0.7;
+  transform: translate3d(65%, 0, -65px) rotateY(-24deg) scale(0.8);
+}
+
+.card-far-left {
+  transform: translate3d(-68%, 0, -85px) rotateY(28deg) scale(0.76);
+  z-index: 10;
+  opacity: 0.45;
+  filter: blur(0.8px);
+  cursor: pointer;
+}
+
+.card-far-left:hover {
+  opacity: 0.7;
+  transform: translate3d(-65%, 0, -65px) rotateY(24deg) scale(0.8);
 }
 
 /* Mobile Responsiveness for 3D Carousel */
@@ -83,14 +102,24 @@
     box-shadow: 0 10px 30px -5px rgba(192, 132, 252, 0.25);
   }
   .card-left {
-    transform: translate3d(-52%, 0, -60px) rotateY(22deg) scale(0.82);
-    opacity: 0.25;
-    filter: blur(1px);
+    transform: translate3d(-48%, 0, -50px) rotateY(20deg) scale(0.82);
+    opacity: 0.35;
+    filter: blur(0.8px);
   }
   .card-right {
-    transform: translate3d(52%, 0, -60px) rotateY(-22deg) scale(0.82);
-    opacity: 0.25;
-    filter: blur(1px);
+    transform: translate3d(48%, 0, -50px) rotateY(-20deg) scale(0.82);
+    opacity: 0.35;
+    filter: blur(0.8px);
+  }
+  .card-far-right {
+    transform: translate3d(78%, 0, -95px) rotateY(-30deg) scale(0.68);
+    opacity: 0.2;
+    filter: blur(1.2px);
+  }
+  .card-far-left {
+    transform: translate3d(-78%, 0, -95px) rotateY(30deg) scale(0.68);
+    opacity: 0.2;
+    filter: blur(1.2px);
   }
 }
 

@@ -103,10 +103,12 @@ export const CoverFlowCarousel: React.FC = () => {
             positionClass = 'card-center';
           } else if (diff === 1) {
             positionClass = 'card-right';
+          } else if (diff === 2) {
+            positionClass = 'card-far-right';
           } else if (diff === total - 1) {
             positionClass = 'card-left';
           } else {
-            positionClass = 'card-hidden';
+            positionClass = 'card-far-left';
           }
 
           return (
@@ -207,9 +209,30 @@ export const CoverFlowCarousel: React.FC = () => {
         })}
       </div>
 
+      {/* Interactive Project Quick-Select Pills */}
+      <div className="flex flex-wrap items-center justify-center gap-2 mt-1 px-4">
+        {PROJECTS.map((project, idx) => {
+          const isActive = idx === activeIndex;
+          return (
+            <button
+              key={project.id}
+              onClick={() => setActiveIndex(idx)}
+              className={`px-3 py-1 rounded-full font-mono text-xs transition-all cursor-pointer flex items-center gap-1.5 ${
+                isActive
+                  ? 'bg-[#c084fc] text-[#500989] font-bold shadow-[0_0_15px_rgba(192,132,252,0.4)] scale-105'
+                  : 'bg-[rgba(80,45,85,0.25)] hover:bg-[rgba(80,45,85,0.45)] text-[rgba(246,219,192,0.8)] border border-[rgba(147,80,115,0.25)]'
+              }`}
+            >
+              <span className={isActive ? 'text-[#500989]' : 'text-[#c084fc]'}>{project.code}.</span>
+              <span>{project.title.split(' · ')[0]}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Tip below 3D Carousel */}
       <div className="flex items-center justify-center gap-2 text-[rgba(246,219,192,0.65)] font-mono text-[11px] sm:text-xs text-center px-4">
-        <span>Desliza lateralmente con el dedo o usa &lt; &gt; para explorar</span>
+        <span>Desliza lateralmente con el dedo o pulsa cualquier tarjeta para enfocarla</span>
       </div>
     </section>
   );
