@@ -5,22 +5,23 @@ from typing import Optional
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
-async def generate_impact_headline(system_name: str, before: str, after: str) -> str:
+async def generate_impact_headline(system_name: str, before: str, after: str, extra: str = "") -> str:
     """
-    Sintetiza el testimonio en un titular corto de impacto (máximo 8-12 palabras).
-    Utiliza Gemini si hay API key configurada; de lo contrario utiliza un extractor heurístico determinista.
+    Sintetiza el testimonio en un titular ultra-resumido tipo veredicto humano (15-20 palabras):
+    Estructura: 'Me ayudó con [proceso], ahora tardamos [resultado/tiempo], pero [detalle/reto si lo hay]'.
     """
     if GEMINI_API_KEY:
         try:
             prompt = (
-                f"Eres un experto en redacción de casos de éxito y ROI de software.\n"
+                f"Eres un sintetizador de veredictos reales de software.\n"
                 f"Sistema evaluado: {system_name}\n"
-                f"Cómo era el proceso antes (problema): \"{before}\"\n"
-                f"Cómo es ahora con la herramienta (solución y resultados): \"{after}\"\n\n"
-                f"Genera un ÚNICO titular de impacto (máximo 10 palabras en español) que resuma el beneficio principal "
-                f"o tiempo ahorrado. Debe sonar profesional, sin tecnicismos complejos, directo al grano.\n"
-                f"Ejemplos: 'Reducción de 40 min a 1.2s en conciliación de facturas' o 'Ahorro de 35h semanales en auditorías'.\n"
-                f"Devuelve SOLAMENTE el texto del titular, sin comillas ni explicaciones."
+                f"Antes (problema): \"{before}\"\n"
+                f"Ahora (resultado): \"{after}\"\n"
+                f"Comentarios extra: \"{extra}\"\n\n"
+                f"Genera un ÚNICO titular en una sola frase breve y directa (máximo 18 palabras en español) con este estilo exacto:\n"
+                f"'Me ayudó con [proceso], ahora tardo/logro [tiempo/resultado], pero [reto o detalle si existe]'.\n"
+                f"Ejemplo: 'Automatizó la revisión de 12.000 facturas bajando a segundos, pero requiere que los PDFs no sean fotos borrosas.'\n"
+                f"Devuelve SOLAMENTE la frase final, sin comillas ni explicaciones."
             )
             
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
@@ -41,25 +42,21 @@ async def generate_impact_headline(system_name: str, before: str, after: str) ->
                     candidates = data.get("candidates", [])
                     if candidates:
                         text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
-                        # Limpiar comillas iniciales/finales
                         text = text.strip('"\'')
                         if text:
                             return text
         except Exception:
-            # Fallback inmediato en caso de error de red
             pass
 
-    # --- Fallback Heurístico Determinista ---
-    # Extrae la primera oración del resultado o busca métricas explícitas
+    # --- Fallback Heurístico Estructurado ---
     after_clean = re.sub(r'[\r\n]+', ' ', after.strip())
-    # Buscar patrones de cifras o tiempo (ej. "35h", "99%", "2 segundos", etc.)
     sentences = [s.strip() for s in re.split(r'[.!?]', after_clean) if s.strip()]
+    first_res = sentences[0] if sentences else after_clean
+
+    if "segundo" in first_res.lower() or "minuto" in first_res.lower() or "hora" in first_res.lower():
+        return f"Me ayudó a optimizar {system_name}: {first_res}"
     
-    if sentences:
-        first_sentence = sentences[0]
-        words = first_sentence.split()
-        if len(words) <= 12:
-            return first_sentence
-        return " ".join(words[:10]) + "..."
-    
-    return f"Optimización de flujo y resultados en {system_name}"
+    words = first_res.split()
+    if len(words) <= 16:
+        return first_res
+    return " ".join(words[:14]) + "..."

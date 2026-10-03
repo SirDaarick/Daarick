@@ -22,7 +22,7 @@ const SEED_TESTIMONIALS: Testimonial[] = [
     before: "El equipo dedicaba más de 35 horas semanales a cotejar facturas PDF a mano en hojas de cálculo, con un margen de error del 8% en capturas.",
     after: "Extrajimos 12.000 facturas sin intervención manual. La conciliación bajó a segundos y el margen de error se redujo a cero este trimestre.",
     extra_comments: "La interfaz es intuitiva y el OCR determinista ahorra semanas enteras de auditoría tributaria.",
-    headline: "De 35h semanales a conciliación instantánea en 12.000 facturas",
+    headline: "Automatizó 12.000 facturas ahorrando 35h semanales, pero requiere que los PDFs no sean fotos borrosas.",
     approved: true,
     created_at: new Date().toISOString()
   },
@@ -34,7 +34,7 @@ const SEED_TESTIMONIALS: Testimonial[] = [
     before: "Para resolver cuellos de botella en rutas de distribución nos tomaba 40 minutos evaluar manualmente grafos y árboles de decisión en papel.",
     after: "El evaluador de grafos redujo el análisis de 40 minutos a 1.2 segundos con visualización interactiva en tiempo real.",
     extra_comments: "Ver los nodos iluminarse y recalcular la ruta óptima en segundos nos dio control absoluto de nuestras operaciones.",
-    headline: "Reducción de 40 min a 1.2s en optimización de rutas operativas",
+    headline: "Bajó el análisis de rutas de 40 min a 1.2s en incidencias, aunque la curva de aprendizaje inicial toma un par de días.",
     approved: true,
     created_at: new Date().toISOString()
   },
@@ -46,7 +46,7 @@ const SEED_TESTIMONIALS: Testimonial[] = [
     before: "Los modelos de lenguaje comerciales alucinaban respuestas ambiguas al consultar manuales técnicos internos de más de 800 páginas.",
     after: "La arquitectura RAG con ChromaDB responde con fuentes exactas y cero alucinaciones con latencia menor a 400ms.",
     extra_comments: "Es el primer sistema de agentes que podemos desplegar a producción sin miedo a respuestas inventadas.",
-    headline: "Consultas técnicas de 800 págs en <400ms con cero alucinaciones",
+    headline: "Respuestas técnicas exactas en <400ms sin alucinaciones, pero necesita buena indexación previa de documentos.",
     approved: true,
     created_at: new Date().toISOString()
   },
@@ -58,7 +58,7 @@ const SEED_TESTIMONIALS: Testimonial[] = [
     before: "Nuestros scripts en Python tardaban más de 2 horas en procesar simulaciones masivas de datos debido al bloqueo del GIL y ejecución secuencial.",
     after: "Con el runtime concurrente en C++ paralelizado, el tiempo de ejecución cayó de 2 horas a solo 4 minutos.",
     extra_comments: "Aprovecha al máximo todos los núcleos de CPU del servidor sin complejidad innecesaria en el código.",
-    headline: "Simulaciones masivas de 2 horas reducidas a 4 minutos en C++",
+    headline: "Simulaciones masivas pasaron de 2 horas a 4 minutos en C++, aunque el consumo de RAM sube con datasets gigantes.",
     approved: true,
     created_at: new Date().toISOString()
   },
@@ -70,7 +70,7 @@ const SEED_TESTIMONIALS: Testimonial[] = [
     before: "Perdíamos contratos porque tardábamos 3 días en emitir estados de cuenta validados para nuestros clientes corporativos.",
     after: "Ahora el pipeline procesa y valida los balances en menos de 10 segundos directamente desde la web.",
     extra_comments: "Excelente solución. Nos permitió cerrar clientes corporativos que exigían validación inmediata sin esperas.",
-    headline: "Validación de balances corporativos de 3 días a 10 segundos",
+    headline: "Estados de cuenta validados en 10s en vez de 3 días para clientes B2B, acelerando el cierre de contratos.",
     approved: true,
     created_at: new Date().toISOString()
   }
@@ -78,11 +78,13 @@ const SEED_TESTIMONIALS: Testimonial[] = [
 
 export default function TestimonialsInteractive() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>(SEED_TESTIMONIALS);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Modales
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<Testimonial | null>(null);
 
   // Formulario nuevo veredicto
   const [formSystem, setFormSystem] = useState("Graphito");
@@ -101,19 +103,6 @@ export default function TestimonialsInteractive() {
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminMsg, setAdminMsg] = useState<string | null>(null);
 
-  // --- Animación GPU-accelerated con Translate3d y Física de Inercia ---
-  const trackRef = useRef<HTMLDivElement>(null);
-  const firstSetRef = useRef<HTMLDivElement>(null);
-  const isHoveredRef = useRef(false);
-  const isDraggingRef = useRef(false);
-  const startXRef = useRef(0);
-  const dragStartOffsetRef = useRef(0);
-  const offsetRef = useRef(0);
-  const speedRef = useRef(0.45);
-  const targetSpeedRef = useRef(0.45);
-  const lastXRef = useRef(0);
-  const dragVelocityRef = useRef(0);
-
   // Cargar testimonios aprobados de la API
   const fetchApproved = async () => {
     try {
@@ -125,7 +114,7 @@ export default function TestimonialsInteractive() {
         }
       }
     } catch {
-      // Fallback local garantizado
+      // Fallback local asegurado
     }
   };
 
@@ -133,74 +122,23 @@ export default function TestimonialsInteractive() {
     fetchApproved();
   }, []);
 
-  // Animación continua mediante translate3d acelerado por GPU (cero temblores / cero reflow)
+  // Intervalo de auto-avance con pausa (Slide -> Pausa de 4.5s -> Slide)
   useEffect(() => {
-    let animId: number;
+    if (isPaused || expandedId !== null) return;
 
-    const animate = () => {
-      const track = trackRef.current;
-      const firstSet = firstSetRef.current;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+    }, 4500);
 
-      if (track && firstSet) {
-        const singleSetWidth = firstSet.offsetWidth + 20; // 20px gap
+    return () => clearInterval(timer);
+  }, [isPaused, expandedId, testimonials.length]);
 
-        if (!isDraggingRef.current) {
-          targetSpeedRef.current = isHoveredRef.current ? 0 : 0.45;
-
-          // Amortiguación hacia velocidad objetivo con inercia suave
-          speedRef.current += (targetSpeedRef.current - speedRef.current) * 0.05;
-
-          // Inercia de arrastre
-          if (Math.abs(dragVelocityRef.current) > 0.05) {
-            speedRef.current += dragVelocityRef.current;
-            dragVelocityRef.current *= 0.92;
-          }
-
-          if (Math.abs(speedRef.current) > 0.005) {
-            offsetRef.current += speedRef.current;
-
-            // Bucle continuo matemáticamente perfecto
-            if (singleSetWidth > 0) {
-              if (offsetRef.current >= singleSetWidth) {
-                offsetRef.current -= singleSetWidth;
-              } else if (offsetRef.current < 0) {
-                offsetRef.current += singleSetWidth;
-              }
-            }
-
-            track.style.transform = `translate3d(-${offsetRef.current.toFixed(2)}px, 0, 0)`;
-          }
-        }
-      }
-      animId = requestAnimationFrame(animate);
-    };
-
-    animId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animId);
-  }, [testimonials]);
-
-  // Manejo de arrastre con mouse o touch
-  const handleMouseDown = (e: React.MouseEvent) => {
-    isDraggingRef.current = true;
-    startXRef.current = e.pageX;
-    dragStartOffsetRef.current = offsetRef.current;
-    lastXRef.current = e.pageX;
-    dragVelocityRef.current = 0;
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingRef.current || !trackRef.current) return;
-    const delta = e.pageX - startXRef.current;
-    offsetRef.current = dragStartOffsetRef.current - delta;
-
-    dragVelocityRef.current = (lastXRef.current - e.pageX) * 0.35;
-    lastXRef.current = e.pageX;
-
-    trackRef.current.style.transform = `translate3d(-${offsetRef.current.toFixed(2)}px, 0, 0)`;
-  };
-
-  const handleMouseUp = () => {
-    isDraggingRef.current = false;
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   };
 
   // Envío del nuevo veredicto
@@ -302,76 +240,12 @@ export default function TestimonialsInteractive() {
     }
   };
 
-  // Render individual de una tarjeta con altura fija uniforme (previene layout shift)
-  const renderCard = (item: Testimonial, key: string) => (
-    <div
-      key={key}
-      onClick={() => setSelectedCard(item)}
-      className="w-[330px] sm:w-[390px] h-[370px] shrink-0 p-5 rounded-2xl bg-[rgba(35,23,39,0.85)] border border-[rgba(147,80,115,0.35)] backdrop-blur-md flex flex-col justify-between transition-all duration-200 hover:border-[#c084fc] hover:shadow-[0_8px_30px_rgba(192,132,252,0.16)] group cursor-pointer relative"
-    >
-      {/* Cabecera */}
-      <div className="flex items-center justify-between pb-2.5 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs">
-        <span className="px-2.5 py-0.5 rounded bg-[rgba(16,185,129,0.12)] text-[#10B981] font-semibold border border-[rgba(16,185,129,0.3)]">
-          [ Sistema: {item.system} ]
-        </span>
-        <span className="text-[#c084fc] font-bold text-sm">“</span>
-      </div>
-
-      {/* Titular de impacto generado por LLM */}
-      <div className="my-2">
-        <h4 className="text-base sm:text-lg font-semibold text-[#F8F4E9] leading-snug group-hover:text-[#ddb8ff] transition-colors line-clamp-2">
-          {item.headline}
-        </h4>
-      </div>
-
-      {/* Sección central con scroll interno suave y limpio */}
-      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-2 my-1 pr-1">
-        <div className="p-2.5 rounded-lg bg-[rgba(255,95,86,0.08)] border border-[rgba(255,95,86,0.25)] text-xs text-[#F6DBC0]">
-          <span className="font-mono text-[#ff5f56] font-bold block text-[10px] mb-0.5">
-            [ 🔴 Antes del sistema ]
-          </span>
-          <p className="leading-relaxed italic line-clamp-3">"{item.before}"</p>
-        </div>
-
-        <div className="p-2.5 rounded-lg bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.25)] text-xs text-[#F6DBC0]">
-          <span className="font-mono text-[#10B981] font-bold block text-[10px] mb-0.5">
-            [ 🟢 Ahora con la herramienta ]
-          </span>
-          <p className="leading-relaxed line-clamp-3">"{item.after}"</p>
-        </div>
-
-        {item.extra_comments && (
-          <div className="p-2.5 rounded-lg bg-[rgba(192,132,252,0.08)] border border-[rgba(192,132,252,0.25)] text-xs text-[#F8F4E9]">
-            <span className="font-mono text-[#c084fc] font-bold block text-[10px] mb-0.5">
-              [ ✦ Comentario adicional ]
-            </span>
-            <p className="leading-relaxed line-clamp-2">"{item.extra_comments}"</p>
-          </div>
-        )}
-      </div>
-
-      {/* Pie de tarjeta */}
-      <div className="pt-2.5 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between text-xs mt-1 shrink-0">
-        <div className="flex flex-col max-w-[70%]">
-          <span className="font-semibold text-[#F8F4E9] truncate">{item.author_name}</span>
-          <span className="text-[11px] text-[rgba(246,219,192,0.65)] font-mono truncate">
-            {item.author_role}
-          </span>
-        </div>
-
-        <span className="text-[10px] font-mono text-[#c084fc] opacity-80 group-hover:opacity-100 transition-opacity">
-          [ ver completo ↗ ]
-        </span>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="flex flex-col gap-6 w-full">
-      {/* Barra superior de acciones */}
+    <div className="flex flex-col gap-5 w-full">
+      {/* Cabecera y acciones */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-xs sm:text-sm text-[#F6DBC0] max-w-xl leading-relaxed">
-          Comentarios reales de personas y equipos. Haz clic en cualquier tarjeta para leer el veredicto completo o comparte tu propia experiencia.
+          Veredictos reales resumidos en una frase. Al acercar el cursor se detiene el carrusel y se expande el caso completo.
         </p>
 
         <div className="flex items-center gap-2.5 shrink-0">
@@ -391,101 +265,141 @@ export default function TestimonialsInteractive() {
         </div>
       </div>
 
-      {/* Riel Horizontal Continuo con Física de Inercia y Aceleración por GPU */}
+      {/* Riel con Avance por Pasos (Slide -> Pausa de 4.5s -> Slide) */}
       <div
-        className="relative w-full overflow-hidden py-3 select-none cursor-grab active:cursor-grabbing"
-        onMouseEnter={() => (isHoveredRef.current = true)}
-        onMouseLeave={() => {
-          isHoveredRef.current = false;
-          handleMouseUp();
-        }}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
+        className="relative w-full overflow-hidden py-4"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
       >
-        {/* Sombras laterales de desvanecimiento */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-[rgba(21,10,25,0.95)] to-transparent z-10" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-[rgba(21,10,25,0.95)] to-transparent z-10" />
-
-        {/* Track interior con Translate3d acelerado por hardware */}
+        {/* Contenedor del riel con desplazamiento suave por paso */}
         <div
-          ref={trackRef}
-          className="flex items-center gap-5 py-2"
-          style={{ willChange: "transform" }}
+          className="flex items-start gap-5 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+          style={{
+            transform: `translateX(calc(-${currentIndex} * (min(100%, 390px) + 20px)))`
+          }}
         >
-          {/* Primer set de tarjetas (originales) */}
-          <div ref={firstSetRef} className="flex items-center gap-5 shrink-0">
-            {testimonials.map((item, idx) => renderCard(item, `first-${item.id}-${idx}`))}
+          {testimonials.map((item) => {
+            const isExpanded = expandedId === item.id;
+
+            return (
+              <div
+                key={item.id}
+                onMouseEnter={() => {
+                  setExpandedId(item.id);
+                  setIsPaused(true);
+                }}
+                onMouseLeave={() => {
+                  setExpandedId(null);
+                  setIsPaused(false);
+                }}
+                onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                className={`w-[330px] sm:w-[390px] shrink-0 p-5 rounded-2xl bg-[rgba(35,23,39,0.88)] border border-[rgba(147,80,115,0.35)] backdrop-blur-md flex flex-col justify-between transition-all duration-300 group cursor-pointer relative ${
+                  isExpanded
+                    ? "border-[#c084fc] shadow-[0_12px_40px_rgba(192,132,252,0.22)] bg-[rgba(40,20,50,0.95)] z-20"
+                    : "hover:border-[#c084fc]/60 hover:shadow-[0_8px_30px_rgba(192,132,252,0.12)]"
+                }`}
+              >
+                {/* Cabecera */}
+                <div className="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs">
+                  <span className="px-2.5 py-0.5 rounded bg-[rgba(16,185,129,0.12)] text-[#10B981] font-semibold border border-[rgba(16,185,129,0.3)]">
+                    [ Sistema: {item.system} ]
+                  </span>
+                  <span className="text-[#c084fc] font-bold text-sm">“</span>
+                </div>
+
+                {/* Titular ultra-resumido en formato veredicto */}
+                <div className="my-3">
+                  <h4 className="text-base sm:text-lg font-semibold text-[#F8F4E9] leading-snug group-hover:text-[#ddb8ff] transition-colors">
+                    "{item.headline}"
+                  </h4>
+                </div>
+
+                {/* Contenido expandible SOLO al hacer Hover o Toque */}
+                <div
+                  className={`overflow-hidden transition-all duration-300 ease-out flex flex-col gap-2.5 ${
+                    isExpanded ? "max-h-96 opacity-100 my-2 pt-2 border-t border-[rgba(147,80,115,0.2)]" : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <div className="p-3 rounded-lg bg-[rgba(255,95,86,0.08)] border border-[rgba(255,95,86,0.25)] text-xs text-[#F6DBC0]">
+                    <span className="font-mono text-[#ff5f56] font-bold block text-[10px] mb-1">
+                      [ 🔴 Cómo era el proceso antes ]
+                    </span>
+                    <p className="leading-relaxed italic">"{item.before}"</p>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.25)] text-xs text-[#F6DBC0]">
+                    <span className="font-mono text-[#10B981] font-bold block text-[10px] mb-1">
+                      [ 🟢 Cómo es ahora con la herramienta ]
+                    </span>
+                    <p className="leading-relaxed">"{item.after}"</p>
+                  </div>
+
+                  {item.extra_comments && (
+                    <div className="p-3 rounded-lg bg-[rgba(192,132,252,0.08)] border border-[rgba(192,132,252,0.25)] text-xs text-[#F8F4E9]">
+                      <span className="font-mono text-[#c084fc] font-bold block text-[10px] mb-1">
+                        [ ✦ Comentarios adicionales ]
+                      </span>
+                      <p className="leading-relaxed">"{item.extra_comments}"</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Pie de tarjeta */}
+                <div className="pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between text-xs mt-1">
+                  <div className="flex flex-col max-w-[70%]">
+                    <span className="font-semibold text-[#F8F4E9] truncate">{item.author_name}</span>
+                    <span className="text-[11px] text-[rgba(246,219,192,0.65)] font-mono truncate">
+                      {item.author_role}
+                    </span>
+                  </div>
+
+                  <span className="text-[10px] font-mono text-[#c084fc] opacity-80 group-hover:opacity-100 transition-opacity">
+                    {isExpanded ? "▲ plegar" : "▼ ver caso"}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Controles de navegación y estado de pausa */}
+        <div className="flex items-center justify-between pt-4 mt-2 font-mono text-xs text-[rgba(246,219,192,0.65)]">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={prevSlide}
+              className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] flex items-center justify-center cursor-pointer active:scale-95"
+              title="Anterior testimonio"
+            >
+              ←
+            </button>
+            <button
+              onClick={nextSlide}
+              className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] flex items-center justify-center cursor-pointer active:scale-95"
+              title="Siguiente testimonio"
+            >
+              →
+            </button>
+            <span className="ml-2 text-[11px]">
+              {isPaused ? "[ ⏸ En pausa ]" : `[ 0${currentIndex + 1} / 0${testimonials.length} ]`}
+            </span>
           </div>
 
-          {/* Segundo set de tarjetas (duplicadas para loop continuo sin cortes) */}
-          <div className="flex items-center gap-5 shrink-0" aria-hidden="true">
-            {testimonials.map((item, idx) => renderCard(item, `second-${item.id}-${idx}`))}
+          {/* Dots indicadores */}
+          <div className="flex items-center gap-1.5">
+            {testimonials.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentIndex(i)}
+                className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                  currentIndex === i ? "w-6 bg-[#c084fc]" : "w-2 bg-[rgba(147,80,115,0.4)] hover:bg-[#c084fc]/50"
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>
 
-      {/* MODAL 1: Lectura de Veredicto Completo */}
-      {selectedCard && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl bg-[rgba(26,15,30,0.98)] border border-[rgba(147,80,115,0.45)] shadow-2xl p-6 sm:p-8 flex flex-col gap-4 relative">
-            <div className="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs">
-              <span className="px-2.5 py-0.5 rounded bg-[rgba(16,185,129,0.12)] text-[#10B981] font-semibold border border-[rgba(16,185,129,0.3)]">
-                [ Sistema: {selectedCard.system} ]
-              </span>
-              <button
-                onClick={() => setSelectedCard(null)}
-                className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.2)] hover:bg-[rgba(80,45,85,0.4)] text-[#F6DBC0] flex items-center justify-center cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div>
-              <span className="font-mono text-xs text-[#c084fc]">// TITULAR SINTETIZADO POR IA</span>
-              <h3 className="text-xl font-semibold text-[#F8F4E9] mt-1 leading-snug">
-                {selectedCard.headline}
-              </h3>
-            </div>
-
-            <div className="flex flex-col gap-3 my-2">
-              <div className="p-3.5 rounded-xl bg-[rgba(255,95,86,0.08)] border border-[rgba(255,95,86,0.25)] text-xs text-[#F6DBC0]">
-                <strong className="font-mono text-[#ff5f56] block mb-1.5">[ 🔴 ¿Cómo era el proceso antes? ]</strong>
-                <p className="leading-relaxed italic">"{selectedCard.before}"</p>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.25)] text-xs text-[#F6DBC0]">
-                <strong className="font-mono text-[#10B981] block mb-1.5">[ 🟢 ¿Cómo es ahora con la herramienta? ]</strong>
-                <p className="leading-relaxed">"{selectedCard.after}"</p>
-              </div>
-
-              {selectedCard.extra_comments && (
-                <div className="p-3.5 rounded-xl bg-[rgba(192,132,252,0.08)] border border-[rgba(192,132,252,0.25)] text-xs text-[#F8F4E9]">
-                  <strong className="font-mono text-[#c084fc] block mb-1.5">[ ✦ Comentarios adicionales del evaluador ]</strong>
-                  <p className="leading-relaxed">"{selectedCard.extra_comments}"</p>
-                </div>
-              )}
-            </div>
-
-            <div className="pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between text-xs">
-              <div className="flex flex-col">
-                <span className="font-semibold text-[#F8F4E9]">{selectedCard.author_name}</span>
-                <span className="text-[11px] text-[rgba(246,219,192,0.65)] font-mono">
-                  {selectedCard.author_role}
-                </span>
-              </div>
-              <button
-                onClick={() => setSelectedCard(null)}
-                className="px-4 py-2 rounded-lg bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.5)] text-[#F8F4E9] font-mono text-xs"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 2: Dejar mi veredicto */}
+      {/* MODAL 1: Dejar mi veredicto */}
       {isSubmitOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-[rgba(26,15,30,0.98)] border border-[rgba(147,80,115,0.45)] shadow-2xl p-6 sm:p-8 flex flex-col gap-5 relative">
@@ -627,7 +541,7 @@ export default function TestimonialsInteractive() {
                   <textarea
                     rows={2}
                     maxLength={400}
-                    placeholder="ej. Reflexión general, facilidad de integración, recomendaciones al equipo..."
+                    placeholder="ej. Reflexión general, facilidad de integración, detalles o retos encontrados..."
                     value={formExtra}
                     onChange={(e) => setFormExtra(e.target.value)}
                     className="p-2.5 rounded-lg bg-[rgba(35,23,39,0.9)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] text-xs focus:border-[#c084fc] outline-none resize-none"
@@ -664,7 +578,7 @@ export default function TestimonialsInteractive() {
         </div>
       )}
 
-      {/* MODAL 3: Moderación Admin (Erick) */}
+      {/* MODAL 2: Moderación Admin (Erick) */}
       {isAdminOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
           <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-[rgba(26,15,30,0.98)] border border-[rgba(147,80,115,0.45)] shadow-2xl p-6 sm:p-8 flex flex-col gap-5 relative">
