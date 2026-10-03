@@ -13,7 +13,7 @@ def get_env_config() -> Dict[str, str]:
     return {
         "OPENROUTER_API_KEY": os.getenv("OPENROUTER_API_KEY", "").strip(),
         "OPENROUTER_ROUTER_MODEL": os.getenv("OPENROUTER_ROUTER_MODEL", "typesafe/jev-router").strip(),
-        "OPENROUTER_CHEAP_MODEL": os.getenv("OPENROUTER_CHEAP_MODEL", "google/gemini-3.8-flash").strip(),
+        "OPENROUTER_CHEAP_MODEL": os.getenv("OPENROUTER_CHEAP_MODEL", "qwen/qwen3.8-27b:free").strip(),
         "GEMINI_API_KEY": os.getenv("GEMINI_API_KEY", "").strip(),
         "GEMINI_FAST_MODEL": os.getenv("GEMINI_FAST_MODEL", "gemini-flash-latest").strip(),
         "GEMINI_HEAVY_MODEL": os.getenv("GEMINI_HEAVY_MODEL", "gemini-pro-latest").strip(),
