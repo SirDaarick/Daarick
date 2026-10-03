@@ -5,13 +5,28 @@ import httpx
 from typing import List, Dict, Any, Optional, Tuple
 from app.schemas.assistant import ChatMessage, ChatResponse
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").strip()
-OPENROUTER_ROUTER_MODEL = os.getenv("OPENROUTER_ROUTER_MODEL", "typesafe/jev").strip()
-OPENROUTER_CHEAP_MODEL = os.getenv("OPENROUTER_CHEAP_MODEL", "google/gemini-2.0-flash-lite:free").strip()
+from dotenv import load_dotenv
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-GEMINI_FAST_MODEL = os.getenv("GEMINI_FAST_MODEL", "gemini-1.5-flash").strip()
-GEMINI_HEAVY_MODEL = os.getenv("GEMINI_HEAVY_MODEL", "gemini-1.5-pro").strip()
+def get_env_config() -> Dict[str, str]:
+    """Carga dinámicamente las variables de entorno para detectar cambios en .env sin reiniciar."""
+    load_dotenv(override=True)
+    return {
+        "OPENROUTER_API_KEY": os.getenv("OPENROUTER_API_KEY", "").strip(),
+        "OPENROUTER_ROUTER_MODEL": os.getenv("OPENROUTER_ROUTER_MODEL", "typesafe/jev-router").strip(),
+        "OPENROUTER_CHEAP_MODEL": os.getenv("OPENROUTER_CHEAP_MODEL", "google/gemini-3.8-flash").strip(),
+        "GEMINI_API_KEY": os.getenv("GEMINI_API_KEY", "").strip(),
+        "GEMINI_FAST_MODEL": os.getenv("GEMINI_FAST_MODEL", "gemini-flash-latest").strip(),
+        "GEMINI_HEAVY_MODEL": os.getenv("GEMINI_HEAVY_MODEL", "gemini-pro-latest").strip(),
+    }
+
+# Variables de compatibilidad inicial
+_initial_cfg = get_env_config()
+OPENROUTER_API_KEY = _initial_cfg["OPENROUTER_API_KEY"]
+OPENROUTER_ROUTER_MODEL = _initial_cfg["OPENROUTER_ROUTER_MODEL"]
+OPENROUTER_CHEAP_MODEL = _initial_cfg["OPENROUTER_CHEAP_MODEL"]
+GEMINI_API_KEY = _initial_cfg["GEMINI_API_KEY"]
+GEMINI_FAST_MODEL = _initial_cfg["GEMINI_FAST_MODEL"]
+GEMINI_HEAVY_MODEL = _initial_cfg["GEMINI_HEAVY_MODEL"]
 
 # Base de conocimiento canónica inmutable
 KNOWLEDGE_BASE = {
@@ -156,16 +171,18 @@ async def call_openrouter_api(
     messages: List[ChatMessage],
     model: str,
     system_text: str = SYSTEM_INSTRUCTION,
-    max_tokens: int = 500
+    max_tokens: int = 600
 ) -> Optional[str]:
     """Llama a la API de OpenRouter con cualquier modelo soportado."""
-    if not OPENROUTER_API_KEY:
+    cfg = get_env_config()
+    api_key = cfg["OPENROUTER_API_KEY"]
+    if not api_key:
         return None
 
     try:
         url = "https://openrouter.ai/api/v1/chat/completions"
         headers = {
-            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             "HTTP-Referer": "http://localhost:4321",
             "X-Title": "Daarick Portfolio Wiki"
@@ -185,7 +202,7 @@ async def call_openrouter_api(
             "max_tokens": max_tokens
         }
 
-        async with httpx.AsyncClient(timeout=12.0) as client:
+        async with httpx.AsyncClient(timeout=15.0) as client:
             resp = await client.post(url, headers=headers, json=payload)
             if resp.status_code == 200:
                 data = resp.json()
@@ -194,8 +211,10 @@ async def call_openrouter_api(
                     content = choices[0].get("message", {}).get("content", "")
                     if content:
                         return content.strip()
+            else:
+                print(f"[OpenRouter Error: {model}] Status {resp.status_code}: {resp.text[:120]}")
     except Exception as e:
-        print(f"[OpenRouter Error: {model}] {e}")
+        print(f"[OpenRouter Exception: {model}] {e}")
     return None
 
 # ==============================================================================
@@ -209,11 +228,13 @@ async def call_gemini_api(
     max_tokens: int = 800
 ) -> Optional[str]:
     """Invoca la API de Google Generative Language directamente con la suscripción Google AI Pro."""
-    if not GEMINI_API_KEY:
+    cfg = get_env_config()
+    api_key = cfg["GEMINI_API_KEY"]
+    if not api_key:
         return None
 
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         
         full_system = system_text
         if canonical_context:
@@ -248,7 +269,7 @@ async def call_gemini_api(
                         if text:
                             return text.strip()
             else:
-                print(f"[Google AI Direct Error: {model}] Status {resp.status_code}: {resp.text}")
+                print(f"[Google AI Direct Info: {model}] Status {resp.status_code}: {resp.text[:120]}")
     except Exception as e:
         print(f"[Google AI Direct Exception: {model}] {e}")
 
@@ -259,27 +280,30 @@ async def evaluate_decision_router(query: str) -> Optional[str]:
     Consulta a Jev o al router de decisiones de OpenRouter si está configurado.
     Retorna la categoría: 'OUT_OF_SCOPE', 'CANON_FAQ', 'TIER_HEAVY', o 'TIER_FAST'.
     """
-    if not OPENROUTER_API_KEY:
+    cfg = get_env_config()
+    api_key = cfg["OPENROUTER_API_KEY"]
+    router_model = cfg["OPENROUTER_ROUTER_MODEL"]
+    if not api_key:
         return None
     try:
         url = "https://openrouter.ai/api/v1/chat/completions"
         headers = {
-            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             "HTTP-Referer": "http://localhost:4321",
             "X-Title": "Daarick Portfolio Wiki Router"
         }
         router_prompt = (
-            "Eres un enrutador de decisiones técnicas para un asistente de IA de portafolio. "
-            "Clasifica la consulta del usuario en una de estas categorías estrictas:\n"
-            "- OUT_OF_SCOPE: Temas ajenos a software, IA o portafolio (recetas, medicina, deportes, etc.).\n"
+            "Eres un enrutador de intenciones para un asistente técnico de portafolio de ingeniería de software e IA. "
+            "Clasifica la consulta del usuario en una de estas 4 categorías estrictas:\n"
+            "- OUT_OF_SCOPE: Temas totalmente ajenos a software, IA o portafolio (recetas de cocina, medicina, deportes, horóscopos, etc.).\n"
             "- CANON_FAQ: Pregunta puntual sobre los proyectos de Erick (Graphito, Tetring, PAIDEA, Paralel) o contacto.\n"
-            "- TIER_HEAVY: Pregunta compleja de arquitectura, viabilidad profunda, cálculo contable o migración de sistemas.\n"
-            "- TIER_FAST: Duda general de desarrollo, aclaración técnica, charla o consulta estándar.\n\n"
+            "- TIER_HEAVY: Pregunta compleja sobre diseño de arquitectura empresarial, viabilidad de automatización, migración masiva o contabilidad.\n"
+            "- TIER_FAST: Pregunta técnica de programación (generar código en Python, dudas de librerías, algoritmos, explicaciones, etc.) o consulta estándar.\n\n"
             "Responde ÚNICAMENTE en formato JSON: {\"route\": \"CATEGORY\"}"
         )
         payload = {
-            "model": OPENROUTER_ROUTER_MODEL,
+            "model": router_model,
             "messages": [
                 {"role": "system", "content": router_prompt},
                 {"role": "user", "content": query}
@@ -302,51 +326,59 @@ async def evaluate_decision_router(query: str) -> Optional[str]:
         print(f"[Jev Router Fallback to Heuristic]: {e}")
     return None
 
-async def call_gemini_heavy(messages: List[ChatMessage], canonical_context: str = "") -> Optional[str]:
+async def call_gemini_heavy(messages: List[ChatMessage], canonical_context: str = "") -> Tuple[Optional[str], str]:
     """Invoca Gemini Pro (Google AI Pro directo) con respaldo en OpenRouter si está configurado."""
+    cfg = get_env_config()
     # 1. Llamada directa a Google AI Pro
-    res = await call_gemini_api(
-        messages=messages,
-        model=GEMINI_HEAVY_MODEL,
-        system_text=SYSTEM_INSTRUCTION,
-        canonical_context=canonical_context,
-        max_tokens=800
-    )
-    if res:
-        return res
+    if cfg["GEMINI_API_KEY"]:
+        res = await call_gemini_api(
+            messages=messages,
+            model=cfg["GEMINI_HEAVY_MODEL"],
+            system_text=SYSTEM_INSTRUCTION,
+            canonical_context=canonical_context,
+            max_tokens=800
+        )
+        if res:
+            return (res, "google_ai_pro_heavy")
 
     # 2. Respaldo vía OpenRouter si existe
-    if OPENROUTER_API_KEY:
-        return await call_openrouter_api(
+    if cfg["OPENROUTER_API_KEY"]:
+        res = await call_openrouter_api(
             messages,
-            model="google/gemini-pro-1.5",
+            model=cfg["OPENROUTER_CHEAP_MODEL"],
             system_text=SYSTEM_INSTRUCTION + (f"\n\n[HECHOS]: {canonical_context}" if canonical_context else ""),
             max_tokens=800
         )
-    return None
+        if res:
+            return (res, f"openrouter_{cfg['OPENROUTER_CHEAP_MODEL'].split('/')[-1]}")
+    return (None, "local_fallback")
 
-async def call_gemini_fast(messages: List[ChatMessage], canonical_context: str = "") -> Optional[str]:
+async def call_gemini_fast(messages: List[ChatMessage], canonical_context: str = "") -> Tuple[Optional[str], str]:
     """Invoca Gemini Flash (Google AI Pro directo) con respaldo en OpenRouter si está configurado."""
+    cfg = get_env_config()
     # 1. Llamada directa a Google AI Pro
-    res = await call_gemini_api(
-        messages=messages,
-        model=GEMINI_FAST_MODEL,
-        system_text=SYSTEM_INSTRUCTION,
-        canonical_context=canonical_context,
-        max_tokens=500
-    )
-    if res:
-        return res
+    if cfg["GEMINI_API_KEY"]:
+        res = await call_gemini_api(
+            messages=messages,
+            model=cfg["GEMINI_FAST_MODEL"],
+            system_text=SYSTEM_INSTRUCTION,
+            canonical_context=canonical_context,
+            max_tokens=600
+        )
+        if res:
+            return (res, "google_ai_pro_flash")
 
     # 2. Respaldo vía OpenRouter si existe
-    if OPENROUTER_API_KEY:
-        return await call_openrouter_api(
+    if cfg["OPENROUTER_API_KEY"]:
+        res = await call_openrouter_api(
             messages,
-            model=OPENROUTER_CHEAP_MODEL,
+            model=cfg["OPENROUTER_CHEAP_MODEL"],
             system_text=SYSTEM_INSTRUCTION + (f"\n\n[HECHOS]: {canonical_context}" if canonical_context else ""),
-            max_tokens=500
+            max_tokens=600
         )
-    return None
+        if res:
+            return (res, f"openrouter_{cfg['OPENROUTER_CHEAP_MODEL'].split('/')[-1]}")
+    return (None, "local_fallback")
 
 # ==============================================================================
 # MOTOR LOCAL DETERMINISTA (Garantía de respuesta offline / 0 costo)
@@ -369,7 +401,7 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
     q = latest_msg.lower()
     feasibility_verdict, tech_stack = evaluate_feasibility(latest_msg)
 
-    if any(k in q for k in ["contabilidad", "calcular", "matematica", "numeros", "sumas", "impuesto", "por qué no usar ia para contabilidad"]):
+    if any(k in q for k in ["contabilidad", "impuesto", "balance contable", "sumar facturas", "ia para contabilidad", "cálculo financiero", "por qué no usar ia para contabilidad"]):
         reply = (
             "**¡Gran pregunta técnica! Aquí está el veredicto arquitectónico:**\n\n"
             "Un modelo de lenguaje (LLM) es un motor probabilístico: predice qué palabra o token sigue según probabilidades estadísticas. "
@@ -393,7 +425,7 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             strategy="feasibility_eval"
         )
 
-    if any(k in q for k in ["graphito", "plagio", "codigo", "copias", "ofuscad"]):
+    if any(k in q for k in ["graphito", "plagio de codigo", "deteccion de plagio", "ofuscad", "ofuscacion", "tree-sitter", "graphcodebert"]):
         proj = KNOWLEDGE_BASE["projects"]["graphito"]
         reply = (
             f"**Graphito // Detección de Plagio Semántico con Deep Learning**\n\n"
@@ -415,6 +447,27 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             tech_recommendations=["GraphCodeBERT", "Tree-sitter", "PyTorch", "FastAPI"],
             source="local_knowledge_engine",
             strategy="predefined_canon"
+        )
+
+    if any(k in q for k in ["script", "libreria", "funcion", "ayudame a programar", "crear codigo", "escribir codigo"]):
+        reply = (
+            "**¡Con gusto te oriento en el diseño y arquitectura de tu código!**\n\n"
+            "Como principio arquitectónico fundamental (**CONCEPTS > CODE**):\n"
+            "• Para procesamiento de datos y scripts de automatización: Recomendamos **Python con Pandas o Polars**, tipado estricto con **Pydantic** y manejo robusto de excepciones.\n"
+            "• Para APIs y microservicios: **FastAPI** con validación asíncrona.\n"
+            "• Para lógica intensiva en rendimiento o tiempo real: Módulos compilados en **C++** o concurrencia multihilo.\n\n"
+            "¿Qué objetivo específico buscas resolver en tu script (ej. procesar un archivo CSV, consumir una API o automatizar un flujo de datos)?"
+        )
+        return ChatResponse(
+            reply=reply,
+            suggestions=[
+                "✦ Limpiar y procesar un archivo CSV",
+                "💬 Crear una API asíncrona con FastAPI",
+                "📋 Automatizar extracción de datos con Python",
+                "⚡ ¿Cómo estructura Erick sus arquitecturas?"
+            ],
+            source="local_knowledge_engine",
+            strategy="standard"
         )
 
     if any(k in q for k in ["tetring", "horario", "saes", "empalme", "combinatori"]):
@@ -659,7 +712,7 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
 
     # 5. TIER A: Razonamiento Complejo (Gemini Pro - Google AI Pro directo)
     if needs_heavy:
-        heavy_reply = await call_gemini_heavy(messages, canonical_context=canonical_context)
+        heavy_reply, heavy_source = await call_gemini_heavy(messages, canonical_context=canonical_context)
         if heavy_reply:
             return ChatResponse(
                 reply=heavy_reply,
@@ -670,13 +723,13 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
                 ],
                 feasibility_verdict=feasibility or "ALTA_VIABILIDAD",
                 tech_recommendations=tech or ["FastAPI", "Python", "RAG", "PostgreSQL"],
-                source="google_ai_pro" if GEMINI_API_KEY else "openrouter_heavy",
+                source=heavy_source,
                 strategy="heavy_reasoning"
             )
 
     # 6. TIER B: Pregunta ágil / Asesoría directa (Gemini Flash - Google AI Pro directo)
     # Aprovecha la suscripción Google AI Pro para velocidad (<400ms) y costo cero en OpenRouter
-    fast_reply = await call_gemini_fast(messages, canonical_context=canonical_context)
+    fast_reply, fast_source = await call_gemini_fast(messages, canonical_context=canonical_context)
     if fast_reply:
         return ChatResponse(
             reply=fast_reply,
@@ -688,7 +741,7 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
             ],
             feasibility_verdict=feasibility,
             tech_recommendations=tech,
-            source="google_ai_flash" if GEMINI_API_KEY else "openrouter_cheap",
+            source=fast_source,
             strategy="fast_response"
         )
 
