@@ -82,8 +82,9 @@ export default function TestimonialsInteractive() {
   // Modales
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<Testimonial | null>(null);
 
-  // Formulario nuevo veredicto con límites de caracteres
+  // Formulario nuevo veredicto
   const [formSystem, setFormSystem] = useState("Graphito");
   const [formName, setFormName] = useState("");
   const [formRole, setFormRole] = useState("");
@@ -100,17 +101,16 @@ export default function TestimonialsInteractive() {
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminMsg, setAdminMsg] = useState<string | null>(null);
 
-  // Tarjeta activa / expandida
-  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
-
-  // --- Animación con física e inercia ---
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // --- Animación GPU-accelerated con Translate3d y Física de Inercia ---
+  const trackRef = useRef<HTMLDivElement>(null);
+  const firstSetRef = useRef<HTMLDivElement>(null);
   const isHoveredRef = useRef(false);
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
-  const scrollStartRef = useRef(0);
-  const speedRef = useRef(0.4);
-  const targetSpeedRef = useRef(0.4);
+  const dragStartOffsetRef = useRef(0);
+  const offsetRef = useRef(0);
+  const speedRef = useRef(0.45);
+  const targetSpeedRef = useRef(0.45);
   const lastXRef = useRef(0);
   const dragVelocityRef = useRef(0);
 
@@ -125,7 +125,7 @@ export default function TestimonialsInteractive() {
         }
       }
     } catch {
-      // Si la API local no responde, se mantienen los SEED_TESTIMONIALS
+      // Fallback local garantizado
     }
   };
 
@@ -133,17 +133,21 @@ export default function TestimonialsInteractive() {
     fetchApproved();
   }, []);
 
-  // Animación continua con inercia
+  // Animación continua mediante translate3d acelerado por GPU (cero temblores / cero reflow)
   useEffect(() => {
     let animId: number;
 
     const animate = () => {
-      const el = scrollContainerRef.current;
-      if (el) {
+      const track = trackRef.current;
+      const firstSet = firstSetRef.current;
+
+      if (track && firstSet) {
+        const singleSetWidth = firstSet.offsetWidth + 20; // 20px gap
+
         if (!isDraggingRef.current) {
           targetSpeedRef.current = isHoveredRef.current ? 0 : 0.45;
 
-          // Amortiguación hacia targetSpeed con inercia
+          // Amortiguación hacia velocidad objetivo con inercia suave
           speedRef.current += (targetSpeedRef.current - speedRef.current) * 0.05;
 
           // Inercia de arrastre
@@ -152,15 +156,19 @@ export default function TestimonialsInteractive() {
             dragVelocityRef.current *= 0.92;
           }
 
-          if (Math.abs(speedRef.current) > 0.01) {
-            el.scrollLeft += speedRef.current;
+          if (Math.abs(speedRef.current) > 0.005) {
+            offsetRef.current += speedRef.current;
 
-            const maxScroll = el.scrollWidth / 2;
-            if (el.scrollLeft >= maxScroll) {
-              el.scrollLeft -= maxScroll;
-            } else if (el.scrollLeft <= 0) {
-              el.scrollLeft += maxScroll;
+            // Bucle continuo matemáticamente perfecto
+            if (singleSetWidth > 0) {
+              if (offsetRef.current >= singleSetWidth) {
+                offsetRef.current -= singleSetWidth;
+              } else if (offsetRef.current < 0) {
+                offsetRef.current += singleSetWidth;
+              }
             }
+
+            track.style.transform = `translate3d(-${offsetRef.current.toFixed(2)}px, 0, 0)`;
           }
         }
       }
@@ -171,28 +179,27 @@ export default function TestimonialsInteractive() {
     return () => cancelAnimationFrame(animId);
   }, [testimonials]);
 
-  // Manejo de arrastre
-  const onMouseDown = (e: React.MouseEvent) => {
+  // Manejo de arrastre con mouse o touch
+  const handleMouseDown = (e: React.MouseEvent) => {
     isDraggingRef.current = true;
     startXRef.current = e.pageX;
+    dragStartOffsetRef.current = offsetRef.current;
     lastXRef.current = e.pageX;
     dragVelocityRef.current = 0;
-    if (scrollContainerRef.current) {
-      scrollStartRef.current = scrollContainerRef.current.scrollLeft;
-    }
   };
 
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingRef.current || !scrollContainerRef.current) return;
-    e.preventDefault();
-    const x = e.pageX;
-    const walk = (x - startXRef.current) * 1.2;
-    scrollContainerRef.current.scrollLeft = scrollStartRef.current - walk;
-    dragVelocityRef.current = (lastXRef.current - x) * 0.4;
-    lastXRef.current = x;
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingRef.current || !trackRef.current) return;
+    const delta = e.pageX - startXRef.current;
+    offsetRef.current = dragStartOffsetRef.current - delta;
+
+    dragVelocityRef.current = (lastXRef.current - e.pageX) * 0.35;
+    lastXRef.current = e.pageX;
+
+    trackRef.current.style.transform = `translate3d(-${offsetRef.current.toFixed(2)}px, 0, 0)`;
   };
 
-  const onMouseUp = () => {
+  const handleMouseUp = () => {
     isDraggingRef.current = false;
   };
 
@@ -221,7 +228,7 @@ export default function TestimonialsInteractive() {
       if (res.ok) {
         const data = await res.json();
         setSubmitFeedback(
-          `¡Veredicto enviado con éxito! La IA generó tu titular: "${data.headline}". Se publicará una vez aprobado por Erick.`
+          `¡Veredicto registrado! La IA sintetizó el titular: "${data.headline}". Se publicará tras la revisión de Erick.`
         );
         setFormBefore("");
         setFormAfter("");
@@ -229,10 +236,10 @@ export default function TestimonialsInteractive() {
         setFormRole("");
         setFormExtra("");
       } else {
-        setSubmitFeedback("Ocurrió un error al enviar el veredicto. Revisa los campos e intenta de nuevo.");
+        setSubmitFeedback("Ocurrió un error al enviar el veredicto. Revisa los datos e intenta de nuevo.");
       }
     } catch {
-      setSubmitFeedback("No se pudo conectar con el servidor local. Tu veredicto se procesará en cuanto el servicio esté disponible.");
+      setSubmitFeedback("No se pudo conectar con el servidor local de base de datos.");
     } finally {
       setSubmitting(false);
     }
@@ -254,7 +261,7 @@ export default function TestimonialsInteractive() {
         setAdminMsg("Clave de administrador incorrecta.");
       }
     } catch {
-      setAdminMsg("Error de conexión al panel de administración.");
+      setAdminMsg("Error al conectar con el servidor.");
     } finally {
       setAdminLoading(false);
     }
@@ -280,7 +287,7 @@ export default function TestimonialsInteractive() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Deseas descartar y eliminar este veredicto?")) return;
+    if (!confirm("¿Deseas descartar este veredicto?")) return;
     try {
       const res = await fetch(`http://127.0.0.1:8000/api/v1/testimonials/admin/${id}`, {
         method: "DELETE",
@@ -295,15 +302,76 @@ export default function TestimonialsInteractive() {
     }
   };
 
-  // Duplicar lista para efecto infinito continuo
-  const loopList = [...testimonials, ...testimonials];
+  // Render individual de una tarjeta con altura fija uniforme (previene layout shift)
+  const renderCard = (item: Testimonial, key: string) => (
+    <div
+      key={key}
+      onClick={() => setSelectedCard(item)}
+      className="w-[330px] sm:w-[390px] h-[370px] shrink-0 p-5 rounded-2xl bg-[rgba(35,23,39,0.85)] border border-[rgba(147,80,115,0.35)] backdrop-blur-md flex flex-col justify-between transition-all duration-200 hover:border-[#c084fc] hover:shadow-[0_8px_30px_rgba(192,132,252,0.16)] group cursor-pointer relative"
+    >
+      {/* Cabecera */}
+      <div className="flex items-center justify-between pb-2.5 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs">
+        <span className="px-2.5 py-0.5 rounded bg-[rgba(16,185,129,0.12)] text-[#10B981] font-semibold border border-[rgba(16,185,129,0.3)]">
+          [ Sistema: {item.system} ]
+        </span>
+        <span className="text-[#c084fc] font-bold text-sm">“</span>
+      </div>
+
+      {/* Titular de impacto generado por LLM */}
+      <div className="my-2">
+        <h4 className="text-base sm:text-lg font-semibold text-[#F8F4E9] leading-snug group-hover:text-[#ddb8ff] transition-colors line-clamp-2">
+          {item.headline}
+        </h4>
+      </div>
+
+      {/* Sección central con scroll interno suave y limpio */}
+      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-2 my-1 pr-1">
+        <div className="p-2.5 rounded-lg bg-[rgba(255,95,86,0.08)] border border-[rgba(255,95,86,0.25)] text-xs text-[#F6DBC0]">
+          <span className="font-mono text-[#ff5f56] font-bold block text-[10px] mb-0.5">
+            [ 🔴 Antes del sistema ]
+          </span>
+          <p className="leading-relaxed italic line-clamp-3">"{item.before}"</p>
+        </div>
+
+        <div className="p-2.5 rounded-lg bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.25)] text-xs text-[#F6DBC0]">
+          <span className="font-mono text-[#10B981] font-bold block text-[10px] mb-0.5">
+            [ 🟢 Ahora con la herramienta ]
+          </span>
+          <p className="leading-relaxed line-clamp-3">"{item.after}"</p>
+        </div>
+
+        {item.extra_comments && (
+          <div className="p-2.5 rounded-lg bg-[rgba(192,132,252,0.08)] border border-[rgba(192,132,252,0.25)] text-xs text-[#F8F4E9]">
+            <span className="font-mono text-[#c084fc] font-bold block text-[10px] mb-0.5">
+              [ ✦ Comentario adicional ]
+            </span>
+            <p className="leading-relaxed line-clamp-2">"{item.extra_comments}"</p>
+          </div>
+        )}
+      </div>
+
+      {/* Pie de tarjeta */}
+      <div className="pt-2.5 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between text-xs mt-1 shrink-0">
+        <div className="flex flex-col max-w-[70%]">
+          <span className="font-semibold text-[#F8F4E9] truncate">{item.author_name}</span>
+          <span className="text-[11px] text-[rgba(246,219,192,0.65)] font-mono truncate">
+            {item.author_role}
+          </span>
+        </div>
+
+        <span className="text-[10px] font-mono text-[#c084fc] opacity-80 group-hover:opacity-100 transition-opacity">
+          [ ver completo ↗ ]
+        </span>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Barra superior de acciones */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-xs sm:text-sm text-[#F6DBC0] max-w-xl leading-relaxed">
-          Comentarios reales de personas y equipos. Pasa el cursor por las tarjetas para detener el riel y conocer el proceso <span className="text-[#ff5f56]">Antes</span> vs <span className="text-[#10B981]">Ahora</span>.
+          Comentarios reales de personas y equipos. Haz clic en cualquier tarjeta para leer el veredicto completo o comparte tu propia experiencia.
         </p>
 
         <div className="flex items-center gap-2.5 shrink-0">
@@ -323,106 +391,101 @@ export default function TestimonialsInteractive() {
         </div>
       </div>
 
-      {/* Riel Horizontal Continuo con Física de Inercia */}
+      {/* Riel Horizontal Continuo con Física de Inercia y Aceleración por GPU */}
       <div
         className="relative w-full overflow-hidden py-3 select-none cursor-grab active:cursor-grabbing"
         onMouseEnter={() => (isHoveredRef.current = true)}
         onMouseLeave={() => {
           isHoveredRef.current = false;
-          onMouseUp();
+          handleMouseUp();
         }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
       >
         {/* Sombras laterales de desvanecimiento */}
         <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-[rgba(21,10,25,0.95)] to-transparent z-10" />
         <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-[rgba(21,10,25,0.95)] to-transparent z-10" />
 
-        {/* Track desplazable */}
+        {/* Track interior con Translate3d acelerado por hardware */}
         <div
-          ref={scrollContainerRef}
-          onMouseDown={onMouseDown}
-          onMouseMove={onMouseMove}
-          onMouseUp={onMouseUp}
-          className="flex items-start gap-5 overflow-x-hidden no-scrollbar py-2"
-          style={{ scrollBehavior: "auto" }}
+          ref={trackRef}
+          className="flex items-center gap-5 py-2"
+          style={{ willChange: "transform" }}
         >
-          {loopList.map((item, idx) => {
-            const cardKey = `${item.id}-${idx}`;
-            const isExpanded = expandedCardId === cardKey;
+          {/* Primer set de tarjetas (originales) */}
+          <div ref={firstSetRef} className="flex items-center gap-5 shrink-0">
+            {testimonials.map((item, idx) => renderCard(item, `first-${item.id}-${idx}`))}
+          </div>
 
-            return (
-              <div
-                key={cardKey}
-                onMouseEnter={() => setExpandedCardId(cardKey)}
-                onMouseLeave={() => setExpandedCardId(null)}
-                onClick={() => setExpandedCardId(isExpanded ? null : cardKey)}
-                className="w-[330px] sm:w-[400px] shrink-0 p-5 rounded-2xl bg-[rgba(35,23,39,0.8)] border border-[rgba(147,80,115,0.35)] backdrop-blur-md flex flex-col justify-between transition-all duration-300 hover:border-[#c084fc]/70 hover:shadow-[0_10px_35px_rgba(192,132,252,0.18)] group relative cursor-pointer"
-              >
-                {/* Cabecera de tarjeta */}
-                <div className="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs">
-                  <span className="px-2.5 py-0.5 rounded bg-[rgba(16,185,129,0.12)] text-[#10B981] font-semibold border border-[rgba(16,185,129,0.3)]">
-                    [ Sistema: {item.system} ]
-                  </span>
-                  <span className="text-[#c084fc] font-bold text-sm">“</span>
-                </div>
-
-                {/* Titular de impacto generado por LLM */}
-                <div className="my-3">
-                  <h4 className="text-base sm:text-lg font-semibold text-[#F8F4E9] leading-snug group-hover:text-[#ddb8ff] transition-colors">
-                    {item.headline}
-                  </h4>
-                </div>
-
-                {/* Comparación Antes vs Ahora SIEMPRE visible en resumen, expandida en detalle */}
-                <div className="flex flex-col gap-2.5 my-2">
-                  <div className="p-3 rounded-xl bg-[rgba(255,95,86,0.08)] border border-[rgba(255,95,86,0.25)] text-xs text-[#F6DBC0]">
-                    <span className="font-mono text-[#ff5f56] font-bold block mb-1">
-                      [ 🔴 Antes del sistema ]
-                    </span>
-                    <p className={`leading-relaxed italic ${!isExpanded ? "line-clamp-2" : ""}`}>
-                      "{item.before}"
-                    </p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.25)] text-xs text-[#F6DBC0]">
-                    <span className="font-mono text-[#10B981] font-bold block mb-1">
-                      [ 🟢 Ahora con la herramienta ]
-                    </span>
-                    <p className={`leading-relaxed ${!isExpanded ? "line-clamp-2" : ""}`}>
-                      "{item.after}"
-                    </p>
-                  </div>
-
-                  {/* Comentario adicional libre si existe y está expandido */}
-                  {isExpanded && item.extra_comments && (
-                    <div className="p-3 rounded-xl bg-[rgba(192,132,252,0.08)] border border-[rgba(192,132,252,0.25)] text-xs text-[#F8F4E9] animate-fade-in">
-                      <span className="font-mono text-[#c084fc] font-bold block mb-1">
-                        [ ✦ Comentario adicional ]
-                      </span>
-                      <p className="leading-relaxed">"{item.extra_comments}"</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Pie de tarjeta */}
-                <div className="pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between text-xs mt-2">
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-[#F8F4E9]">{item.author_name}</span>
-                    <span className="text-[11px] text-[rgba(246,219,192,0.65)] font-mono">
-                      {item.author_role}
-                    </span>
-                  </div>
-
-                  <span className="text-[10px] font-mono text-[#c084fc] opacity-80 group-hover:opacity-100 transition-opacity">
-                    {isExpanded ? "▲ ver menos" : "▼ ver completo"}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+          {/* Segundo set de tarjetas (duplicadas para loop continuo sin cortes) */}
+          <div className="flex items-center gap-5 shrink-0" aria-hidden="true">
+            {testimonials.map((item, idx) => renderCard(item, `second-${item.id}-${idx}`))}
+          </div>
         </div>
       </div>
 
-      {/* MODAL: Dejar mi veredicto */}
+      {/* MODAL 1: Lectura de Veredicto Completo */}
+      {selectedCard && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl bg-[rgba(26,15,30,0.98)] border border-[rgba(147,80,115,0.45)] shadow-2xl p-6 sm:p-8 flex flex-col gap-4 relative">
+            <div className="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs">
+              <span className="px-2.5 py-0.5 rounded bg-[rgba(16,185,129,0.12)] text-[#10B981] font-semibold border border-[rgba(16,185,129,0.3)]">
+                [ Sistema: {selectedCard.system} ]
+              </span>
+              <button
+                onClick={() => setSelectedCard(null)}
+                className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.2)] hover:bg-[rgba(80,45,85,0.4)] text-[#F6DBC0] flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div>
+              <span className="font-mono text-xs text-[#c084fc]">// TITULAR SINTETIZADO POR IA</span>
+              <h3 className="text-xl font-semibold text-[#F8F4E9] mt-1 leading-snug">
+                {selectedCard.headline}
+              </h3>
+            </div>
+
+            <div className="flex flex-col gap-3 my-2">
+              <div className="p-3.5 rounded-xl bg-[rgba(255,95,86,0.08)] border border-[rgba(255,95,86,0.25)] text-xs text-[#F6DBC0]">
+                <strong className="font-mono text-[#ff5f56] block mb-1.5">[ 🔴 ¿Cómo era el proceso antes? ]</strong>
+                <p className="leading-relaxed italic">"{selectedCard.before}"</p>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.25)] text-xs text-[#F6DBC0]">
+                <strong className="font-mono text-[#10B981] block mb-1.5">[ 🟢 ¿Cómo es ahora con la herramienta? ]</strong>
+                <p className="leading-relaxed">"{selectedCard.after}"</p>
+              </div>
+
+              {selectedCard.extra_comments && (
+                <div className="p-3.5 rounded-xl bg-[rgba(192,132,252,0.08)] border border-[rgba(192,132,252,0.25)] text-xs text-[#F8F4E9]">
+                  <strong className="font-mono text-[#c084fc] block mb-1.5">[ ✦ Comentarios adicionales del evaluador ]</strong>
+                  <p className="leading-relaxed">"{selectedCard.extra_comments}"</p>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between text-xs">
+              <div className="flex flex-col">
+                <span className="font-semibold text-[#F8F4E9]">{selectedCard.author_name}</span>
+                <span className="text-[11px] text-[rgba(246,219,192,0.65)] font-mono">
+                  {selectedCard.author_role}
+                </span>
+              </div>
+              <button
+                onClick={() => setSelectedCard(null)}
+                className="px-4 py-2 rounded-lg bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.5)] text-[#F8F4E9] font-mono text-xs"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Dejar mi veredicto */}
       {isSubmitOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-[rgba(26,15,30,0.98)] border border-[rgba(147,80,115,0.45)] shadow-2xl p-6 sm:p-8 flex flex-col gap-5 relative">
@@ -450,7 +513,7 @@ export default function TestimonialsInteractive() {
                 <p className="text-sm text-[#F6DBC0] leading-relaxed">{submitFeedback}</p>
                 <button
                   onClick={() => setIsSubmitOpen(false)}
-                  className="mt-2 px-4 py-2 rounded-lg bg-[#10B981] hover:bg-[#34D399] text-[#042f2e] font-mono text-xs font-bold"
+                  className="mt-2 px-4 py-2 rounded-lg bg-[#10B981] hover:bg-[#34D399] text-[#042f2e] font-mono text-xs font-bold cursor-pointer"
                 >
                   Entendido, cerrar
                 </button>
@@ -501,7 +564,7 @@ export default function TestimonialsInteractive() {
                     <input
                       type="text"
                       maxLength={60}
-                      placeholder="ej. Gerente de Operaciones (opcional)"
+                      placeholder="ej. Gerente de Finanzas (opcional)"
                       value={formRole}
                       onChange={(e) => setFormRole(e.target.value)}
                       className="p-2.5 rounded-lg bg-[rgba(35,23,39,0.9)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] text-xs focus:border-[#c084fc] outline-none"
@@ -601,7 +664,7 @@ export default function TestimonialsInteractive() {
         </div>
       )}
 
-      {/* MODAL: Moderación Admin (Erick) */}
+      {/* MODAL 3: Moderación Admin (Erick) */}
       {isAdminOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
           <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-[rgba(26,15,30,0.98)] border border-[rgba(147,80,115,0.45)] shadow-2xl p-6 sm:p-8 flex flex-col gap-5 relative">
