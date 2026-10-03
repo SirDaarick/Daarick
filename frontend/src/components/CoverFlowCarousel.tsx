@@ -5,28 +5,22 @@ export const CoverFlowCarousel: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const total = PROJECTS.length;
-  const autoPlayIntervalMs = 4600; // ~4.6s: suficiente para leer y apreciar la rotación
+  const autoPlayIntervalMs = 4200; // ~4.2s por tarjeta
 
-  // Auto-play / Rotación lenta continua
+  // Auto-play continuo y suave
   useEffect(() => {
-    if (isPaused) return;
-
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return;
-    }
-
     const interval = setInterval(() => {
-      if (document.hidden) return;
+      if (document.hidden || isPaused) return;
       setActiveIndex((prev) => (prev + 1) % total);
     }, autoPlayIntervalMs);
 
     return () => clearInterval(interval);
   }, [isPaused, total]);
 
-  // Touch Swipe Gesture State
-  const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
-  const minSwipeDistance = 45;
+  // Pointer / Mouse Drag & Touch Gestures
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const minSwipeDistance = 35;
 
   const nextCard = () => {
     setActiveIndex((prev) => (prev + 1) % total);
@@ -40,26 +34,25 @@ export const CoverFlowCarousel: React.FC = () => {
     setActiveIndex(index);
   };
 
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchEndX.current = null;
-    touchStartX.current = e.targetTouches[0].clientX;
+  const onPointerDown = (e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest('button, a, textarea')) return;
+    isDragging.current = true;
+    dragStartX.current = e.clientX;
   };
 
-  const onTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.targetTouches[0].clientX;
-  };
-
-  const onTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current) return;
-    const distance = touchStartX.current - touchEndX.current;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe) {
+  const onPointerUp = (e: React.PointerEvent) => {
+    if (!isDragging.current) return;
+    const distance = dragStartX.current - e.clientX;
+    if (distance > minSwipeDistance) {
       nextCard();
-    } else if (isRightSwipe) {
+    } else if (distance < -minSwipeDistance) {
       prevCard();
     }
+    isDragging.current = false;
+  };
+
+  const onPointerCancel = () => {
+    isDragging.current = false;
   };
 
   const openInspectModal = (key: string) => {
@@ -69,7 +62,7 @@ export const CoverFlowCarousel: React.FC = () => {
   };
 
   return (
-    <section className="flex flex-col gap-5 sm:gap-6" id="proyectos">
+    <section className="flex flex-col gap-5 sm:gap-6 overflow-x-clip" id="proyectos">
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -80,7 +73,7 @@ export const CoverFlowCarousel: React.FC = () => {
             Casos de estudio interactivos
           </h2>
           <p className="text-sm text-[#F6DBC0] mt-1 max-w-xl leading-relaxed">
-            Sistemas reales con integración de IA. Desliza lateralmente para navegar o pulsa una tarjeta para abrir su simulador.
+            Sistemas reales con integración de IA. Desliza con el ratón o pulsa cualquier tarjeta para traerla al frente.
           </p>
         </div>
 
@@ -106,20 +99,12 @@ export const CoverFlowCarousel: React.FC = () => {
         </div>
       </div>
 
-      {/* 3D Stage Wrapper with Touch Handlers */}
+      {/* 3D Stage Wrapper with Pointer (Mouse + Touch) Handlers */}
       <div
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-        onTouchStart={(e) => {
-          setIsPaused(true);
-          onTouchStart(e);
-        }}
-        onTouchMove={onTouchMove}
-        onTouchEnd={() => {
-          setIsPaused(false);
-          onTouchEnd();
-        }}
-        className="relative w-full h-[500px] sm:h-[440px] my-2 sm:my-4 perspective-stage flex items-center justify-center overflow-hidden py-4 select-none touch-pan-y"
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+        className="relative w-full h-[520px] sm:h-[450px] my-2 sm:my-4 perspective-stage flex items-center justify-center py-4 select-none touch-pan-y cursor-grab active:cursor-grabbing"
       >
         {PROJECTS.map((project, index) => {
           const diff = (index - activeIndex + total) % total;
@@ -137,11 +122,19 @@ export const CoverFlowCarousel: React.FC = () => {
             positionClass = 'card-far-left';
           }
 
+          const isCenter = diff === 0;
+
           return (
             <div
               key={project.id}
               onClick={() => handleCardClick(index)}
-              className={`carousel-3d-card ${positionClass} absolute w-[90%] sm:w-full max-w-[360px] sm:max-w-[450px] p-5 sm:p-6 rounded-xl bg-[rgba(26,15,30,0.96)] border border-[rgba(147,80,115,0.4)] backdrop-blur-xl flex flex-col justify-between`}
+              onMouseEnter={() => {
+                if (isCenter) setIsPaused(true);
+              }}
+              onMouseLeave={() => {
+                if (isCenter) setIsPaused(false);
+              }}
+              className={`carousel-3d-card ${positionClass} absolute w-[90%] sm:w-full max-w-[360px] sm:max-w-[450px] p-5 sm:p-6 rounded-xl bg-[rgba(26,15,30,0.96)] border border-[rgba(147,80,115,0.4)] backdrop-blur-xl flex flex-col justify-between transition-all`}
             >
               {/* Corner Crosshairs */}
               <div className="absolute top-2 left-2 font-mono text-xs text-[#c084fc] select-none">+</div>
@@ -156,7 +149,7 @@ export const CoverFlowCarousel: React.FC = () => {
                     {project.id}
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 font-mono text-xs text-[#10B981] border border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
                     {project.status}
                   </span>
                 </div>
@@ -224,7 +217,7 @@ export const CoverFlowCarousel: React.FC = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="py-2 px-3 rounded bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-mono text-xs transition-all text-center flex items-center justify-center gap-1 active:scale-95"
+                    className="py-2 px-3 rounded bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-mono text-xs transition-all text-center flex items-center justify-center gap-1 active:scale-95 cursor-pointer"
                   >
                     <span>Ver demo ↗</span>
                   </a>
@@ -237,7 +230,7 @@ export const CoverFlowCarousel: React.FC = () => {
 
       {/* Tip below 3D Carousel */}
       <div className="flex items-center justify-center gap-2 text-[rgba(246,219,192,0.65)] font-mono text-[11px] sm:text-xs text-center px-4">
-        <span>Desliza lateralmente con el dedo o pulsa cualquier tarjeta para enfocarla</span>
+        <span>Arrastra con el ratón/dedo o pulsa cualquier tarjeta para enfocarla</span>
       </div>
     </section>
   );
