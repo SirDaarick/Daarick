@@ -1,10 +1,16 @@
 import os
 import re
+import json
 import httpx
 from typing import List, Dict, Any, Optional, Tuple
 from app.schemas.assistant import ChatMessage, ChatResponse
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").strip()
+OPENROUTER_ROUTER_MODEL = os.getenv("OPENROUTER_ROUTER_MODEL", "typesafe/jev").strip()
+OPENROUTER_CHEAP_MODEL = os.getenv("OPENROUTER_CHEAP_MODEL", "google/gemini-2.0-flash-lite:free").strip()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+GEMINI_HEAVY_MODEL = os.getenv("GEMINI_HEAVY_MODEL", "gemini-1.5-pro").strip()
 
 # Base de conocimiento canónica inmutable
 KNOWLEDGE_BASE = {
@@ -68,7 +74,7 @@ KNOWLEDGE_BASE = {
 }
 
 SYSTEM_INSTRUCTION = """
-Eres 'Daverick Assistant', el copiloto técnico y asesor senior de inteligencia artificial del portafolio de Erick Daniel (Daarick).
+Eres 'Wiki', el copiloto técnico y wiki interactiva de inteligencia artificial del portafolio de Erick Daniel (Daarick).
 Tu personalidad:
 - Eres un Senior AI Solutions Architect y apasionado docente (GDE & MVP style).
 - Tu misión es tender un puente pedagógico y honesto entre la alta ingeniería técnica y personas o clientes con o sin conocimiento técnico.
@@ -86,49 +92,54 @@ Respuestas estructuradas:
 """
 
 def is_out_of_scope(text: str) -> bool:
-    """Detecta si la consulta está completamente fuera del alcance del portafolio."""
+    """Filtro de seguridad previo: descarta temas no relacionados con software/IA."""
     q = text.lower()
-    out_of_scope_patterns = [
+    patterns = [
         r"\breceta\b", r"\bcocinar\b", r"\bdieta\b",
         r"\bhackear\b", r"\bvulnerar\b", r"\bdos attack\b",
         r"\bremedio\b", r"\bsintomas\b", r"\bmedicamento\b",
         r"\bhoroscopo\b", r"\btarot\b", r"\bfutbol\b", r"\bpartido de hoy\b"
     ]
-    return any(re.search(pat, q) for pat in out_of_scope_patterns)
+    return any(re.search(pat, q) for pat in patterns)
+
+def is_complex_query(text: str) -> bool:
+    """Identifica si la duda requiere el modelo pesado (Gemini Pro) por su nivel de complejidad técnica/empresarial."""
+    q = text.lower()
+    complex_keywords = [
+        "arquitectura empresarial", "evaluacion de viabilidad", "roi", "retorno de inversion",
+        "migracion de sistema", "cuello de botella", "escalabilidad", "multi-agente complejo",
+        "balance contable", "auditoria de codigo", "pipeline de datos", "despliegue en cluster"
+    ]
+    return any(k in q for k in complex_keywords) or len(text.split()) > 35
 
 def evaluate_feasibility(query_text: str) -> Tuple[Optional[str], List[str]]:
     """Evalúa la viabilidad técnica de una idea de automatización planteada por el usuario."""
     q = query_text.lower()
     
-    # Caso: Cálculos matemáticos puros / Contabilidad con LLMs
     if any(k in q for k in ["contabilidad", "calcular impuestos", "balance contable", "sumar facturas", "matemática pura", "cálculo financiero"]):
         return (
             "VIABLE_CON_RESTRICCIONES",
             ["FastAPI", "SQL / PostgreSQL", "Pydantic", "LLM sólo para extracción"]
         )
         
-    # Caso: Extracción de documentos / facturas / contratos
     if any(k in q for k in ["factura", "facturas", "documento", "pdf", "contrato", "extraer datos", "ocr"]):
         return (
             "ALTA_VIABILIDAD",
             ["FastAPI", "Vision Models / OCR", "Pydantic Schemas", "PostgreSQL"]
         )
         
-    # Caso: WhatsApp / Atención a clientes / Bots
     if any(k in q for k in ["whatsapp", "soporte", "atencion al cliente", "chatbot", "ventas", "crm", "hubspot"]):
         return (
             "ALTA_VIABILIDAD",
             ["WhatsApp Cloud API", "FastAPI", "RAG (ChromaDB)", "Guardrails / Human-in-the-loop"]
         )
         
-    # Caso: Scraping / Automatización de flujos repetitivos
     if any(k in q for k in ["scraping", "extraer de web", "notion", "sheets", "excel", "correo", "gmail"]):
         return (
             "ALTA_VIABILIDAD",
             ["Python Playwright / BeautifulSoup", "FastAPI", "Celery / Background Workers", "Webhooks"]
         )
 
-    # Caso: Algoritmos combinatorios / Horarios / Rutas
     if any(k in q for k in ["horario", "rutas", "combinatoria", "optimizar tiempos", "asignacion"]):
         return (
             "ALTA_VIABILIDAD_DETERMINISTA",
@@ -137,57 +148,115 @@ def evaluate_feasibility(query_text: str) -> Tuple[Optional[str], List[str]]:
 
     return (None, [])
 
-async def call_gemini_api(messages: List[ChatMessage], canonical_context: str = "") -> Optional[str]:
-    """Llama a la API de Gemini aplicando ventana deslizante y contexto canónico."""
-    if not GEMINI_API_KEY:
+# ==============================================================================
+# CLIENTE OPENROUTER (Jev Decision Router & Modelos Económicos)
+# ==============================================================================
+async def call_openrouter_api(
+    messages: List[ChatMessage],
+    model: str,
+    system_text: str = SYSTEM_INSTRUCTION,
+    max_tokens: int = 500
+) -> Optional[str]:
+    """Llama a la API de OpenRouter con cualquier modelo soportado."""
+    if not OPENROUTER_API_KEY:
         return None
-    try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-        
-        system_text = SYSTEM_INSTRUCTION
-        if canonical_context:
-            system_text += f"\n\n[HECHOS CANÓNICOS DEL PORTAFOLIO]:\n{canonical_context}\nAdapta estos hechos a la consulta del usuario sin inventar datos adicionales."
 
-        contents = []
-        for msg in messages:
-            role = "user" if msg.role == "user" else "model"
-            contents.append({
-                "role": role,
-                "parts": [{"text": msg.content}]
-            })
-            
-        payload = {
-            "contents": contents,
-            "systemInstruction": {
-                "parts": [{"text": system_text}]
-            },
-            "generationConfig": {
-                "temperature": 0.3,
-                "maxOutputTokens": 600
-            }
+    try:
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:4321",
+            "X-Title": "Daarick Portfolio Wiki"
         }
-        
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(url, json=payload)
+
+        formatted_msgs = [{"role": "system", "content": system_text}]
+        for m in messages:
+            formatted_msgs.append({
+                "role": "user" if m.role == "user" else "assistant",
+                "content": m.content
+            })
+
+        payload = {
+            "model": model,
+            "messages": formatted_msgs,
+            "temperature": 0.3,
+            "max_tokens": max_tokens
+        }
+
+        async with httpx.AsyncClient(timeout=12.0) as client:
+            resp = await client.post(url, headers=headers, json=payload)
             if resp.status_code == 200:
                 data = resp.json()
-                candidates = data.get("candidates", [])
-                if candidates:
-                    text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                    if text:
-                        return text.strip()
-    except Exception:
-        pass
+                choices = data.get("choices", [])
+                if choices:
+                    content = choices[0].get("message", {}).get("content", "")
+                    if content:
+                        return content.strip()
+    except Exception as e:
+        print(f"[OpenRouter Error: {model}] {e}")
     return None
 
+# ==============================================================================
+# CLIENTE GEMINI (Razonamiento Complejo / Modelo Pesado)
+# ==============================================================================
+async def call_gemini_heavy(messages: List[ChatMessage], canonical_context: str = "") -> Optional[str]:
+    """Invoca Gemini Pro para análisis profundos y razonamiento de arquitectura."""
+    # 1. Intento directo con Google AI Studio si hay GEMINI_API_KEY
+    if GEMINI_API_KEY:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_HEAVY_MODEL}:generateContent?key={GEMINI_API_KEY}"
+            system_text = SYSTEM_INSTRUCTION
+            if canonical_context:
+                system_text += f"\n\n[HECHOS CANÓNICOS DEL PORTAFOLIO]:\n{canonical_context}\n"
+
+            contents = []
+            for msg in messages:
+                role = "user" if msg.role == "user" else "model"
+                contents.append({
+                    "role": role,
+                    "parts": [{"text": msg.content}]
+                })
+
+            payload = {
+                "contents": contents,
+                "systemInstruction": {"parts": [{"text": system_text}]},
+                "generationConfig": {
+                    "temperature": 0.3,
+                    "maxOutputTokens": 800
+                }
+            }
+
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                resp = await client.post(url, json=payload)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                        if text:
+                            return text.strip()
+        except Exception as e:
+            print(f"[Gemini Direct Error] {e}")
+
+    # 2. Respaldo vía OpenRouter para Gemini Pro si hay OPENROUTER_API_KEY
+    if OPENROUTER_API_KEY:
+        return await call_openrouter_api(
+            messages,
+            model="google/gemini-pro-1.5",
+            system_text=SYSTEM_INSTRUCTION + (f"\n\n[HECHOS]: {canonical_context}" if canonical_context else ""),
+            max_tokens=800
+        )
+
+    return None
+
+# ==============================================================================
+# MOTOR LOCAL DETERMINISTA (Garantía de respuesta offline / 0 costo)
+# ==============================================================================
 def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
-    """
-    Motor semántico local de alta fidelidad pedagógica y técnica.
-    Garantiza funcionamiento offline/local con cero dependencias externas.
-    """
     if not messages:
         return ChatResponse(
-            reply="¡Hola! Soy Daverick Assistant, copiloto de arquitectura de IA. ¿En qué te puedo asesorar hoy? Puedo despejar dudas sobre los proyectos de Erick, contarte qué se puede automatizar y qué no, o revisar la viabilidad de una idea que tengas en mente.",
+            reply="¡Hola! Soy **Wiki**, el copiloto técnico del portafolio. ¿En qué te puedo asesorar hoy? Puedo despejar dudas sobre los proyectos de Erick, contarte qué se puede automatizar y qué no, o revisar la viabilidad de una idea que tengas en mente.",
             suggestions=[
                 "✦ ¿Qué proyectos ha desarrollado Erick?",
                 "💬 ¿Es viable automatizar mi soporte o facturas?",
@@ -200,10 +269,8 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
         
     latest_msg = messages[-1].content.strip()
     q = latest_msg.lower()
-    
     feasibility_verdict, tech_stack = evaluate_feasibility(latest_msg)
 
-    # 1. Dudas sobre contabilidad / cálculos / LLMs
     if any(k in q for k in ["contabilidad", "calcular", "matematica", "numeros", "sumas", "impuesto", "por qué no usar ia para contabilidad"]):
         reply = (
             "**¡Gran pregunta técnica! Aquí está el veredicto arquitectónico:**\n\n"
@@ -228,7 +295,6 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             strategy="feasibility_eval"
         )
 
-    # 2. Dudas sobre Graphito / Plagio
     if any(k in q for k in ["graphito", "plagio", "codigo", "copias", "ofuscad"]):
         proj = KNOWLEDGE_BASE["projects"]["graphito"]
         reply = (
@@ -253,7 +319,6 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             strategy="predefined_canon"
         )
 
-    # 3. Dudas sobre Tetring / Algoritmos / CSP
     if any(k in q for k in ["tetring", "horario", "saes", "empalme", "combinatori"]):
         proj = KNOWLEDGE_BASE["projects"]["tetring"]
         reply = (
@@ -277,7 +342,6 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             strategy="predefined_canon"
         )
 
-    # 4. Dudas sobre PAIDEA / RAG / Multiagentes
     if any(k in q for k in ["paidea", "rag", "tecnoburro", "multiagente", "multi-agente", "docente", "profesor"]):
         proj = KNOWLEDGE_BASE["projects"]["paidea"]
         reply = (
@@ -302,7 +366,6 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             strategy="predefined_canon"
         )
 
-    # 5. Dudas sobre Paralel / Computación de alto rendimiento
     if any(k in q for k in ["paralel", "c++", "openmp", "tetris", "paralelo", "rendimiento", "multithread"]):
         proj = KNOWLEDGE_BASE["projects"]["paralel"]
         reply = (
@@ -326,7 +389,6 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             strategy="predefined_canon"
         )
 
-    # 6. Viabilidad de automatizar procesos de negocio (Soporte, WhatsApp, Facturas, CRM)
     if any(k in q for k in ["factura", "whatsapp", "soporte", "crm", "mi negocio", "automatizar mi", "empresa", "ahorrar tiempo", "proceso"]):
         reply = (
             "**¡Es totalmente viable! Y tiene un retorno de inversión muy alto si se hace bien.**\n\n"
@@ -350,7 +412,6 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             strategy="feasibility_eval"
         )
 
-    # 7. Dudas sobre Erick (Quién es, experiencia, formación)
     if any(k in q for k in ["erick", "quien eres", "autor", "daarick", "experiencia", "estudios", "escom", "ipn"]):
         reply = (
             "**Erick Daniel (Daarick)** es Ingeniero en Sistemas Computacionales egresado de **ESCOM - IPN** (México).\n\n"
@@ -369,7 +430,6 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             strategy="predefined_canon"
         )
 
-    # 8. Contratación / Contacto / Servicios
     if any(k in q for k in ["contacto", "contratar", "precio", "cuanto cuesta", "agendar", "correo", "telefono", "whatsapp", "llamada"]):
         reply = (
             "**¿Listo para automatizar tus procesos?**\n\n"
@@ -393,7 +453,6 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
             strategy="predefined_canon"
         )
 
-    # Default / Consulta general
     reply = (
         f"Analizando tu consulta: *\"{latest_msg}\"*.\n\n"
         "Desde la perspectiva de arquitectura de IA, cualquier solución debe evaluarse por su **viabilidad técnica**, **fidelidad de datos** y **retorno de inversión**.\n\n"
@@ -413,13 +472,10 @@ def generate_local_response(messages: List[ChatMessage]) -> ChatResponse:
         strategy="standard"
     )
 
+# ==============================================================================
+# ORQUESTADOR PRINCIPAL MULTI-TIER
+# ==============================================================================
 async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
-    """
-    Orquestador de consultas con arquitectura de 3 capas:
-    1. Guardrail de entrada: Anti-biblia (>1200 chars) y filtro de fuera de alcance.
-    2. Sliding Window Memory: toma sólo los últimos 6 turnos de conversación.
-    3. Model Multiplexing & Grounded Rewriter.
-    """
     raw_messages = request_data.get("messages", [])
     if not raw_messages:
         return generate_local_response([])
@@ -460,7 +516,7 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
         return ChatResponse(
             reply=(
                 "**Fuera de alcance del sistema:**\n\n"
-                "Mi rol como **Daverick Assistant** está enfocado exclusivamente en **ingeniería de software, "
+                "Mi rol como **Wiki** está enfocado exclusivamente en **ingeniería de software, "
                 "sistemas de inteligencia artificial y automatización de procesos** para el portafolio de Erick Daniel.\n\n"
                 "¿Te gustaría consultar sobre viabilidad de IA para un negocio o conocer proyectos como Graphito o Tetring?"
             ),
@@ -473,32 +529,55 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
             strategy="out_of_scope"
         )
 
-    # 4. Contexto canónico para reescritura guiada
-    canonical_summary = (
-        f"Perfil: {KNOWLEDGE_BASE['profile']['name']}, {KNOWLEDGE_BASE['profile']['role']} (ESCOM-IPN). "
-        f"Filosofía: {KNOWLEDGE_BASE['profile']['philosophy']} "
-        f"Proyectos: Graphito (DFG, LoRA, Tree-sitter), Tetring (CSP 42ms), PAIDEA (RAG ChromaDB), Paralel (C++ OpenMP)."
+    canonical_context = (
+        f"Erick Daniel (Daarick): Ingeniero de Sistemas de IA & Automatización (ESCOM-IPN). "
+        f"Proyectos: Graphito (Tree-sitter, LoRA, 96.8% plagio), Tetring (CSP 42ms), "
+        f"PAIDEA (TecnoBurro RAG en ChromaDB), Paralel (C++ OpenMP 68k evals/s)."
     )
+    feasibility, tech = evaluate_feasibility(latest_text)
 
-    # 5. Si hay Gemini API Key disponible, intentamos la reescritura guiada con contexto
-    if GEMINI_API_KEY:
-        gemini_reply = await call_gemini_api(messages, canonical_context=canonical_summary)
-        if gemini_reply:
-            feasibility, tech = evaluate_feasibility(latest_text)
-            suggestions = [
-                "✦ ¿Es viable automatizar mi soporte o facturas?",
-                "💬 ¿Cómo funciona Graphito contra plagio?",
-                "📋 ¿Por qué no usar IA para contabilidad directa?",
-                "⚡ ¿Cómo contactar a Erick para un proyecto?"
-            ]
+    # 4. Decisión de Nivel: ¿Consulta compleja o simple?
+    needs_heavy = is_complex_query(latest_text)
+
+    # 5. TIER A: Razonamiento Complejo (Gemini Pro / Heavy Model)
+    if needs_heavy:
+        heavy_reply = await call_gemini_heavy(messages, canonical_context=canonical_context)
+        if heavy_reply:
             return ChatResponse(
-                reply=gemini_reply,
-                suggestions=suggestions,
-                feasibility_verdict=feasibility,
-                tech_recommendations=tech,
-                source="gemini",
-                strategy="grounded_rewrite"
+                reply=heavy_reply,
+                suggestions=[
+                    "✦ ¿Cómo agendar una llamada de diagnóstico?",
+                    "💬 ¿Qué stack técnico recomiendas?",
+                    "📋 Ver demos interactivas en vivo"
+                ],
+                feasibility_verdict=feasibility or "ALTA_VIABILIDAD",
+                tech_recommendations=tech or ["FastAPI", "Python", "RAG", "PostgreSQL"],
+                source="gemini_pro" if GEMINI_API_KEY else "openrouter_heavy",
+                strategy="heavy_reasoning"
             )
 
-    # 6. Fallback garantizado: Motor Semántico Local
+    # 6. TIER B: Pregunta simple o reescritura ligera (OpenRouter Modelo Económico / Jev Router)
+    if OPENROUTER_API_KEY:
+        cheap_reply = await call_openrouter_api(
+            messages,
+            model=OPENROUTER_CHEAP_MODEL,
+            system_text=SYSTEM_INSTRUCTION + f"\n\n[CONTEXTO BASE]:\n{canonical_context}",
+            max_tokens=400
+        )
+        if cheap_reply:
+            return ChatResponse(
+                reply=cheap_reply,
+                suggestions=[
+                    "✦ ¿Es viable automatizar mi soporte o facturas?",
+                    "💬 ¿Cómo funciona Graphito contra plagio?",
+                    "📋 ¿Por qué no usar IA para contabilidad directa?",
+                    "⚡ ¿Cómo contactar a Erick para un proyecto?"
+                ],
+                feasibility_verdict=feasibility,
+                tech_recommendations=tech,
+                source=f"openrouter_{OPENROUTER_CHEAP_MODEL.split('/')[-1]}",
+                strategy="cheap_paraphrase"
+            )
+
+    # 7. TIER C: Respaldo garantizado: Motor Semántico Local de Alta Fidelidad
     return generate_local_response(messages)

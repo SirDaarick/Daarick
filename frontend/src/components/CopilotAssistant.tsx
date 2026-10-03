@@ -47,7 +47,7 @@ export const CopilotAssistant: React.FC = () => {
       id: 'init-1',
       role: 'assistant',
       content:
-        '¡Hola! Soy **Daverick Assistant**, el copiloto técnico del portafolio.\n\n' +
+        '¡Hola! Soy **Wiki**, el copiloto técnico del portafolio.\n\n' +
         'Puedo resolver dudas sobre la trayectoria y proyectos de Erick (**Graphito**, **Tetring**, **PAIDEA**, **Paralel**), ' +
         'o evaluar con total honestidad la **viabilidad técnica y arquitectura** de lo que quieras automatizar en tu negocio.\n\n' +
         '¿En qué te puedo asesorar hoy?',
@@ -319,7 +319,7 @@ export const CopilotAssistant: React.FC = () => {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="font-sans text-sm font-semibold tracking-tight text-[#F8F4E9]">
-                  Daverick Assistant
+                  Wiki
                 </span>
                 <span className="px-1.5 py-0.5 rounded bg-[#c084fc]/15 border border-[#c084fc]/30 text-[#c084fc] font-mono text-[10px] font-bold uppercase tracking-wider">
                   IA
@@ -575,7 +575,7 @@ export const CopilotAssistant: React.FC = () => {
             className="cursor-pointer hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[rgba(30,15,35,0.95)] border border-[rgba(147,80,115,0.4)] text-[#F6DBC0] shadow-xl font-mono text-xs hover:border-[#c084fc]/60 transition-all animate-bounce"
           >
             <span className="inline-block w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
-            <span>¿Dudas sobre IA? Habla conmigo</span>
+            <span>¿Dudas sobre IA? Pregúntale a Wiki</span>
           </button>
         )}
 
@@ -585,7 +585,7 @@ export const CopilotAssistant: React.FC = () => {
 
           <button
             type="button"
-            aria-label={isOpen ? 'Cerrar asistente' : 'Abrir asistente de chat'}
+            aria-label={isOpen ? 'Cerrar Wiki' : 'Abrir Wiki'}
             onClick={handleToggle}
             className="relative z-10 w-14 h-14 rounded-full bg-gradient-to-tr from-[#935073] via-[#a855f7] to-[#c084fc] text-[#160B1A] flex items-center justify-center shadow-2xl transition-transform duration-200 group-hover:scale-105 active:scale-95 cursor-pointer"
           >
