@@ -8,11 +8,5 @@ export default defineConfig({
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
-    resolve: {
-      dedupe: ['react', 'react-dom'],
-    },
-    optimizeDeps: {
-      include: ['react', 'react-dom', 'lucide-react'],
-    },
   },
 });
