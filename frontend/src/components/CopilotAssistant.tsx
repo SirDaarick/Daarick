@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Bot,
+  Dog,
   Send,
+  Mic,
+  MicOff,
   X,
   Minus,
   Maximize2,
@@ -41,6 +43,8 @@ export const CopilotAssistant: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -57,7 +61,75 @@ export const CopilotAssistant: React.FC = () => {
   ]);
 
   const streamEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const baseTextRef = useRef('');
+
+  // Inicialización de reconocimiento de voz (Web Speech API)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition =
+        (window as any).SpeechRecognition ||
+        (window as any).webkitSpeechRecognition;
+
+      if (SpeechRecognition) {
+        setSpeechSupported(true);
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'es-MX';
+
+        recognition.onstart = () => {
+          setIsListening(true);
+        };
+
+        recognition.onresult = (event: any) => {
+          let currentTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            currentTranscript += event.results[i][0].transcript;
+          }
+          const base = baseTextRef.current ? `${baseTextRef.current.trim()} ` : '';
+          const newText = `${base}${currentTranscript}`;
+          setInputValue(newText);
+          if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+          }
+        };
+
+        recognition.onerror = (event: any) => {
+          console.warn('Error en reconocimiento de voz:', event.error);
+          setIsListening(false);
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognitionRef.current = recognition;
+      }
+    }
+  }, []);
+
+  const handleToggleVoice = () => {
+    if (!speechSupported || !recognitionRef.current) {
+      alert('Tu navegador no tiene activado el soporte para entrada de voz.');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      baseTextRef.current = inputValue;
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error('Error al iniciar micrófono:', err);
+      }
+    }
+  };
 
   // Hidratación segura del almacenamiento de sesión en cliente
   useEffect(() => {
@@ -114,11 +186,11 @@ export const CopilotAssistant: React.FC = () => {
     }
   }, [messages, isLoading, isOpen]);
 
-  // Enfocar input al abrir
+  // Enfocar textarea al abrir
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => {
-        inputRef.current?.focus();
+        textareaRef.current?.focus();
       }, 150);
     }
   }, [isOpen]);
@@ -128,6 +200,39 @@ export const CopilotAssistant: React.FC = () => {
     e.stopPropagation();
     console.log('[Copilot] Toggle clicked. Previous state:', isOpen);
     setIsOpen((prev) => !prev);
+  };
+
+  const streamPremeditatedText = async (
+    targetId: string,
+    fullText: string,
+    suggestions?: string[],
+    verdict?: string | null,
+    tech?: string[]
+  ) => {
+    const tokens = fullText.split(/(\s+)/);
+    let current = '';
+    for (let i = 0; i < tokens.length; i++) {
+      current += tokens[i];
+      if (tokens[i].trim() || i === tokens.length - 1) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === targetId ? { ...m, content: current } : m))
+        );
+        await new Promise((r) => setTimeout(r, 18));
+      }
+    }
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === targetId
+          ? {
+              ...m,
+              content: fullText,
+              feasibility_verdict: verdict,
+              tech_recommendations: tech,
+              suggestions: suggestions && suggestions.length > 0 ? suggestions : INITIAL_SUGGESTIONS
+            }
+          : m
+      )
+    );
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -148,10 +253,26 @@ export const CopilotAssistant: React.FC = () => {
     const updatedHistory = [...messages, userMsg];
     setMessages(updatedHistory);
     setInputValue('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+
+    const botMsgId = `bot-${Date.now()}`;
+    const botTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Mensaje inicial del bot preparado para recibir tokens vía SSE
+    const initialBotMsg: ChatMessage = {
+      id: botMsgId,
+      role: 'assistant',
+      content: '',
+      timestamp: botTime,
+      suggestions: []
+    };
+
+    setMessages([...updatedHistory, initialBotMsg]);
     setIsLoading(true);
 
     try {
-      // Sliding window en el cliente (últimos 6 turnos)
       const slidingWindow = updatedHistory.slice(-6);
 
       const payload = {
@@ -163,7 +284,7 @@ export const CopilotAssistant: React.FC = () => {
         current_page: typeof window !== 'undefined' ? window.location.pathname : 'home'
       };
 
-      const res = await fetch(`${API_BASE}/api/v1/assistant/chat`, {
+      const res = await fetch(`${API_BASE}/api/v1/assistant/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -173,34 +294,76 @@ export const CopilotAssistant: React.FC = () => {
         throw new Error(`Error en servidor: ${res.status}`);
       }
 
-      const data = await res.json();
-      const botTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      if (!res.body) {
+        throw new Error('ReadableStream no disponible');
+      }
 
-      const botMsg: ChatMessage = {
-        id: `bot-${Date.now()}`,
-        role: 'assistant',
-        content: data.reply,
-        timestamp: botTime,
-        feasibility_verdict: data.feasibility_verdict,
-        tech_recommendations: data.tech_recommendations,
-        suggestions: data.suggestions && data.suggestions.length > 0 ? data.suggestions : INITIAL_SUGGESTIONS
-      };
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let accumulated = '';
+      let sseBuffer = '';
+      let streamFinished = false;
 
-      setMessages((prev) => [...prev, botMsg]);
+      while (!streamFinished) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split('\n\n');
+        sseBuffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
+          const jsonStr = trimmed.replace(/^data:\s*/, '');
+          try {
+            const data = JSON.parse(jsonStr);
+
+            if (data.error) {
+              throw new Error(data.detail || 'Error en stream SSE');
+            }
+
+            if (data.token) {
+              accumulated += data.token;
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === botMsgId ? { ...m, content: accumulated } : m
+                )
+              );
+            }
+
+            if (data.done) {
+              streamFinished = true;
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === botMsgId
+                    ? {
+                        ...m,
+                        content: data.reply || accumulated,
+                        feasibility_verdict: data.feasibility_verdict,
+                        tech_recommendations: data.tech_recommendations,
+                        suggestions:
+                          data.suggestions && data.suggestions.length > 0
+                            ? data.suggestions
+                            : INITIAL_SUGGESTIONS
+                      }
+                    : m
+                )
+              );
+            }
+          } catch (parseErr) {
+            console.warn('Error procesando fragmento SSE:', parseErr);
+          }
+        }
+      }
     } catch (err) {
-      console.warn('Fallback a respuesta local asistida:', err);
-      const botTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const fallbackMsg: ChatMessage = {
-        id: `bot-err-${Date.now()}`,
-        role: 'assistant',
-        content:
-          '**Nota técnica:** No pude conectar con el gateway de FastAPI en este instante, pero te adelanto:\n\n' +
-          '• **Proyectos clave:** Graphito (Tree-sitter + Deep Learning contra plagio), Tetring (CSP 42ms), PAIDEA (RAG con ChromaDB) y Paralel (C++ OpenMP).\n' +
-          '• **Contacto directo:** Puedes escribir a Erick vía WhatsApp o al correo **erick.daarick@gmail.com**.',
-        timestamp: botTime,
-        suggestions: INITIAL_SUGGESTIONS
-      };
-      setMessages((prev) => [...prev, fallbackMsg]);
+      console.warn('Fallback a respuesta local asistida progresiva:', err);
+      const fallbackText =
+        '**Nota técnica:** No pude conectar con el gateway de FastAPI en este instante, pero te adelanto:\n\n' +
+        '• **Proyectos clave:** Graphito (Tree-sitter + Deep Learning contra plagio), Tetring (CSP 42ms), PAIDEA (RAG con ChromaDB) y Paralel (C++ OpenMP).\n' +
+        '• **Contacto directo:** Puedes escribir a Erick vía WhatsApp o al correo **erick.daarick@gmail.com**.';
+
+      await streamPremeditatedText(botMsgId, fallbackText, INITIAL_SUGGESTIONS);
     } finally {
       setIsLoading(false);
     }
@@ -313,7 +476,7 @@ export const CopilotAssistant: React.FC = () => {
         <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 bg-[rgba(30,15,35,0.95)] border-b border-[rgba(147,80,115,0.3)] shrink-0 select-none">
           <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.4)] text-[#c084fc] shadow-sm">
-              <Bot className="w-5 h-5 text-[#c084fc]" />
+              <Dog className="w-5 h-5 text-[#c084fc]" />
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#10B981] ring-2 ring-[#160B1A]"></span>
             </div>
             <div className="flex flex-col">
@@ -325,8 +488,8 @@ export const CopilotAssistant: React.FC = () => {
                   IA
                 </span>
               </div>
-              <span className="font-mono text-[11px] text-[#F6DBC0]/80">
-                [ ● En línea // 24/7 ]
+              <span className="font-mono text-[11px] text-[#F6DBC0]/70">
+                Copiloto Técnico
               </span>
             </div>
           </div>
@@ -382,6 +545,11 @@ export const CopilotAssistant: React.FC = () => {
           {messages.map((msg) => {
             const isBot = msg.role === 'assistant';
 
+            // Si el mensaje del bot aún no tiene tokens durante el inicio del streaming, el indicador de carga se encarga
+            if (isBot && !msg.content) {
+              return null;
+            }
+
             return (
               <div
                 key={msg.id}
@@ -394,17 +562,17 @@ export const CopilotAssistant: React.FC = () => {
                 >
                   {isBot && (
                     <div className="w-7 h-7 rounded-md bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.3)] flex items-center justify-center shrink-0 text-[#c084fc] mt-1 shadow-sm">
-                      <Bot className="w-4 h-4 text-[#c084fc]" />
+                      <Dog className="w-4 h-4 text-[#c084fc]" />
                     </div>
                   )}
 
                   <div className="flex flex-col gap-1 w-full">
-                    {/* Burbuja de Mensaje */}
+                    {/* Burbuja de Mensaje: Fondo sólido de alto contraste para el usuario (adiós degradado ilegible) */}
                     <div
                       className={`p-3.5 rounded-2xl shadow-sm text-sm ${
                         isBot
                           ? 'rounded-tl-sm bg-[rgba(45,20,52,0.7)] border border-[rgba(147,80,115,0.35)] text-[#F8F4E9] font-sans'
-                          : 'rounded-tr-sm bg-gradient-to-r from-[#935073] to-[#c084fc] text-[#160B1A] font-medium shadow-md'
+                          : 'rounded-tr-sm bg-[#381a3e] border border-[rgba(192,132,252,0.3)] text-[#F8F4E9] font-normal shadow-md'
                       }`}
                     >
                       {isBot ? (
@@ -459,7 +627,7 @@ export const CopilotAssistant: React.FC = () => {
                           )}
                         </div>
                       ) : (
-                        <span className="leading-relaxed">{msg.content}</span>
+                        <span className="leading-relaxed whitespace-pre-wrap">{msg.content}</span>
                       )}
                     </div>
 
@@ -493,11 +661,11 @@ export const CopilotAssistant: React.FC = () => {
             );
           })}
 
-          {/* Estado de Carga (Typing indicator) */}
-          {isLoading && (
+          {/* Estado de Carga (Typing indicator mientras espera el primer token) */}
+          {isLoading && (!messages[messages.length - 1]?.content || messages[messages.length - 1]?.role === 'user') && (
             <div className="flex items-start gap-2.5 max-w-[85%]">
               <div className="w-7 h-7 rounded-md bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.3)] flex items-center justify-center shrink-0 text-[#c084fc] mt-1 shadow-sm animate-pulse">
-                <Bot className="w-4 h-4 text-[#c084fc]" />
+                <Dog className="w-4 h-4 text-[#c084fc]" />
               </div>
               <div className="flex flex-col gap-1">
                 <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-[rgba(45,20,52,0.65)] border border-[rgba(147,80,115,0.35)] text-[#F6DBC0] font-mono text-xs flex items-center gap-2">
@@ -520,29 +688,58 @@ export const CopilotAssistant: React.FC = () => {
             }}
             className="flex flex-col gap-1.5"
           >
-            <div className="flex items-center gap-2">
-              <div className="flex-1 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[rgba(22,11,26,0.9)] border border-[rgba(147,80,115,0.35)] focus-within:border-[#c084fc]/60 transition-all shadow-inner">
-                <span className="text-[#c084fc] font-mono text-sm font-bold select-none">&gt;</span>
-                <input
-                  ref={inputRef}
-                  type="text"
+            <div className="flex items-end gap-2">
+              <div className="flex-1 flex items-start gap-2 px-3.5 py-2.5 rounded-xl bg-[rgba(22,11,26,0.9)] border border-[rgba(147,80,115,0.35)] focus-within:border-[#c084fc]/60 transition-all shadow-inner">
+                <span className="text-[#c084fc] font-mono text-sm font-bold select-none mt-0.5">&gt;</span>
+                <textarea
+                  ref={textareaRef}
+                  rows={1}
                   maxLength={1200}
-                  autoComplete="off"
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Pregunta sobre proyectos o viabilidad..."
-                  className="w-full bg-transparent border-0 p-0 text-[#F8F4E9] placeholder-[#F6DBC0]/40 focus:ring-0 text-sm focus:outline-none font-sans"
+                  onChange={(e) => {
+                    setInputValue(e.target.value);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  placeholder={
+                    isListening
+                      ? 'Escuchando tu voz... habla ahora'
+                      : 'Pregunta sobre proyectos o viabilidad...'
+                  }
+                  className="w-full bg-transparent border-0 p-0 text-[#F8F4E9] placeholder-[#F6DBC0]/40 focus:ring-0 text-sm focus:outline-none font-sans resize-none overflow-y-auto leading-relaxed max-h-[120px]"
                 />
               </div>
 
+              {/* Botón de Entrada por Voz */}
+              <button
+                type="button"
+                onClick={handleToggleVoice}
+                title={isListening ? 'Detener dictado por voz (escuchando...)' : 'Dictar por voz'}
+                aria-label={isListening ? 'Detener dictado por voz' : 'Dictar por voz'}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 shrink-0 cursor-pointer ${
+                  isListening
+                    ? 'bg-rose-500/25 border border-rose-500 text-rose-300 animate-pulse ring-2 ring-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.4)]'
+                    : 'bg-[rgba(80,45,85,0.4)] hover:bg-[rgba(80,45,85,0.7)] text-[#F6DBC0] border border-[rgba(147,80,115,0.3)] hover:text-[#F8F4E9]'
+                }`}
+              >
+                {isListening ? <MicOff className="w-4 h-4 text-rose-300" /> : <Mic className="w-4 h-4" />}
+              </button>
+
+              {/* Botón de Enviar (Solo el Iconito) */}
               <button
                 type="submit"
                 disabled={isLoading || !inputValue.trim()}
-                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#935073] to-[#c084fc] hover:from-[#a855f7] hover:to-[#d8b4fe] text-[#160B1A] font-mono text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shrink-0 shadow-md cursor-pointer"
+                title="Enviar mensaje"
+                aria-label="Enviar mensaje"
+                className="w-10 h-10 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] flex items-center justify-center transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed shrink-0 shadow-md cursor-pointer"
               >
-                <span>[ Enviar</span>
-                <Send className="w-3 h-3 font-bold" />
-                <span>]</span>
+                <Send className="w-4 h-4 ml-0.5" />
               </button>
             </div>
 
@@ -592,7 +789,7 @@ export const CopilotAssistant: React.FC = () => {
             {isOpen ? (
               <X className="w-6 h-6 text-[#160B1A]" />
             ) : (
-              <MessageSquare className="w-6 h-6 text-[#160B1A]" />
+              <Dog className="w-6 h-6 text-[#160B1A]" />
             )}
 
             {/* Indicador de estado en vivo */}

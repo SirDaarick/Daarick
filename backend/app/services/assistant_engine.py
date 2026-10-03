@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import asyncio
 import httpx
 from typing import List, Dict, Any, Optional, Tuple
 from app.schemas.assistant import ChatMessage, ChatResponse
@@ -809,3 +810,52 @@ async def process_chat(request_data: Dict[str, Any]) -> ChatResponse:
 
     # 7. TIER C: Respaldo garantizado: Motor Semántico Local de Alta Fidelidad (0 tokens, 100% determinista)
     return generate_local_response(messages)
+
+async def stream_chat_sse(request_data: Dict[str, Any]):
+    """
+    Generador asíncrono para Server-Sent Events (SSE).
+    Ejecuta el pipeline de procesamiento de Wiki y emite la respuesta progresivamente.
+    Para respuestas premeditadas (motor determinista local, FAQs canónicas o filtros
+    de alcance), emite los fragmentos con una pausa natural (15-20ms) de modo que la
+    experiencia de lectura sea fluida e indistinguible de un modelo generativo en vivo.
+    """
+    try:
+        response = await process_chat(request_data)
+        reply_text = response.reply
+
+        # Fragmentamos en tokens respetando espacios y saltos de línea
+        tokens = re.split(r'(\s+)', reply_text)
+        
+        buffer = ""
+        for i, token in enumerate(tokens):
+            buffer += token
+            # Emitir en bloques de palabra o al final
+            if token.strip() or i == len(tokens) - 1:
+                data_obj = {"token": buffer}
+                yield f"data: {json.dumps(data_obj, ensure_ascii=False)}\n\n"
+                buffer = ""
+                await asyncio.sleep(0.018)
+
+        if buffer:
+            data_obj = {"token": buffer}
+            yield f"data: {json.dumps(data_obj, ensure_ascii=False)}\n\n"
+            await asyncio.sleep(0.018)
+
+        # Evento final con metadatos completos y sugerencias
+        final_data = {
+            "done": True,
+            "reply": reply_text,
+            "suggestions": response.suggestions,
+            "feasibility_verdict": response.feasibility_verdict,
+            "tech_recommendations": response.tech_recommendations,
+            "source": response.source,
+            "strategy": response.strategy
+        }
+        yield f"data: {json.dumps(final_data, ensure_ascii=False)}\n\n"
+    except Exception as e:
+        err_data = {
+            "error": True,
+            "detail": str(e)
+        }
+        yield f"data: {json.dumps(err_data, ensure_ascii=False)}\n\n"
+
