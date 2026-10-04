@@ -49,6 +49,6 @@
   - Un bot inteligente en Telegram con arquitectura *Dual-Scope* que permite registrar gastos y tickets en menos de 3 segundos por mensaje de texto, foto o voz.
   - El sistema detecta automáticamente la categoría del gasto, el proveedor y el monto, y calcula el IVA acreditable en tiempo real.
   - Permite alternar instantáneamente entre **Modo Negocio (`BUSINESS`)** y **Modo Personal (`PERSONAL`)**, aislando las cuentas fiscales y sellando cada transacción en un ledger con interfaz industrial táctil.
-  - Cuenta con demo interactiva en vivo en el portafolio en `/demo/stampy` con motor NLP cliente offline y repositorio público en `https://github.com/SirDaarick/Stampy`.
+  - Cuenta con demo interactiva en vivo desplegada en https://stampy.vercel.app/ con base de datos autónoma en cliente y repositorio público en https://github.com/SirDaarick/Stampy.
 - **¿Cómo se aplica a otros negocios?**: Ideal para cualquier empresa, consultor o comercio que busque automatizar el control de caja chica, viáticos de empleados o gestión tributaria sin obligar al equipo a aprender sistemas contables complejos.
 
