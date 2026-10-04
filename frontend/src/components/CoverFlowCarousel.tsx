@@ -255,6 +255,24 @@ export const CoverFlowCarousel: React.FC = () => {
                   <span>{project.id === 'PRJ-06' ? '¡Pruébalo ahora! :D' : 'Probar demo ↗'}</span>
                 </a>
               </div>
+
+              {/* Acceso directo para dejar veredicto de este proyecto */}
+              <div className="flex items-center justify-center pt-2">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.dispatchEvent(
+                      new CustomEvent('open-testimonial-modal', {
+                        detail: { system: project.title },
+                      })
+                    );
+                  }}
+                  className="text-[11px] font-mono text-[rgba(246,219,192,0.7)] hover:text-[#c084fc] transition-colors cursor-pointer flex items-center gap-1 py-0.5"
+                >
+                  <span>★ Dejar veredicto sobre {project.title}</span>
+                </button>
+              </div>
             </div>
           );
         })}

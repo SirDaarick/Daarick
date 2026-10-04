@@ -263,6 +263,23 @@ export const SandboxModal: React.FC = () => {
                   <span>↗</span>
                 </a>
               )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  closeModal();
+                  setTimeout(() => {
+                    window.dispatchEvent(
+                      new CustomEvent('open-testimonial-modal', {
+                        detail: { system: currentProject.title },
+                      })
+                    );
+                  }, 180);
+                }}
+                className="w-full py-2 px-4 rounded-xl bg-[rgba(192,132,252,0.12)] hover:bg-[rgba(192,132,252,0.25)] border border-[rgba(192,132,252,0.35)] text-[#F8F4E9] font-mono text-xs font-medium transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer min-h-[40px]"
+              >
+                <span>★ Dejar veredicto sobre {currentProject.title}</span>
+              </button>
             </div>
           </div>
 
@@ -362,6 +379,24 @@ export const SandboxModal: React.FC = () => {
                     <span>Abrir ↗</span>
                   </a>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeModal();
+                    setTimeout(() => {
+                      window.dispatchEvent(
+                        new CustomEvent('open-testimonial-modal', {
+                          detail: { system: currentProject.title },
+                        })
+                      );
+                    }, 180);
+                  }}
+                  title={`Dejar veredicto de ${currentProject.title}`}
+                  className="px-2.5 py-1 rounded bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.55)] border border-[rgba(147,80,115,0.35)] text-[#F8F4E9] font-mono text-xs transition-colors cursor-pointer inline-flex items-center gap-1"
+                >
+                  <span>★ Dejar veredicto</span>
+                </button>
               </div>
             </div>
 

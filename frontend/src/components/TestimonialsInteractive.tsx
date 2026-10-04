@@ -3,14 +3,15 @@ import { PROJECTS } from "../data/projects";
 
 const API_BASE = import.meta.env.PUBLIC_API_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : '');
 
-const formatProjectOption = (proj: { title: string; shortDesc?: string }) => {
-  if (!proj.shortDesc) return proj.title;
+const formatProjectOption = (proj: { code?: string; title: string; shortDesc?: string }) => {
+  const codePrefix = proj.code ? `[0${parseInt(proj.code, 10)}] ` : "";
+  if (!proj.shortDesc) return `${codePrefix}${proj.title}`;
   const firstClause = proj.shortDesc.split(/[,.]/)[0].trim();
-  if (firstClause.length <= 55) {
-    return `${proj.title} (${firstClause})`;
+  if (firstClause.length <= 48) {
+    return `${codePrefix}${proj.title} — ${firstClause}`;
   }
-  const truncated = firstClause.slice(0, 52).replace(/\s+\S*$/, "");
-  return `${proj.title} (${truncated}...)`;
+  const truncated = firstClause.slice(0, 45).replace(/\s+\S*$/, "");
+  return `${codePrefix}${proj.title} — ${truncated}...`;
 };
 
 interface Testimonial {
@@ -700,19 +701,31 @@ export default function TestimonialsInteractive() {
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 {/* Sistema */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-mono text-xs text-[#F6DBC0]">Sistema evaluado:</label>
+                  <div className="flex items-center justify-between">
+                    <label className="font-mono text-xs text-[#F6DBC0]">Sistema evaluado:</label>
+                    <span className="text-[10px] font-mono text-[#c084fc] font-semibold">
+                      {PROJECTS.length} proyectos del carrusel sincronizados
+                    </span>
+                  </div>
                   <select
                     value={formSystem}
                     onChange={(e) => setFormSystem(e.target.value)}
-                    className="p-2.5 rounded-lg bg-[rgba(35,23,39,0.9)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] font-mono text-xs focus:border-[#c084fc] outline-none"
+                    className="p-2.5 rounded-lg bg-[rgba(35,23,39,0.95)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-mono text-xs focus:border-[#c084fc] outline-none cursor-pointer"
                   >
                     {PROJECTS.map((proj) => (
-                      <option key={proj.id} value={proj.title}>
+                      <option
+                        key={proj.id}
+                        value={proj.title}
+                        className="bg-[#231727] text-[#F8F4E9] py-1.5"
+                      >
                         {formatProjectOption(proj)}
                       </option>
                     ))}
-                    <option value="Consultoría / Servicios Generales">
-                      Consultoría / Servicios Generales
+                    <option
+                      value="Consultoría / Servicios Generales"
+                      className="bg-[#231727] text-[#F8F4E9] py-1.5"
+                    >
+                      [✦] Consultoría / Servicios Generales
                     </option>
                   </select>
                 </div>
