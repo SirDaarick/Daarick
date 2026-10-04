@@ -224,6 +224,49 @@ export default function TestimonialsInteractive() {
     setDisplayIndex(N + targetIndex);
   };
 
+  // Soporte para gestos táctiles (Swipe) y rueda de ratón (Wheel / Scroll horizontal)
+  const isDraggingTestimonials = useRef(false);
+  const dragStartX = useRef(0);
+  const lastWheelTime = useRef(0);
+
+  const handleTestimonialWheel = (e: React.WheelEvent) => {
+    const now = Date.now();
+    if (now - lastWheelTime.current < 350) return;
+
+    if (Math.abs(e.deltaX) > 15 || (e.shiftKey && Math.abs(e.deltaY) > 15)) {
+      const delta = Math.abs(e.deltaX) > 15 ? e.deltaX : e.deltaY;
+      if (delta > 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+      lastWheelTime.current = now;
+    }
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest('button, a, textarea, input')) return;
+    isDraggingTestimonials.current = true;
+    dragStartX.current = e.clientX;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDraggingTestimonials.current) return;
+    const distance = dragStartX.current - e.clientX;
+    if (Math.abs(distance) > 35) {
+      if (distance > 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+      isDraggingTestimonials.current = false;
+    }
+  };
+
+  const handlePointerUp = () => {
+    isDraggingTestimonials.current = false;
+  };
+
   // Envío del nuevo veredicto
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -348,13 +391,21 @@ export default function TestimonialsInteractive() {
         </div>
       </div>
 
-      {/* Riel con Avance por Pasos (con contenedor simétrico para evitar cortes laterales en tarjetas de ambos extremos) */}
+      {/* Riel con Avance por Pasos y Soporte Táctil/Scroll */}
       <div
-        className="relative w-[calc(100%+2rem)] lg:w-[calc(100%+4rem)] overflow-hidden -mx-4 lg:-mx-8 py-6 sm:py-8 -my-2 sm:-my-3"
+        className="relative w-full lg:w-[calc(100%+4rem)] overflow-hidden lg:-mx-8 py-4 sm:py-6 touch-pan-y cursor-grab active:cursor-grabbing select-none"
         onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
+        onMouseLeave={() => {
+          setIsPaused(false);
+          handlePointerUp();
+        }}
+        onWheel={handleTestimonialWheel}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
       >
-        <div ref={containerRef} className="px-4 lg:px-8 w-full">
+        <div ref={containerRef} className="px-0 lg:px-8 w-full">
           {/* Contenedor del riel con desplazamiento circular infinito */}
           <div
             ref={trackRef}

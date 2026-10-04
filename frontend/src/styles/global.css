@@ -19,6 +19,12 @@
   --font-sans: 'Inter', sans-serif;
 }
 
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
+}
+
 /* 3D Carousel Stage Styles */
 .perspective-stage {
   perspective: 1200px;

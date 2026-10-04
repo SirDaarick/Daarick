@@ -34,20 +34,44 @@ export const CoverFlowCarousel: React.FC = () => {
     setActiveIndex(index);
   };
 
+  // Soporte para scroll con rueda de ratón o trackpad horizontal
+  const lastWheelTime = useRef(0);
+  const handleWheel = (e: React.WheelEvent) => {
+    const now = Date.now();
+    if (now - lastWheelTime.current < 350) return; // Debounce suave
+
+    if (Math.abs(e.deltaX) > 15 || (e.shiftKey && Math.abs(e.deltaY) > 15)) {
+      const delta = Math.abs(e.deltaX) > 15 ? e.deltaX : e.deltaY;
+      if (delta > 0) {
+        nextCard();
+      } else {
+        prevCard();
+      }
+      lastWheelTime.current = now;
+    }
+  };
+
+  // Pointer / Touch Gestures con soporte fluido
   const onPointerDown = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest('button, a, textarea')) return;
     isDragging.current = true;
     dragStartX.current = e.clientX;
   };
 
-  const onPointerUp = (e: React.PointerEvent) => {
+  const onPointerMove = (e: React.PointerEvent) => {
     if (!isDragging.current) return;
     const distance = dragStartX.current - e.clientX;
-    if (distance > minSwipeDistance) {
-      nextCard();
-    } else if (distance < -minSwipeDistance) {
-      prevCard();
+    if (Math.abs(distance) > 25) {
+      if (distance > 0) {
+        nextCard();
+      } else {
+        prevCard();
+      }
+      isDragging.current = false; // Bloquea hasta el siguiente gesto
     }
+  };
+
+  const onPointerUp = () => {
     isDragging.current = false;
   };
 
@@ -99,9 +123,11 @@ export const CoverFlowCarousel: React.FC = () => {
         </div>
       </div>
 
-      {/* 3D Stage Wrapper with Pointer (Mouse + Touch) Handlers */}
+      {/* 3D Stage Wrapper with Pointer (Mouse + Touch) & Wheel Handlers */}
       <div
+        onWheel={handleWheel}
         onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
         className="relative w-full h-[620px] sm:h-[570px] my-2 sm:my-4 perspective-stage flex items-center justify-center py-4 select-none touch-pan-y cursor-grab active:cursor-grabbing"

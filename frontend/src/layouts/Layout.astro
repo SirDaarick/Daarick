@@ -52,8 +52,8 @@ const {
 
     <Footer />
 
-    {/* Interactive Modal Island (Loaded on Idle) */}
-    <SandboxModal client:idle />
+    {/* Interactive Modal Island (Loaded Immediately to catch custom events) */}
+    <SandboxModal client:load />
 
     {/* Floating AI Copilot Assistant (Loaded Immediately on Load) */}
     <CopilotAssistant client:load />

@@ -576,32 +576,32 @@ export const CopilotAssistant: React.FC = () => {
           zIndex: 99999,
           display: isOpen ? 'flex' : 'none'
         }}
-        className={`fixed bg-[#160B1A] border border-[rgba(147,80,115,0.5)] shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out z-[99999] ${
+        className={`fixed bg-[#160B1A] border-0 sm:border border-[rgba(147,80,115,0.5)] shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out z-[99999] ${
           isExpanded
-            ? 'inset-x-0 bottom-0 sm:inset-auto sm:bottom-8 sm:right-8 w-full sm:w-[680px] md:w-[760px] h-[92vh] sm:h-[720px] rounded-t-2xl sm:rounded-2xl'
-            : 'inset-x-0 bottom-0 sm:inset-auto sm:bottom-24 sm:right-6 w-full sm:w-[460px] md:w-[490px] h-[85vh] sm:h-[580px] rounded-t-2xl sm:rounded-2xl'
+            ? 'inset-0 sm:inset-auto sm:bottom-8 sm:right-8 w-full sm:w-[680px] md:w-[760px] h-full sm:h-[720px] rounded-none sm:rounded-2xl'
+            : 'inset-0 sm:inset-auto sm:bottom-24 sm:right-6 w-full sm:w-[460px] md:w-[490px] h-full sm:h-[580px] rounded-none sm:rounded-2xl'
         }`}
         role="dialog"
         aria-label="Daverick Assistant Chat"
       >
-        {/* Marcadores Crosshairs en las 4 esquinas (Stitch Design Spec) */}
-        <span className="absolute top-2 left-2 text-[#c084fc]/40 font-mono text-[10px] select-none pointer-events-none z-20">
+        {/* Marcadores Crosshairs en las 4 esquinas (Stitch Design Spec - Solo desktop) */}
+        <span className="hidden sm:inline absolute top-2 left-2 text-[#c084fc]/40 font-mono text-[10px] select-none pointer-events-none z-20">
           +
         </span>
-        <span className="absolute top-2 right-2 text-[#c084fc]/40 font-mono text-[10px] select-none pointer-events-none z-20">
+        <span className="hidden sm:inline absolute top-2 right-2 text-[#c084fc]/40 font-mono text-[10px] select-none pointer-events-none z-20">
           +
         </span>
-        <span className="absolute bottom-2 left-2 text-[#c084fc]/40 font-mono text-[10px] select-none pointer-events-none z-20">
+        <span className="hidden sm:inline absolute bottom-2 left-2 text-[#c084fc]/40 font-mono text-[10px] select-none pointer-events-none z-20">
           +
         </span>
-        <span className="absolute bottom-2 right-2 text-[#c084fc]/40 font-mono text-[10px] select-none pointer-events-none z-20">
+        <span className="hidden sm:inline absolute bottom-2 right-2 text-[#c084fc]/40 font-mono text-[10px] select-none pointer-events-none z-20">
           +
         </span>
 
         {/* Encabezado del Chat */}
-        <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 bg-[rgba(30,15,35,0.95)] border-b border-[rgba(147,80,115,0.3)] shrink-0 select-none">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 bg-[rgba(30,15,35,0.98)] border-b border-[rgba(147,80,115,0.3)] shrink-0 select-none pt-safe">
           <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.4)] text-[#c084fc] shadow-sm">
+            <div className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.4)] text-[#c084fc] shadow-sm">
               <Dog className="w-5 h-5 text-[#c084fc]" />
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#10B981] ring-2 ring-[#160B1A]"></span>
             </div>
@@ -621,22 +621,22 @@ export const CopilotAssistant: React.FC = () => {
           </div>
 
           {/* Acciones de la ventana */}
-          <div className="flex items-center gap-1 text-[#F6DBC0]/60">
+          <div className="flex items-center gap-1 sm:gap-1.5 text-[#F6DBC0]/60">
             <button
               type="button"
               onClick={handleReset}
               title="Reiniciar conversación"
               aria-label="Reiniciar conversación"
-              className="w-7 h-7 flex items-center justify-center rounded hover:bg-[rgba(80,45,85,0.5)] hover:text-[#F8F4E9] transition-colors cursor-pointer"
+              className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg hover:bg-[rgba(80,45,85,0.5)] hover:text-[#F8F4E9] transition-colors cursor-pointer"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
             </button>
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
               title={isExpanded ? 'Restaurar tamaño' : 'Expandir ventana'}
               aria-label={isExpanded ? 'Restaurar tamaño' : 'Expandir ventana'}
-              className="w-7 h-7 flex items-center justify-center rounded hover:bg-[rgba(80,45,85,0.5)] hover:text-[#F8F4E9] transition-colors cursor-pointer"
+              className="hidden sm:flex w-7 h-7 items-center justify-center rounded hover:bg-[rgba(80,45,85,0.5)] hover:text-[#F8F4E9] transition-colors cursor-pointer"
             >
               {isExpanded ? (
                 <Minimize2 className="w-3.5 h-3.5" />
@@ -649,7 +649,7 @@ export const CopilotAssistant: React.FC = () => {
               onClick={() => setIsOpen(false)}
               title="Cerrar chat"
               aria-label="Cerrar chat"
-              className="w-7 h-7 flex items-center justify-center rounded hover:bg-[rgba(80,45,85,0.5)] hover:text-[#F8F4E9] transition-colors cursor-pointer"
+              className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.6)] text-[#F8F4E9] transition-colors cursor-pointer active:scale-95"
             >
               <X className="w-4 h-4" />
             </button>
