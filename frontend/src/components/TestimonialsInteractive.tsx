@@ -1,6 +1,17 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { PROJECTS } from "../data/projects";
 
 const API_BASE = import.meta.env.PUBLIC_API_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : '');
+
+const formatProjectOption = (proj: { title: string; shortDesc?: string }) => {
+  if (!proj.shortDesc) return proj.title;
+  const firstClause = proj.shortDesc.split(/[,.]/)[0].trim();
+  if (firstClause.length <= 55) {
+    return `${proj.title} (${firstClause})`;
+  }
+  const truncated = firstClause.slice(0, 52).replace(/\s+\S*$/, "");
+  return `${proj.title} (${truncated}...)`;
+};
 
 interface Testimonial {
   id: string;
@@ -105,8 +116,9 @@ export default function TestimonialsInteractive() {
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
-  // Formulario nuevo veredicto
-  const [formSystem, setFormSystem] = useState("Wiki Assistant");
+  // Formulario nuevo veredicto - Vinculado automáticamente al catálogo de proyectos del carrusel
+  const defaultSystem = PROJECTS.find((p) => p.title.toLowerCase().includes("wiki"))?.title || PROJECTS[0]?.title || "Wiki Assistant";
+  const [formSystem, setFormSystem] = useState(defaultSystem);
   const [formName, setFormName] = useState("");
   const [formRole, setFormRole] = useState("");
   const [formBefore, setFormBefore] = useState("");
@@ -114,6 +126,18 @@ export default function TestimonialsInteractive() {
   const [formExtra, setFormExtra] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitFeedback, setSubmitFeedback] = useState<string | null>(null);
+
+  // Escuchar si se desea abrir el formulario para evaluar un proyecto específico
+  useEffect(() => {
+    const handleOpenWithSystem = (e: CustomEvent<{ system?: string }>) => {
+      if (e.detail?.system) {
+        setFormSystem(e.detail.system);
+      }
+      setIsSubmitOpen(true);
+    };
+    window.addEventListener("open-testimonial-modal" as any, handleOpenWithSystem);
+    return () => window.removeEventListener("open-testimonial-modal" as any, handleOpenWithSystem);
+  }, []);
 
   // Moderación Admin
   const [adminToken, setAdminToken] = useState("");
@@ -297,6 +321,7 @@ export default function TestimonialsInteractive() {
         setFormName("");
         setFormRole("");
         setFormExtra("");
+        setFormSystem(defaultSystem);
       } else {
         setSubmitFeedback("Ocurrió un error al enviar el veredicto. Revisa los datos e intenta de nuevo.");
       }
@@ -681,12 +706,14 @@ export default function TestimonialsInteractive() {
                     onChange={(e) => setFormSystem(e.target.value)}
                     className="p-2.5 rounded-lg bg-[rgba(35,23,39,0.9)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] font-mono text-xs focus:border-[#c084fc] outline-none"
                   >
-                    <option value="Wiki Assistant">Wiki Assistant (Asistente de Ventas & Citas)</option>
-                    <option value="Graphito">Graphito (Visualizador de Grafos IA)</option>
-                    <option value="Tetring">Tetring (Optimizador de Horarios & Turnos)</option>
-                    <option value="PAIDEA">PAIDEA (Agentes IA con Base de Conocimiento)</option>
-                    <option value="Paralel">Paralel (Ejecución y Cómputo Concurrente)</option>
-                    <option value="Extractor de Facturas">Extractor de Facturas & Tickets</option>
+                    {PROJECTS.map((proj) => (
+                      <option key={proj.id} value={proj.title}>
+                        {formatProjectOption(proj)}
+                      </option>
+                    ))}
+                    <option value="Consultoría / Servicios Generales">
+                      Consultoría / Servicios Generales
+                    </option>
                   </select>
                 </div>
 
