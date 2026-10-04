@@ -239,12 +239,20 @@ export const CoverFlowCarousel: React.FC = () => {
                 </button>
                 <a
                   href={project.demoUrl}
-                  target="_blank"
+                  target={project.id === 'PRJ-06' || project.demoUrl === '#wiki' ? '_self' : '_blank'}
                   rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    if (project.id === 'PRJ-06' || project.demoUrl === '#wiki') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      window.dispatchEvent(new CustomEvent('open-copilot-chat'));
+                    } else {
+                      e.stopPropagation();
+                    }
+                  }}
                   className="py-2.5 px-4 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
                 >
-                  <span>Probar demo ↗</span>
+                  <span>{project.id === 'PRJ-06' ? '¡Pruébalo ahora! :D' : 'Probar demo ↗'}</span>
                 </a>
               </div>
             </div>

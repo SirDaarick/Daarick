@@ -227,15 +227,30 @@ export const SandboxModal: React.FC = () => {
             </div>
 
             <div className="flex flex-col w-full gap-2.5 pt-1">
-              <a
-                href={currentProject.demoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3 px-5 rounded-xl bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
-              >
-                <span>Ver demo en vivo</span>
-                <span className="text-sm font-bold">↗</span>
-              </a>
+              {currentProject.id === 'PRJ-06' || currentProject.demoUrl === '#wiki' ? (
+                <button
+                  onClick={() => {
+                    closeModal();
+                    setTimeout(() => {
+                      window.dispatchEvent(new CustomEvent('open-copilot-chat'));
+                    }, 180);
+                  }}
+                  className="w-full py-3 px-5 rounded-xl bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+                >
+                  <span>¡Pruébalo ahora mismo :D!</span>
+                  <span className="text-sm font-bold">↗</span>
+                </button>
+              ) : (
+                <a
+                  href={currentProject.demoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 px-5 rounded-xl bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+                >
+                  <span>Ver demo en vivo</span>
+                  <span className="text-sm font-bold">↗</span>
+                </a>
+              )}
 
               {currentProject.githubUrl && (
                 <a
@@ -324,19 +339,33 @@ export const SandboxModal: React.FC = () => {
                   ↻
                 </button>
 
-                {/* Abrir en pestaña nueva */}
-                <a
-                  href={currentProject.demoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1 rounded bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-semibold transition-all inline-flex items-center gap-1 shadow-sm active:scale-95"
-                >
-                  <span>Abrir ↗</span>
-                </a>
+                {/* Abrir en pestaña nueva o lanzar chat */}
+                {currentProject.id === 'PRJ-06' || currentProject.demoUrl === '#wiki' ? (
+                  <button
+                    onClick={() => {
+                      closeModal();
+                      setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent('open-copilot-chat'));
+                      }, 180);
+                    }}
+                    className="px-3 py-1 rounded bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all inline-flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer"
+                  >
+                    <span>¡Pruébalo ahora :D!</span>
+                  </button>
+                ) : (
+                  <a
+                    href={currentProject.demoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1 rounded bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-semibold transition-all inline-flex items-center gap-1 shadow-sm active:scale-95"
+                  >
+                    <span>Abrir ↗</span>
+                  </a>
+                )}
               </div>
             </div>
 
-            {/* Embedded Interactive Iframe con escalado de viewport */}
+            {/* Embedded Interactive Iframe con escalado de viewport o Showcase de Wiki */}
             <div
               className={`relative w-full ${
                 showDetails
@@ -344,31 +373,64 @@ export const SandboxModal: React.FC = () => {
                   : 'h-[720px] sm:h-[800px] lg:h-[850px] 2xl:h-[900px]'
               } bg-black/60 overflow-hidden transition-all duration-300`}
             >
-              {/* Spinner de Carga Inicial */}
-              {isIframeLoading && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[rgba(18,9,22,0.9)] backdrop-blur-xs gap-3 z-10 pointer-events-none transition-opacity duration-300">
-                  <div className="w-8 h-8 rounded-full border-2 border-[rgba(192,132,252,0.3)] border-t-[#c084fc] animate-spin" />
-                  <span className="font-mono text-xs text-[#F6DBC0]/80">
-                    Cargando demo interactiva ({currentProject.title})...
-                  </span>
+              {currentProject.id === 'PRJ-06' || currentProject.demoUrl === '#wiki' ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-radial from-[rgba(66,28,80,0.5)] to-[rgba(18,9,22,0.98)] gap-5">
+                  <div className="w-16 h-16 rounded-2xl bg-[rgba(192,132,252,0.15)] border border-[#c084fc]/50 flex items-center justify-center text-3xl shadow-[0_0_30px_rgba(192,132,252,0.3)]">
+                    ⚡
+                  </div>
+                  <div className="max-w-lg flex flex-col gap-2.5">
+                    <span className="font-mono text-xs text-[#c084fc] font-semibold tracking-wider uppercase">
+                      [ Sistema Activo en Esta Misma Página ]
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-bold text-[#F8F4E9]">
+                      Wiki Assistant está en ejecución
+                    </h3>
+                    <p className="text-xs sm:text-sm text-[#F6DBC0] leading-relaxed">
+                      Este asistente no requiere un iframe simulado: está integrado en vivo en este sitio web. Cuenta con streaming reactivo token por token, diagnóstico guiado para personas sin conocimientos técnicos y sincronización directa con Google Calendar.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      closeModal();
+                      setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent('open-copilot-chat'));
+                      }, 180);
+                    }}
+                    className="py-3 px-6 rounded-xl bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs sm:text-sm font-bold transition-all shadow-lg active:scale-95 flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>¡Pruébalo ahora mismo :D!</span>
+                    <span>→</span>
+                  </button>
                 </div>
-              )}
+              ) : (
+                <>
+                  {/* Spinner de Carga Inicial */}
+                  {isIframeLoading && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[rgba(18,9,22,0.9)] backdrop-blur-xs gap-3 z-10 pointer-events-none transition-opacity duration-300">
+                      <div className="w-8 h-8 rounded-full border-2 border-[rgba(192,132,252,0.3)] border-t-[#c084fc] animate-spin" />
+                      <span className="font-mono text-xs text-[#F6DBC0]/80">
+                        Cargando demo interactiva ({currentProject.title})...
+                      </span>
+                    </div>
+                  )}
 
-              <iframe
-                key={`${currentProject.demoUrl}-${iframeKey}`}
-                src={currentProject.demoUrl}
-                title={`Demo interactiva de ${currentProject.title}`}
-                onLoad={() => setIsIframeLoading(false)}
-                style={{
-                  width: `${100 / scale}%`,
-                  height: `${100 / scale}%`,
-                  transform: `scale(${scale})`,
-                  transformOrigin: 'top left',
-                }}
-                className="border-0 select-auto"
-                loading="lazy"
-                allow="clipboard-write; fullscreen"
-              />
+                  <iframe
+                    key={`${currentProject.demoUrl}-${iframeKey}`}
+                    src={currentProject.demoUrl}
+                    title={`Demo interactiva de ${currentProject.title}`}
+                    onLoad={() => setIsIframeLoading(false)}
+                    style={{
+                      width: `${100 / scale}%`,
+                      height: `${100 / scale}%`,
+                      transform: `scale(${scale})`,
+                      transformOrigin: 'top left',
+                    }}
+                    className="border-0 select-auto"
+                    loading="lazy"
+                    allow="clipboard-write; fullscreen"
+                  />
+                </>
+              )}
             </div>
           </div>
         </div>

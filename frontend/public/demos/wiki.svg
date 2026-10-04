@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140A18"/>
+      <stop offset="50%" stop-color="#1E0D25"/>
+      <stop offset="100%" stop-color="#100714"/>
+    </linearGradient>
+
+    <!-- Card Gradient -->
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#281432"/>
+      <stop offset="100%" stop-color="#1B0C22"/>
+    </linearGradient>
+
+    <!-- Purple Glow Accent -->
+    <linearGradient id="accentGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C084FC"/>
+      <stop offset="100%" stop-color="#E879F9"/>
+    </linearGradient>
+
+    <!-- Pill Gradient -->
+    <linearGradient id="pillGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4C1D6B"/>
+      <stop offset="100%" stop-color="#2E1145"/>
+    </linearGradient>
+
+    <!-- Subtle Shadows -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="800" height="480" fill="url(#bgGrad)"/>
+
+  <!-- Subtle Grid Texture -->
+  <g stroke="rgba(192, 132, 252, 0.05)" stroke-width="1">
+    <line x1="0" y1="60" x2="800" y2="60"/>
+    <line x1="0" y1="120" x2="800" y2="120"/>
+    <line x1="0" y1="180" x2="800" y2="180"/>
+    <line x1="0" y1="240" x2="800" y2="240"/>
+    <line x1="0" y1="300" x2="800" y2="300"/>
+    <line x1="0" y1="360" x2="800" y2="360"/>
+    <line x1="0" y1="420" x2="800" y2="420"/>
+    <line x1="100" y1="0" x2="100" y2="480"/>
+    <line x1="200" y1="0" x2="200" y2="480"/>
+    <line x1="300" y1="0" x2="300" y2="480"/>
+    <line x1="400" y1="0" x2="400" y2="480"/>
+    <line x1="500" y1="0" x2="500" y2="480"/>
+    <line x1="600" y1="0" x2="600" y2="480"/>
+    <line x1="700" y1="0" x2="700" y2="480"/>
+  </g>
+
+  <!-- Ambient Glow Behind Main Card -->
+  <circle cx="400" cy="240" r="180" fill="#c084fc" opacity="0.08" filter="blur(40px)"/>
+
+  <!-- Main Assistant Window Container -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="35" width="700" height="410" rx="16" fill="url(#cardGrad)" stroke="rgba(192, 132, 252, 0.35)" stroke-width="1.5"/>
+
+    <!-- Window Header -->
+    <rect x="50" y="35" width="700" height="46" rx="16" fill="#180A1F"/>
+    <rect x="50" y="65" width="700" height="16" fill="#180A1F"/>
+    <line x1="50" y1="81" x2="750" y2="81" stroke="rgba(147, 80, 115, 0.3)" stroke-width="1"/>
+
+    <!-- Window Dots -->
+    <circle cx="75" cy="58" r="5" fill="#EF4444"/>
+    <circle cx="93" cy="58" r="5" fill="#F59E0B"/>
+    <circle cx="111" cy="58" r="5" fill="#10B981"/>
+
+    <!-- Window Title -->
+    <text x="135" y="62" fill="#F8F4E9" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" letter-spacing="0.5">Wiki Assistant // Motor de Ventas &amp; Citas</text>
+
+    <!-- Live Status Badge -->
+    <rect x="560" y="47" width="172" height="22" rx="11" fill="rgba(16, 185, 129, 0.12)" stroke="rgba(16, 185, 129, 0.4)" stroke-width="1"/>
+    <circle cx="574" cy="58" r="3.5" fill="#10B981"/>
+    <text x="584" y="62" fill="#34D399" font-family="monospace" font-size="10.5" font-weight="600">EN VIVO EN ESTA PÁGINA</text>
+  </g>
+
+  <!-- User Chat Bubble (Right-aligned) -->
+  <g>
+    <rect x="290" y="102" width="435" height="54" rx="14" fill="#3B174F" stroke="rgba(192, 132, 252, 0.35)" stroke-width="1"/>
+    <text x="310" y="125" fill="#F8F4E9" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="500">
+      “Tengo una peluquería y se me empalman las citas y los
+    </text>
+    <text x="310" y="144" fill="#F8F4E9" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="500">
+      horarios de mis clientas. ¿Qué me recomiendas hacer?”
+    </text>
+  </g>
+
+  <!-- Wiki Avatar & Assistant Message (Left-aligned) -->
+  <g>
+    <!-- Avatar -->
+    <rect x="75" y="172" width="38" height="38" rx="10" fill="url(#pillGrad)" stroke="#C084FC" stroke-width="1.2"/>
+    <text x="94" y="196" fill="#F8F4E9" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="bold" text-anchor="middle">W</text>
+
+    <!-- Assistant Chat Bubble -->
+    <rect x="125" y="172" width="600" height="72" rx="14" fill="#200C2A" stroke="rgba(147, 80, 115, 0.4)" stroke-width="1"/>
+    <text x="145" y="197" fill="#F8F4E9" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="500">
+      ¡Te entiendo perfectamente! No te preocupes por la tecnología.
+    </text>
+    <text x="145" y="218" fill="#F6DBC0" font-family="system-ui, -apple-system, sans-serif" font-size="12.5">
+      Para tu peluquería preparé 3 opciones prácticas. Puedes elegir una o varias para profundizar:
+    </text>
+  </g>
+
+  <!-- 3 Options Selection Pills -->
+  <g>
+    <!-- Option 1 (Selected) -->
+    <rect x="125" y="258" width="590" height="36" rx="8" fill="rgba(80, 20, 110, 0.45)" stroke="#C084FC" stroke-width="1.2"/>
+    <rect x="137" y="267" width="18" height="18" rx="4" fill="#C084FC"/>
+    <text x="146" y="280" fill="#180A1F" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">✓</text>
+    <text x="166" y="281" fill="#F8F4E9" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600">
+      1. Agendador automático por WhatsApp para que reserven sin empalmes
+    </text>
+
+    <!-- Option 2 -->
+    <rect x="125" y="302" width="590" height="36" rx="8" fill="rgba(35, 15, 45, 0.7)" stroke="rgba(147, 80, 115, 0.35)" stroke-width="1"/>
+    <rect x="137" y="311" width="18" height="18" rx="4" fill="transparent" stroke="rgba(192, 132, 252, 0.5)" stroke-width="1.5"/>
+    <text x="166" y="325" fill="#F6DBC0" font-family="system-ui, -apple-system, sans-serif" font-size="12">
+      2. Recordatorios automáticos 2 horas antes de la cita para reducir cancelaciones
+    </text>
+
+    <!-- Option 3 -->
+    <rect x="125" y="346" width="590" height="36" rx="8" fill="rgba(35, 15, 45, 0.7)" stroke="rgba(147, 80, 115, 0.35)" stroke-width="1"/>
+    <rect x="137" y="355" width="18" height="18" rx="4" fill="transparent" stroke="rgba(192, 132, 252, 0.5)" stroke-width="1.5"/>
+    <text x="166" y="369" fill="#F6DBC0" font-family="system-ui, -apple-system, sans-serif" font-size="12">
+      3. Registro ágil de clientas y servicios favoritos desde el celular sin papel
+    </text>
+  </g>
+
+  <!-- Bottom Interactive CTA Ribbon -->
+  <g>
+    <rect x="75" y="398" width="650" height="34" rx="8" fill="rgba(192, 132, 252, 0.12)" stroke="rgba(192, 132, 252, 0.4)" stroke-width="1"/>
+    <text x="400" y="420" fill="#E9D5FF" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" text-anchor="middle">
+      ✨ 4 Reglas Estrictas de Experiencia: Descubrir → Opciones → Propuesta → Cierre | ¡Pruébalo ahora mismo :D!
+    </text>
+  </g>
+</svg>
