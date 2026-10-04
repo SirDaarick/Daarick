@@ -174,127 +174,423 @@ html.light [class*="bg-[rgba(80,45,85,0.4"]:hover {
   transform: translateY(-1px) !important;
 }
 
-/* Chat Wiki: Cuadros de texto, mensajes y barra de entrada en modo claro */
-html.light #chat-window {
-  background-color: #F8F3ED !important;
-  border-color: rgba(120, 60, 95, 0.3) !important;
+/* ==========================================================================
+   Chat Asesor Wiki: Modo Claro (Light Mode) con Alta Accesibilidad (WCAG AAA)
+   ========================================================================== */
+
+/* Ventana principal del Chat */
+html.light .wiki-chat-window,
+html:not(.dark) .wiki-chat-window {
+  background-color: #FAF4EE !important;
+  border-color: rgba(120, 60, 95, 0.25) !important;
+  color: #241428 !important;
+  box-shadow: 0 20px 45px -10px rgba(70, 30, 80, 0.18), 0 0 1px 1px rgba(120, 60, 95, 0.1) !important;
+}
+
+/* Encabezado del Chat */
+html.light .wiki-chat-header,
+html:not(.dark) .wiki-chat-header {
+  background-color: #EFE6DD !important;
+  border-color: rgba(120, 60, 95, 0.2) !important;
+}
+html.light .wiki-chat-header .wiki-header-title,
+html:not(.dark) .wiki-chat-header .wiki-header-title {
+  color: #241428 !important;
+}
+html.light .wiki-chat-header .wiki-header-subtitle,
+html:not(.dark) .wiki-chat-header .wiki-header-subtitle {
+  color: #52365A !important;
+}
+html.light .wiki-header-badge,
+html:not(.dark) .wiki-header-badge {
+  background-color: rgba(126, 34, 206, 0.12) !important;
+  color: #7E22CE !important;
+  border-color: rgba(126, 34, 206, 0.3) !important;
+}
+html.light .wiki-chat-header .wiki-avatar-box,
+html:not(.dark) .wiki-chat-header .wiki-avatar-box {
+  background-color: #E4D5C7 !important;
+  border-color: rgba(126, 34, 206, 0.3) !important;
+  color: #7E22CE !important;
+}
+html.light .wiki-header-actions button,
+html:not(.dark) .wiki-header-actions button {
+  color: #52365A !important;
+}
+html.light .wiki-header-actions button:hover,
+html:not(.dark) .wiki-header-actions button:hover {
+  background-color: #E2D4C5 !important;
   color: #241428 !important;
 }
 
-html.light #chat-window header,
-html.light #chat-window [class*="bg-[rgba(30,15,35"] {
-  background-color: #EFE6DD !important;
-  border-color: rgba(120, 60, 95, 0.22) !important;
-}
-
-/* Área de conversación y burbujas de mensaje */
-html.light #conversation-stream {
-  background-color: #F8F3ED !important;
+/* Area de conversacion y scroll */
+html.light #conversation-stream,
+html:not(.dark) #conversation-stream {
+  background-color: #FAF4EE !important;
 }
 
 /* Burbuja del Bot Wiki en Modo Claro */
-html.light [class*="rounded-tl-sm bg-[rgba(45,20,52"] {
-  background-color: #ECE3DB !important;
-  border-color: rgba(120, 60, 95, 0.25) !important;
+html.light .wiki-bot-bubble,
+html:not(.dark) .wiki-bot-bubble {
+  background-color: #FFFFFF !important;
+  border-color: rgba(120, 60, 95, 0.22) !important;
   color: #241428 !important;
+  box-shadow: 0 2px 8px rgba(70, 30, 80, 0.05) !important;
+}
+html.light .wiki-bot-bubble p,
+html.light .wiki-bot-bubble span,
+html.light .wiki-bot-bubble li,
+html:not(.dark) .wiki-bot-bubble p,
+html:not(.dark) .wiki-bot-bubble span,
+html:not(.dark) .wiki-bot-bubble li {
+  color: #241428 !important;
+}
+html.light .wiki-bot-bubble strong,
+html:not(.dark) .wiki-bot-bubble strong {
+  color: #160B1A !important;
+  font-weight: 700 !important;
 }
 
 /* Burbuja del Usuario en Modo Claro */
-html.light [class*="rounded-tr-sm bg-[#381a3e"] {
+html.light .wiki-user-bubble,
+html:not(.dark) .wiki-user-bubble {
   background-color: #7E22CE !important;
   border-color: #6B21A8 !important;
-  color: #FAF5FF !important; /* Texto blanco en la burbuja del usuario para máxima legibilidad */
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 10px rgba(126, 34, 206, 0.25) !important;
+}
+html.light .wiki-user-bubble span,
+html:not(.dark) .wiki-user-bubble span {
+  color: #FFFFFF !important;
 }
 
-/* Chips de sugerencias del chat en Modo Claro */
-html.light #conversation-stream button[class*="bg-[rgba(45,20,52"] {
-  background-color: #ECE3DB !important;
-  border-color: rgba(120, 60, 95, 0.25) !important;
-  color: #452D4D !important;
+/* Timestamps de mensajes */
+html.light #conversation-stream .text-\[\#F3E5D8\],
+html:not(.dark) #conversation-stream .text-\[\#F3E5D8\] {
+  color: #6B4E71 !important;
 }
-html.light #conversation-stream button[class*="bg-[rgba(45,20,52"]:hover {
-  background-color: #E2D7CC !important;
+
+/* ==========================================================================
+   Componente Interactivo de 3 Opciones (Estilo Claude) en Modo Claro
+   ========================================================================== */
+html.light .wiki-options-card,
+html:not(.dark) .wiki-options-card {
+  background-color: #F3EAE1 !important;
+  border-color: rgba(126, 34, 206, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(70, 30, 80, 0.08) !important;
+}
+html.light .wiki-options-title,
+html:not(.dark) .wiki-options-title {
+  color: #241428 !important;
+}
+html.light .wiki-options-badge,
+html:not(.dark) .wiki-options-badge {
+  background-color: rgba(126, 34, 206, 0.12) !important;
+  color: #7E22CE !important;
+  border-color: rgba(126, 34, 206, 0.25) !important;
+}
+
+/* Boton de opcion individual: No seleccionada */
+html.light .wiki-option-btn:not(.selected),
+html:not(.dark) .wiki-option-btn:not(.selected) {
+  background-color: #FFFFFF !important;
+  border-color: rgba(120, 60, 95, 0.25) !important;
+  color: #241428 !important;
+}
+html.light .wiki-option-btn:not(.selected):hover,
+html:not(.dark) .wiki-option-btn:not(.selected):hover {
+  background-color: #EDE2D7 !important;
+  border-color: rgba(126, 34, 206, 0.4) !important;
+}
+html.light .wiki-option-checkbox:not(.selected),
+html:not(.dark) .wiki-option-checkbox:not(.selected) {
+  background-color: #FAF6F1 !important;
+  border-color: rgba(120, 60, 95, 0.45) !important;
+}
+html.light .wiki-option-btn:not(.selected) .wiki-option-text,
+html:not(.dark) .wiki-option-btn:not(.selected) .wiki-option-text {
   color: #241428 !important;
 }
 
-/* Tarjeta interactiva de proyecto o recomendación dentro del chat */
-html.light #conversation-stream [class*="bg-[rgba(30,15,35,0.85"] {
-  background-color: #FAF5EF !important;
+/* Boton de opcion individual: Seleccionada */
+html.light .wiki-option-btn.selected,
+html:not(.dark) .wiki-option-btn.selected {
+  background-color: #F1E7FC !important;
+  border-color: #7E22CE !important;
+  box-shadow: 0 2px 10px rgba(126, 34, 206, 0.22) !important;
+}
+html.light .wiki-option-checkbox.selected,
+html:not(.dark) .wiki-option-checkbox.selected {
+  background-color: #7E22CE !important;
+  border-color: #7E22CE !important;
+  color: #FFFFFF !important;
+}
+html.light .wiki-option-btn.selected .wiki-option-text,
+html:not(.dark) .wiki-option-btn.selected .wiki-option-text {
+  color: #1E0E2B !important;
+  font-weight: 700 !important;
+}
+
+/* Boton de envio de seleccion */
+html.light .wiki-options-submit-btn,
+html:not(.dark) .wiki-options-submit-btn {
+  background-color: #7E22CE !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px rgba(126, 34, 206, 0.3) !important;
+}
+html.light .wiki-options-submit-btn:hover:not(:disabled),
+html:not(.dark) .wiki-options-submit-btn:hover:not(:disabled) {
+  background-color: #6B21A8 !important;
+}
+html.light .wiki-options-submit-btn:disabled,
+html:not(.dark) .wiki-options-submit-btn:disabled {
+  background-color: #E6DACD !important;
+  color: #8F7296 !important;
+  border-color: rgba(120, 60, 95, 0.2) !important;
+  box-shadow: none !important;
+}
+html.light .wiki-options-hint,
+html:not(.dark) .wiki-options-hint {
+  color: #52365A !important;
+}
+
+/* ==========================================================================
+   Tarjetas de Proyecto Comprobado en Modo Claro
+   ========================================================================== */
+html.light .wiki-project-card,
+html:not(.dark) .wiki-project-card {
+  background-color: #F3EAE1 !important;
   border-color: rgba(126, 34, 206, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(70, 30, 80, 0.08) !important;
+}
+html.light .wiki-project-title,
+html:not(.dark) .wiki-project-title {
+  color: #241428 !important;
+}
+html.light .wiki-project-badge,
+html:not(.dark) .wiki-project-badge {
+  background-color: rgba(126, 34, 206, 0.12) !important;
+  color: #7E22CE !important;
+  border-color: rgba(126, 34, 206, 0.25) !important;
+}
+html.light .wiki-project-tagline,
+html:not(.dark) .wiki-project-tagline {
+  color: #452D4D !important;
+}
+html.light .wiki-project-btn-primary,
+html:not(.dark) .wiki-project-btn-primary {
+  background-color: #7E22CE !important;
+  color: #FFFFFF !important;
+}
+html.light .wiki-project-btn-primary:hover,
+html:not(.dark) .wiki-project-btn-primary:hover {
+  background-color: #6B21A8 !important;
+}
+html.light .wiki-project-btn-secondary,
+html:not(.dark) .wiki-project-btn-secondary {
+  background-color: #FFFFFF !important;
+  border-color: rgba(120, 60, 95, 0.3) !important;
+  color: #241428 !important;
+}
+html.light .wiki-project-btn-secondary:hover,
+html:not(.dark) .wiki-project-btn-secondary:hover {
+  background-color: #EDE2D7 !important;
+  color: #160B1A !important;
 }
 
-/* Input y barra de escritura del chat en Modo Claro */
-html.light #chat-window [class*="bg-[rgba(26,12,30"] {
-  background-color: #EFE6DD !important;
+/* ==========================================================================
+   Tarjeta de Agendado (Booking Calendar) en Modo Claro
+   ========================================================================== */
+html.light .wiki-booking-card,
+html:not(.dark) .wiki-booking-card {
+  background-color: #F3EAE1 !important;
+  border-color: rgba(126, 34, 206, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(70, 30, 80, 0.08) !important;
+}
+html.light .wiki-booking-title,
+html:not(.dark) .wiki-booking-title {
+  color: #241428 !important;
+}
+html.light .wiki-booking-badge,
+html:not(.dark) .wiki-booking-badge {
+  background-color: rgba(126, 34, 206, 0.12) !important;
+  color: #7E22CE !important;
+  border-color: rgba(126, 34, 206, 0.25) !important;
+}
+html.light .wiki-booking-desc,
+html:not(.dark) .wiki-booking-desc {
+  color: #452D4D !important;
+}
+html.light .wiki-booking-slot:not(.selected),
+html:not(.dark) .wiki-booking-slot:not(.selected) {
+  background-color: #FFFFFF !important;
   border-color: rgba(120, 60, 95, 0.25) !important;
+  color: #241428 !important;
+}
+html.light .wiki-booking-slot:not(.selected):hover,
+html:not(.dark) .wiki-booking-slot:not(.selected):hover {
+  background-color: #EDE2D7 !important;
+}
+html.light .wiki-booking-slot.selected,
+html:not(.dark) .wiki-booking-slot.selected {
+  background-color: #7E22CE !important;
+  color: #FFFFFF !important;
+}
+html.light .wiki-booking-input,
+html:not(.dark) .wiki-booking-input {
+  background-color: #FFFFFF !important;
+  border-color: rgba(120, 60, 95, 0.3) !important;
+  color: #241428 !important;
+}
+html.light .wiki-booking-input::placeholder,
+html:not(.dark) .wiki-booking-input::placeholder {
+  color: rgba(69, 45, 77, 0.55) !important;
+}
+html.light .wiki-booking-input:focus,
+html:not(.dark) .wiki-booking-input:focus {
+  border-color: #7E22CE !important;
+}
+html.light .wiki-booking-submit,
+html:not(.dark) .wiki-booking-submit {
+  background-color: #7E22CE !important;
+  color: #FFFFFF !important;
+}
+html.light .wiki-booking-submit:hover:not(:disabled),
+html:not(.dark) .wiki-booking-submit:hover:not(:disabled) {
+  background-color: #6B21A8 !important;
+}
+html.light .wiki-booking-success,
+html:not(.dark) .wiki-booking-success {
+  background-color: #ECFDF5 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #065F46 !important;
 }
 
-html.light #chat-window [class*="bg-[rgba(45,20,52"] {
+/* ==========================================================================
+   Chips de Sugerencias en Modo Claro
+   ========================================================================== */
+html.light .wiki-suggestion-chip,
+html:not(.dark) .wiki-suggestion-chip {
+  background-color: #FFFFFF !important;
+  border-color: rgba(120, 60, 95, 0.25) !important;
+  color: #3B2043 !important;
+  box-shadow: 0 2px 6px rgba(70, 30, 80, 0.05) !important;
+}
+html.light .wiki-suggestion-chip:hover,
+html:not(.dark) .wiki-suggestion-chip:hover {
+  background-color: #7E22CE !important;
+  border-color: #7E22CE !important;
+  color: #FFFFFF !important;
+}
+
+/* ==========================================================================
+   Estado Pensando (Loading Animation) en Modo Claro
+   ========================================================================== */
+html.light .wiki-thinking-card,
+html:not(.dark) .wiki-thinking-card {
+  background-color: #FFFFFF !important;
+  border-color: rgba(120, 60, 95, 0.22) !important;
+  box-shadow: 0 2px 8px rgba(70, 30, 80, 0.05) !important;
+}
+html.light .wiki-thinking-text,
+html:not(.dark) .wiki-thinking-text {
+  color: #3B2043 !important;
+}
+html.light .wiki-thinking-dots span,
+html:not(.dark) .wiki-thinking-dots span {
+  background-color: #7E22CE !important;
+}
+
+/* ==========================================================================
+   Barra de Entrada de Texto en Modo Claro
+   ========================================================================== */
+html.light .wiki-input-bar,
+html:not(.dark) .wiki-input-bar {
+  background-color: #EFE6DD !important;
+  border-color: rgba(120, 60, 95, 0.2) !important;
+}
+html.light .wiki-input-container,
+html:not(.dark) .wiki-input-container {
   background-color: #FFFFFF !important;
   border-color: rgba(120, 60, 95, 0.3) !important;
 }
-
-html.light #chat-window textarea {
+html.light .wiki-input-container:focus-within,
+html:not(.dark) .wiki-input-container:focus-within {
+  border-color: #7E22CE !important;
+}
+html.light .wiki-textarea,
+html:not(.dark) .wiki-textarea {
   color: #241428 !important;
 }
-
-html.light #chat-window textarea::placeholder {
+html.light .wiki-textarea::placeholder,
+html:not(.dark) .wiki-textarea::placeholder {
   color: rgba(69, 45, 77, 0.55) !important;
 }
+html.light .wiki-mic-btn,
+html:not(.dark) .wiki-mic-btn {
+  background-color: #FFFFFF !important;
+  border-color: rgba(120, 60, 95, 0.3) !important;
+  color: #3B2043 !important;
+}
+html.light .wiki-mic-btn:hover,
+html:not(.dark) .wiki-mic-btn:hover {
+  border-color: #7E22CE !important;
+  color: #7E22CE !important;
+}
+html.light .wiki-send-btn,
+html:not(.dark) .wiki-send-btn {
+  background-color: #7E22CE !important;
+  color: #FFFFFF !important;
+}
+html.light .wiki-send-btn:hover:not(:disabled),
+html:not(.dark) .wiki-send-btn:hover:not(:disabled) {
+  background-color: #6B21A8 !important;
+}
 
-/* Botón Flotante (FAB) de Wiki en Modo Claro */
-html.light .wiki-fab-glow {
+/* ==========================================================================
+   Boton Flotante (FAB) y Globo de Bienvenida en Modo Claro
+   ========================================================================== */
+html.light .wiki-fab-glow,
+html.light .wiki-fab-button,
+html:not(.dark) .wiki-fab-glow,
+html:not(.dark) .wiki-fab-button {
   background-color: #FAF4EE !important;
-  border-color: rgba(126, 34, 206, 0.5) !important;
+  border-color: rgba(126, 34, 206, 0.45) !important;
   color: #241428 !important;
   box-shadow: 0 10px 30px rgba(120, 60, 95, 0.15), 0 0 15px rgba(126, 34, 206, 0.2) !important;
 }
-
-html.light .wiki-fab-glow:hover {
+html.light .wiki-fab-glow:hover,
+html.light .wiki-fab-button:hover,
+html:not(.dark) .wiki-fab-glow:hover,
+html:not(.dark) .wiki-fab-button:hover {
   background-color: #F3EAE0 !important;
 }
-
-html.light .wiki-fab-glow [class*="bg-[#c084fc]/20"] {
+html.light .wiki-fab-glow [class*="bg-[#c084fc]/25"],
+html:not(.dark) .wiki-fab-glow [class*="bg-[#c084fc]/25"] {
   background-color: rgba(126, 34, 206, 0.15) !important;
+  color: #7E22CE !important;
 }
-
-/* Globo Flotante Proactivo de Bienvenida en Modo Claro */
-html.light .wiki-bubble-float {
+html.light .wiki-fab-glow span,
+html:not(.dark) .wiki-fab-glow span {
+  color: #241428 !important;
+}
+html.light .wiki-bubble-float,
+html.light .wiki-bubble-card,
+html:not(.dark) .wiki-bubble-float,
+html:not(.dark) .wiki-bubble-card {
   background-color: #FAF4EE !important;
   border-color: rgba(126, 34, 206, 0.45) !important;
   color: #241428 !important;
   box-shadow: 0 14px 35px rgba(120, 60, 95, 0.16) !important;
 }
-
-html.light .wiki-bubble-float p {
+html.light .wiki-bubble-text,
+html:not(.dark) .wiki-bubble-text {
   color: #452D4D !important;
 }
-
-html.light .wiki-bubble-float div[class*="bg-[#1A0C1E]"] {
+html.light .wiki-bubble-arrow,
+html:not(.dark) .wiki-bubble-arrow {
   background-color: #FAF4EE !important;
   border-color: rgba(126, 34, 206, 0.45) !important;
-}
-
-/* Tarjeta de Agendado de Google Calendar en Modo Claro */
-html.light [class*="bg-[rgba(26,12,30,0.85]"] {
-  background-color: #FAF5EF !important;
-  border-color: rgba(126, 34, 206, 0.35) !important;
-}
-
-html.light [class*="bg-[rgba(55,26,62"] {
-  background-color: #EDE3DA !important;
-  border-color: rgba(120, 60, 95, 0.25) !important;
-  color: #241428 !important;
-}
-
-html.light [class*="bg-[rgba(55,26,62"]:hover {
-  background-color: #E2D5C8 !important;
-}
-
-html.light [class*="bg-[rgba(20,10,25,0.7]"] {
-  background-color: #FFFFFF !important;
-  border-color: rgba(120, 60, 95, 0.3) !important;
-  color: #241428 !important;
 }
 
 @media (prefers-color-scheme: light) {
@@ -448,63 +744,6 @@ html.light [class*="bg-[rgba(20,10,25,0.7]"] {
     border-color: rgba(120, 60, 95, 0.45) !important;
     color: #1E1222 !important;
     transform: translateY(-1px) !important;
-  }
-
-  /* Chat Wiki: Cuadros de texto, mensajes y barra de entrada en modo claro */
-  html:not(.dark) #chat-window {
-    background-color: #F8F3ED !important;
-    border-color: rgba(120, 60, 95, 0.3) !important;
-    color: #241428 !important;
-  }
-
-  html:not(.dark) #chat-window header,
-  html:not(.dark) #chat-window [class*="bg-[rgba(30,15,35"] {
-    background-color: #EFE6DD !important;
-    border-color: rgba(120, 60, 95, 0.22) !important;
-  }
-
-  html:not(.dark) #conversation-stream {
-    background-color: #F8F3ED !important;
-  }
-
-  html:not(.dark) [class*="rounded-tl-sm bg-[rgba(45,20,52"] {
-    background-color: #ECE3DB !important;
-    border-color: rgba(120, 60, 95, 0.25) !important;
-    color: #241428 !important;
-  }
-
-  html:not(.dark) [class*="rounded-tr-sm bg-[#381a3e"] {
-    background-color: #7E22CE !important;
-    border-color: #6B21A8 !important;
-    color: #FAF5FF !important;
-  }
-
-  html:not(.dark) #conversation-stream button[class*="bg-[rgba(45,20,52"] {
-    background-color: #ECE3DB !important;
-    border-color: rgba(120, 60, 95, 0.25) !important;
-    color: #452D4D !important;
-  }
-  html:not(.dark) #conversation-stream button[class*="bg-[rgba(45,20,52"]:hover {
-    background-color: #E2D7CC !important;
-    color: #241428 !important;
-  }
-
-  html:not(.dark) #conversation-stream [class*="bg-[rgba(30,15,35,0.85"] {
-    background-color: #FAF5EF !important;
-    border-color: rgba(126, 34, 206, 0.35) !important;
-  }
-
-  html:not(.dark) #chat-window [class*="bg-[rgba(22,11,26"] {
-    background-color: #FFFFFF !important;
-    border-color: rgba(120, 60, 95, 0.3) !important;
-  }
-
-  html:not(.dark) #chat-window textarea {
-    color: #241428 !important;
-  }
-
-  html:not(.dark) #chat-window textarea::placeholder {
-    color: rgba(69, 45, 77, 0.55) !important;
   }
 }
 

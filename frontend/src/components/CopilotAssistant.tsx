@@ -550,7 +550,7 @@ export const CopilotAssistant: React.FC = () => {
               }
             : {})
         }}
-        className={`fixed bg-[#160B1A] border-0 sm:border border-[rgba(147,80,115,0.5)] shadow-2xl flex flex-col overflow-hidden transition-[width,height,transform] duration-200 ease-out z-[99999] ${
+        className={`wiki-chat-window fixed bg-[#160B1A] border-0 sm:border border-[rgba(147,80,115,0.5)] shadow-2xl flex flex-col overflow-hidden transition-[width,height,transform] duration-200 ease-out z-[99999] ${
           isExpanded
             ? 'inset-0 sm:inset-auto sm:bottom-8 sm:right-8 w-full sm:w-[680px] md:w-[760px] h-full sm:h-[720px] rounded-none sm:rounded-2xl'
             : 'inset-0 sm:inset-auto sm:bottom-24 sm:right-6 w-full sm:w-[460px] md:w-[490px] h-full sm:h-[580px] rounded-none sm:rounded-2xl'
@@ -559,28 +559,28 @@ export const CopilotAssistant: React.FC = () => {
         aria-label="Wiki Asesor de Automatización"
       >
         {/* Encabezado del Chat */}
-        <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 bg-[rgba(30,15,35,0.98)] border-b border-[rgba(147,80,115,0.3)] shrink-0 select-none">
+        <div className="wiki-chat-header flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 bg-[rgba(30,15,35,0.98)] border-b border-[rgba(147,80,115,0.3)] shrink-0 select-none">
           <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(80,45,85,0.6)] border border-[rgba(192,132,252,0.4)] text-[#c084fc] shadow-sm">
+            <div className="wiki-avatar-box relative flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(80,45,85,0.6)] border border-[rgba(192,132,252,0.4)] text-[#c084fc] shadow-sm">
               <Dog className="w-5 h-5 text-[#c084fc]" />
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#10B981] ring-2 ring-[#160B1A]"></span>
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="font-sans text-base font-bold tracking-tight text-[#FFFFFF]">
+                <span className="wiki-header-title font-sans text-base font-bold tracking-tight text-[#FFFFFF]">
                   Wiki
                 </span>
-                <span className="px-2 py-0.5 rounded bg-[#c084fc]/20 border border-[#c084fc]/40 text-[#d8b4fe] font-mono text-xs font-bold uppercase tracking-wider">
+                <span className="wiki-header-badge px-2 py-0.5 rounded bg-[#c084fc]/20 border border-[#c084fc]/40 text-[#d8b4fe] font-mono text-xs font-bold uppercase tracking-wider">
                   Asesor
                 </span>
               </div>
-              <span className="font-sans text-xs text-[#F6DBC0] font-medium">
+              <span className="wiki-header-subtitle font-sans text-xs text-[#F6DBC0] font-medium">
                 Soluciones & Automatización
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-1.5 text-[#F6DBC0]/60">
+          <div className="wiki-header-actions flex items-center gap-1 sm:gap-1.5 text-[#F6DBC0]/60">
             <button
               type="button"
               onClick={handleReset}
@@ -640,8 +640,8 @@ export const CopilotAssistant: React.FC = () => {
                     <div
                       className={`p-4 rounded-2xl shadow-md text-[15px] sm:text-base leading-relaxed ${
                         isBot
-                          ? 'rounded-tl-sm bg-[rgba(42,18,50,0.95)] border border-[rgba(192,132,252,0.4)] text-[#FFFFFF] font-sans'
-                          : 'rounded-tr-sm bg-[#521f61] border border-[rgba(216,180,254,0.5)] text-[#FFFFFF] font-normal shadow-md'
+                          ? 'wiki-bot-bubble rounded-tl-sm bg-[rgba(42,18,50,0.95)] border border-[rgba(192,132,252,0.4)] text-[#FFFFFF] font-sans'
+                          : 'wiki-user-bubble rounded-tr-sm bg-[#521f61] border border-[rgba(216,180,254,0.5)] text-[#FFFFFF] font-normal shadow-md'
                       }`}
                     >
                       {isBot ? (
@@ -655,17 +655,17 @@ export const CopilotAssistant: React.FC = () => {
 
                           {/* TARJETA DE SELECCIÓN INTERACTIVA DE 3 OPCIONES (ESTILO CLAUDE) */}
                           {msg.options && msg.options.length > 0 && (
-                            <div className="mt-3.5 p-3.5 sm:p-4 rounded-xl bg-[rgba(24,10,28,0.95)] border border-[#c084fc]/50 shadow-lg flex flex-col gap-3">
+                            <div className="wiki-options-card mt-3.5 p-3.5 sm:p-4 rounded-xl bg-[rgba(24,10,28,0.95)] border border-[#c084fc]/50 shadow-lg flex flex-col gap-3">
                               <div className="flex items-center justify-between gap-2 border-b border-[rgba(147,80,115,0.3)] pb-2.5">
                                 <div className="flex items-center gap-2">
                                   <span className="p-1 rounded bg-[#c084fc]/20 text-[#c084fc]">
                                     <Sparkles className="w-4 h-4" />
                                   </span>
-                                  <span className="font-sans text-sm sm:text-base font-bold text-[#FFFFFF] tracking-tight">
+                                  <span className="wiki-options-title font-sans text-sm sm:text-base font-bold text-[#FFFFFF] tracking-tight">
                                     Posibles caminos para tu negocio:
                                   </span>
                                 </div>
-                                <span className="font-mono text-xs px-2.5 py-0.5 rounded bg-[rgba(192,132,252,0.2)] text-[#d8b4fe] font-semibold border border-[#c084fc]/30">
+                                <span className="wiki-options-badge font-mono text-xs px-2.5 py-0.5 rounded bg-[rgba(192,132,252,0.2)] text-[#d8b4fe] font-semibold border border-[#c084fc]/30">
                                   {msg.options.length} opciones
                                 </span>
                               </div>
@@ -683,7 +683,7 @@ export const CopilotAssistant: React.FC = () => {
                                       onClick={() => isInteractive && toggleOption(msg.id, option)}
                                       aria-checked={isSelected}
                                       role="checkbox"
-                                      className={`w-full p-3 sm:p-3.5 rounded-xl text-left flex items-start gap-3 transition-all duration-150 select-none ${
+                                      className={`wiki-option-btn ${isSelected ? 'selected' : ''} w-full p-3 sm:p-3.5 rounded-xl text-left flex items-start gap-3 transition-all duration-150 select-none ${
                                         !isInteractive
                                           ? 'bg-[rgba(42,18,50,0.5)] border border-[rgba(147,80,115,0.25)] text-[#e2d4e7] opacity-80 cursor-default'
                                           : isSelected
@@ -692,7 +692,7 @@ export const CopilotAssistant: React.FC = () => {
                                       }`}
                                     >
                                       <div
-                                        className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 border transition-all ${
+                                        className={`wiki-option-checkbox ${isSelected ? 'selected' : ''} w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 border transition-all ${
                                           isSelected
                                             ? 'bg-[#c084fc] border-[#c084fc] text-[#160B1A]'
                                             : 'bg-[rgba(30,12,36,0.6)] border-[rgba(192,132,252,0.5)] text-transparent'
@@ -702,7 +702,7 @@ export const CopilotAssistant: React.FC = () => {
                                       </div>
 
                                       <div className="flex-1 flex flex-col">
-                                        <span className={`text-[14px] sm:text-[15px] leading-snug ${isSelected ? 'font-bold text-[#FFFFFF]' : 'font-medium text-[#F8F4E9]'}`}>
+                                        <span className={`wiki-option-text text-[14px] sm:text-[15px] leading-snug ${isSelected ? 'font-bold text-[#FFFFFF]' : 'font-medium text-[#F8F4E9]'}`}>
                                           {option}
                                         </span>
                                       </div>
@@ -717,7 +717,7 @@ export const CopilotAssistant: React.FC = () => {
                                     type="button"
                                     disabled={(selectedOptionsMap[msg.id] || []).length === 0}
                                     onClick={() => handleSendSelectedOptions(msg.id)}
-                                    className={`w-full py-2.5 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all shadow-md ${
+                                    className={`wiki-options-submit-btn w-full py-2.5 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all shadow-md ${
                                       (selectedOptionsMap[msg.id] || []).length > 0
                                         ? 'bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] active:scale-[0.98] cursor-pointer'
                                         : 'bg-[rgba(80,45,85,0.4)] text-[rgba(248,244,233,0.4)] border border-[rgba(147,80,115,0.3)] cursor-not-allowed'
@@ -731,7 +731,7 @@ export const CopilotAssistant: React.FC = () => {
                                     {(selectedOptionsMap[msg.id] || []).length > 0 && <Send className="w-4 h-4 ml-1" />}
                                   </button>
 
-                                  <span className="text-center font-sans text-xs text-[#d8b4fe]/80 pt-0.5">
+                                  <span className="wiki-options-hint text-center font-sans text-xs text-[#d8b4fe]/80 pt-0.5">
                                     💡 O si prefieres otra cosa, escribe tu idea libremente aquí abajo 👇
                                   </span>
                                 </div>
@@ -741,22 +741,22 @@ export const CopilotAssistant: React.FC = () => {
 
                           {/* TARJETA DE PROYECTO COMPROBADO */}
                           {msg.project_action && (
-                            <div className="mt-3.5 p-4 rounded-xl bg-[rgba(24,10,28,0.95)] border border-[#c084fc]/50 shadow-md flex flex-col gap-2.5">
+                            <div className="wiki-project-card mt-3.5 p-4 rounded-xl bg-[rgba(24,10,28,0.95)] border border-[#c084fc]/50 shadow-md flex flex-col gap-2.5">
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
                                   <span className="p-1 rounded bg-[#c084fc]/20 text-[#c084fc]">
                                     <Sparkles className="w-4 h-4" />
                                   </span>
-                                  <span className="font-sans text-sm sm:text-base font-bold text-[#FFFFFF] tracking-tight">
+                                  <span className="wiki-project-title font-sans text-sm sm:text-base font-bold text-[#FFFFFF] tracking-tight">
                                     {msg.project_action.title}
                                   </span>
                                 </div>
-                                <span className="font-mono text-xs px-2.5 py-0.5 rounded bg-[rgba(192,132,252,0.2)] text-[#d8b4fe] font-semibold border border-[#c084fc]/40">
+                                <span className="wiki-project-badge font-mono text-xs px-2.5 py-0.5 rounded bg-[rgba(192,132,252,0.2)] text-[#d8b4fe] font-semibold border border-[#c084fc]/40">
                                   ✓ Caso Comprobado
                                 </span>
                               </div>
 
-                              <p className="font-sans text-xs sm:text-sm text-[#F8F4E9] leading-relaxed">
+                              <p className="wiki-project-tagline font-sans text-xs sm:text-sm text-[#F8F4E9] leading-relaxed">
                                 {msg.project_action.tagline}
                               </p>
 
@@ -766,7 +766,7 @@ export const CopilotAssistant: React.FC = () => {
                                     href={msg.project_action.demo_url}
                                     target={msg.project_action.demo_url.startsWith('http') ? '_blank' : '_self'}
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-bold text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer"
+                                    className="wiki-project-btn-primary inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-bold text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer"
                                   >
                                     <span>{msg.project_action.action_label || 'Ver Cómo Funciona'}</span>
                                     <ExternalLink className="w-4 h-4" />
@@ -777,7 +777,7 @@ export const CopilotAssistant: React.FC = () => {
                                     href={msg.project_action.github_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[rgba(80,45,85,0.5)] hover:bg-[rgba(80,45,85,0.8)] border border-[rgba(192,132,252,0.4)] text-[#FFFFFF] text-xs sm:text-sm font-semibold transition-all active:scale-95 cursor-pointer"
+                                    className="wiki-project-btn-secondary inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[rgba(80,45,85,0.5)] hover:bg-[rgba(80,45,85,0.8)] border border-[rgba(192,132,252,0.4)] text-[#FFFFFF] text-xs sm:text-sm font-semibold transition-all active:scale-95 cursor-pointer"
                                   >
                                     <GitHubIcon className="w-4 h-4 text-[#ddb8ff]" />
                                     <span>Código</span>
@@ -845,13 +845,13 @@ export const CopilotAssistant: React.FC = () => {
 
                 {/* SUGERENCIAS: Solo se muestran en el último mensaje si no hay opciones interactivas */}
                 {isBot && isLastMessage && msg.suggestions && msg.suggestions.length > 0 && !isLoading && (!msg.options || msg.options.length === 0) && (
-                  <div className="pt-2.5 pl-10 flex flex-wrap gap-2 max-w-full">
+                  <div className="wiki-suggestions-container pt-2.5 pl-10 flex flex-wrap gap-2 max-w-full">
                     {msg.suggestions.map((sug, sIdx) => (
                       <button
                         key={sIdx}
                         type="button"
                         onClick={() => handleSendMessage(sug)}
-                        className="px-4 py-2 rounded-xl bg-[rgba(58,25,69,0.95)] hover:bg-[#c084fc] hover:text-[#160B1A] border border-[rgba(192,132,252,0.45)] hover:border-[#c084fc] text-[#FFFFFF] text-[13px] sm:text-sm font-semibold transition-all shadow-md flex items-center gap-2 active:scale-95 text-left cursor-pointer"
+                        className="wiki-suggestion-chip px-4 py-2 rounded-xl bg-[rgba(58,25,69,0.95)] hover:bg-[#c084fc] hover:text-[#160B1A] border border-[rgba(192,132,252,0.45)] hover:border-[#c084fc] text-[#FFFFFF] text-[13px] sm:text-sm font-semibold transition-all shadow-md flex items-center gap-2 active:scale-95 text-left cursor-pointer"
                       >
                         {sug}
                       </button>
@@ -865,17 +865,17 @@ export const CopilotAssistant: React.FC = () => {
           {/* Estado de carga / pensando con animación fluida */}
           {isLoading && (!messages[messages.length - 1]?.content || messages[messages.length - 1]?.role === 'user') && (
             <div className="flex items-start gap-3 max-w-[85%] animate-fadeIn">
-              <div className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.7)] border border-[rgba(192,132,252,0.4)] flex items-center justify-center shrink-0 text-[#c084fc] mt-1 shadow-md">
+              <div className="wiki-avatar-box w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.7)] border border-[rgba(192,132,252,0.4)] flex items-center justify-center shrink-0 text-[#c084fc] mt-1 shadow-md">
                 <Dog className="w-4 h-4 text-[#c084fc] animate-pulse" />
               </div>
               <div className="flex flex-col gap-1">
-                <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-[rgba(42,18,50,0.95)] border border-[rgba(192,132,252,0.4)] shadow-md flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 py-0.5" aria-label="Wiki está pensando">
+                <div className="wiki-thinking-card px-4 py-3 rounded-2xl rounded-tl-sm bg-[rgba(42,18,50,0.95)] border border-[rgba(192,132,252,0.4)] shadow-md flex items-center gap-3">
+                  <div className="wiki-thinking-dots flex items-center gap-1.5 py-0.5" aria-label="Wiki está pensando">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#c084fc] animate-bounce [animation-delay:-0.3s]"></span>
                     <span className="w-2.5 h-2.5 rounded-full bg-[#d8b4fe] animate-bounce [animation-delay:-0.15s]"></span>
                     <span className="w-2.5 h-2.5 rounded-full bg-[#f3e8ff] animate-bounce"></span>
                   </div>
-                  <span className="text-xs sm:text-sm font-sans text-[#FFFFFF] font-medium tracking-wide">
+                  <span className="wiki-thinking-text text-xs sm:text-sm font-sans text-[#FFFFFF] font-medium tracking-wide">
                     Wiki está pensando...
                   </span>
                 </div>
@@ -887,7 +887,7 @@ export const CopilotAssistant: React.FC = () => {
         </div>
 
         {/* Barra de Entrada (Input Area) */}
-        <div className="p-3 sm:p-4 bg-[rgba(26,12,30,0.95)] border-t border-[rgba(147,80,115,0.3)] shrink-0">
+        <div className="wiki-input-bar p-3 sm:p-4 bg-[rgba(26,12,30,0.95)] border-t border-[rgba(147,80,115,0.3)] shrink-0">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -895,7 +895,7 @@ export const CopilotAssistant: React.FC = () => {
             }}
             className="flex items-end gap-2"
           >
-            <div className="relative flex-1 rounded-xl bg-[rgba(45,20,52,0.7)] border border-[rgba(192,132,252,0.4)] focus-within:border-[#c084fc] transition-colors">
+            <div className="wiki-input-container relative flex-1 rounded-xl bg-[rgba(45,20,52,0.7)] border border-[rgba(192,132,252,0.4)] focus-within:border-[#c084fc] transition-colors">
               <textarea
                 ref={textareaRef}
                 value={inputValue}
@@ -920,7 +920,7 @@ export const CopilotAssistant: React.FC = () => {
                 placeholder="Escribe tu mensaje o cuéntame de tu negocio..."
                 rows={1}
                 maxLength={800}
-                className="w-full px-3.5 py-2.5 bg-transparent text-[15px] sm:text-base text-[#FFFFFF] placeholder-[#F6DBC0]/70 resize-none focus:outline-none font-normal"
+                className="wiki-textarea w-full px-3.5 py-2.5 bg-transparent text-[15px] sm:text-base text-[#FFFFFF] placeholder-[#F6DBC0]/70 resize-none focus:outline-none font-normal"
               />
             </div>
 
@@ -928,7 +928,7 @@ export const CopilotAssistant: React.FC = () => {
               <button
                 type="button"
                 onClick={handleToggleVoice}
-                className={`w-11 h-11 rounded-xl border transition-all cursor-pointer flex items-center justify-center shrink-0 ${
+                className={`wiki-mic-btn w-11 h-11 rounded-xl border transition-all cursor-pointer flex items-center justify-center shrink-0 ${
                   isListening
                     ? 'bg-rose-500/25 border-rose-500 text-rose-300 animate-pulse'
                     : 'bg-[rgba(45,20,52,0.7)] border-[rgba(192,132,252,0.4)] text-[#FFFFFF] hover:text-[#c084fc] hover:border-[#c084fc]'
@@ -942,7 +942,7 @@ export const CopilotAssistant: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading || !inputValue.trim()}
-              className="w-11 h-11 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] disabled:opacity-40 text-[#160B1A] transition-all cursor-pointer shadow-md active:scale-95 flex items-center justify-center shrink-0"
+              className="wiki-send-btn w-11 h-11 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] disabled:opacity-40 text-[#160B1A] transition-all cursor-pointer shadow-md active:scale-95 flex items-center justify-center shrink-0"
               title="Enviar mensaje"
             >
               <Send className="w-5 h-5" />
@@ -958,13 +958,13 @@ export const CopilotAssistant: React.FC = () => {
       >
         {/* Globo de bienvenida proactivo */}
         {showWelcomeBubble && !bubbleDismissed && (
-          <div className="wiki-bubble-float pointer-events-auto relative max-w-[280px] sm:max-w-[320px] p-4 rounded-2xl bg-[rgba(26,12,30,0.98)] border border-[#c084fc]/60 shadow-2xl backdrop-blur-md text-[#FFFFFF] flex items-start gap-2.5 animate-fadeIn">
+          <div className="wiki-bubble-float wiki-bubble-card pointer-events-auto relative max-w-[280px] sm:max-w-[320px] p-4 rounded-2xl bg-[rgba(26,12,30,0.98)] border border-[#c084fc]/60 shadow-2xl backdrop-blur-md text-[#FFFFFF] flex items-start gap-2.5 animate-fadeIn">
             <div className="flex-1 cursor-pointer" onClick={() => { setIsOpen(true); setShowWelcomeBubble(false); }}>
               <div className="flex items-center gap-1.5 font-sans text-xs text-[#d8b4fe] font-bold uppercase tracking-wider mb-1">
                 <Sparkles className="w-3.5 h-3.5 text-[#c084fc]" />
                 <span>¿Tienes un negocio?</span>
               </div>
-              <p className="text-sm text-[#FFFFFF] leading-relaxed font-sans">
+              <p className="wiki-bubble-text text-sm text-[#FFFFFF] leading-relaxed font-sans">
                 ¿Qué tarea te quita más tiempo en el día? Pregúntame cómo simplificarla.
               </p>
             </div>
@@ -981,7 +981,7 @@ export const CopilotAssistant: React.FC = () => {
               <X className="w-4 h-4" />
             </button>
             {/* Flechita del globo apuntando hacia el botón */}
-            <div className="absolute -bottom-1.5 right-8 w-3 h-3 bg-[#1A0C1E] border-r border-b border-[#c084fc]/60 transform rotate-45" />
+            <div className="wiki-bubble-arrow absolute -bottom-1.5 right-8 w-3 h-3 bg-[#1A0C1E] border-r border-b border-[#c084fc]/60 transform rotate-45" />
           </div>
         )}
 
@@ -992,7 +992,7 @@ export const CopilotAssistant: React.FC = () => {
             setIsOpen(true);
             setShowWelcomeBubble(false);
           }}
-          className="pointer-events-auto wiki-fab-glow items-center gap-3 px-4 py-3 rounded-2xl bg-[rgba(26,12,30,0.96)] hover:bg-[rgba(45,20,52,0.98)] border border-[#c084fc]/60 text-[#FFFFFF] shadow-2xl backdrop-blur-md transition-all active:scale-95 cursor-pointer group flex"
+          className="pointer-events-auto wiki-fab-glow wiki-fab-button items-center gap-3 px-4 py-3 rounded-2xl bg-[rgba(26,12,30,0.96)] hover:bg-[rgba(45,20,52,0.98)] border border-[#c084fc]/60 text-[#FFFFFF] shadow-2xl backdrop-blur-md transition-all active:scale-95 cursor-pointer group flex"
         >
           <div className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-[#c084fc]/25 text-[#c084fc]">
             <Dog className="w-5 h-5 text-[#c084fc] group-hover:scale-110 transition-transform" />

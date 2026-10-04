@@ -70,7 +70,7 @@ export const BookingSlotsCard: React.FC<BookingActionProps> = ({
 
   if (status === 'success') {
     return (
-      <div className="mt-3.5 p-4 rounded-xl bg-[rgba(16,185,129,0.15)] border border-[#10B981]/50 text-[#FFFFFF] flex flex-col gap-2.5">
+      <div className="wiki-booking-card wiki-booking-success mt-3.5 p-4 rounded-xl bg-[rgba(16,185,129,0.15)] border border-[#10B981]/50 text-[#FFFFFF] flex flex-col gap-2.5">
         <div className="flex items-center gap-2 text-[#34d399]">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span className="font-sans text-sm font-bold uppercase tracking-wider">
@@ -100,22 +100,22 @@ export const BookingSlotsCard: React.FC<BookingActionProps> = ({
   }
 
   return (
-    <div className="mt-3.5 p-4 rounded-xl bg-[rgba(26,12,30,0.95)] border border-[#c084fc]/50 shadow-lg flex flex-col gap-3">
+    <div className="wiki-booking-card mt-3.5 p-4 rounded-xl bg-[rgba(26,12,30,0.95)] border border-[#c084fc]/50 shadow-lg flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2 border-b border-[rgba(147,80,115,0.3)] pb-2.5">
         <div className="flex items-center gap-2">
           <span className="p-1.5 rounded-lg bg-[#c084fc]/20 text-[#c084fc]">
             <Calendar className="w-4 h-4" />
           </span>
-          <span className="font-sans text-sm font-bold text-[#FFFFFF]">
+          <span className="wiki-booking-title font-sans text-sm font-bold text-[#FFFFFF]">
             Agendar llamada breve (15-20 min)
           </span>
         </div>
-        <span className="font-mono text-xs text-[#d8b4fe] bg-[#c084fc]/20 px-2 py-0.5 rounded font-semibold border border-[#c084fc]/40">
+        <span className="wiki-booking-badge font-mono text-xs text-[#d8b4fe] bg-[#c084fc]/20 px-2 py-0.5 rounded font-semibold border border-[#c084fc]/40">
           Google Calendar
         </span>
       </div>
 
-      <p className="font-sans text-sm text-[#F8F4E9] leading-relaxed">
+      <p className="wiki-booking-desc font-sans text-sm text-[#F8F4E9] leading-relaxed">
         Elige un horario disponible para revisar tu idea con Erick:
       </p>
 
@@ -128,9 +128,9 @@ export const BookingSlotsCard: React.FC<BookingActionProps> = ({
               key={idx}
               type="button"
               onClick={() => setSelectedSlot(slot)}
-              className={`w-full text-left px-3.5 py-2.5 rounded-lg font-sans text-sm transition-all flex items-center justify-between cursor-pointer ${
+              className={`wiki-booking-slot w-full text-left px-3.5 py-2.5 rounded-lg font-sans text-sm transition-all flex items-center justify-between cursor-pointer ${
                 isSelected
-                  ? 'bg-[#c084fc] text-[#160B1A] font-bold shadow-md'
+                  ? 'selected bg-[#c084fc] text-[#160B1A] font-bold shadow-md'
                   : 'bg-[rgba(55,26,62,0.65)] hover:bg-[rgba(80,45,85,0.7)] border border-[rgba(192,132,252,0.35)] text-[#FFFFFF]'
               }`}
             >
@@ -161,7 +161,7 @@ export const BookingSlotsCard: React.FC<BookingActionProps> = ({
               placeholder="Tu nombre completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-2 rounded-lg bg-[rgba(20,10,25,0.85)] border border-[rgba(192,132,252,0.4)] text-sm text-[#FFFFFF] placeholder-[#F6DBC0]/70 focus:outline-none focus:border-[#c084fc]"
+              className="wiki-booking-input w-full pl-9 pr-3.5 py-2 rounded-lg bg-[rgba(20,10,25,0.85)] border border-[rgba(192,132,252,0.4)] text-sm text-[#FFFFFF] placeholder-[#F6DBC0]/70 focus:outline-none focus:border-[#c084fc]"
             />
           </div>
 
@@ -173,7 +173,7 @@ export const BookingSlotsCard: React.FC<BookingActionProps> = ({
               placeholder="Tu correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-2 rounded-lg bg-[rgba(20,10,25,0.85)] border border-[rgba(192,132,252,0.4)] text-sm text-[#FFFFFF] placeholder-[#F6DBC0]/70 focus:outline-none focus:border-[#c084fc]"
+              className="wiki-booking-input w-full pl-9 pr-3.5 py-2 rounded-lg bg-[rgba(20,10,25,0.85)] border border-[rgba(192,132,252,0.4)] text-sm text-[#FFFFFF] placeholder-[#F6DBC0]/70 focus:outline-none focus:border-[#c084fc]"
             />
           </div>
 
@@ -194,7 +194,7 @@ export const BookingSlotsCard: React.FC<BookingActionProps> = ({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-1 py-2.5 px-4 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] active:scale-95 text-[#160B1A] font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+            className="wiki-booking-submit w-full mt-1 py-2.5 px-4 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] active:scale-95 text-[#160B1A] font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
           >
             <span>{isSubmitting ? 'Reservando en Google Calendar...' : 'Confirmar y Recibir Invitación'}</span>
             <ArrowRight className="w-4 h-4" />
