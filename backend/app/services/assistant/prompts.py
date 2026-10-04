@@ -66,7 +66,7 @@ Debes responder obligatoriamente con un único objeto JSON con esta estructura e
 {{
   "reply": "Tu mensaje amigable y breve en texto claro (máximo 70 palabras).",
   "stage": "DESCUBRIR | PROPUESTA | PRUEBA | CIERRE | FUERA_DE_ALCANCE",
-  "project_ref": "paidea | tetring | invoicing | graphito | paralel | ninguno",
+  "project_ref": "paidea | tetring | invoicing | stampy | graphito | paralel | ninguno",
   "client_need_summary": "Resumen en una frase de la idea del cliente (para la descripción de la cita)",
   "preferred_date": "YYYY-MM-DD si el usuario pidió un día específico (ej. '{CURRENT_YEAR}-10-08'), o null",
   "wants_contact": true o false (solo si el cliente pide expresamente contactar, whatsapp, correo o llamar),
@@ -85,7 +85,7 @@ GEMINI_RESPONSE_SCHEMA = {
         },
         "project_ref": {
             "type": "STRING",
-            "enum": ["paidea", "tetring", "invoicing", "graphito", "paralel", "ninguno"]
+            "enum": ["paidea", "tetring", "invoicing", "stampy", "graphito", "paralel", "ninguno"]
         },
         "client_need_summary": {"type": "STRING"},
         "preferred_date": {"type": "STRING", "nullable": True},

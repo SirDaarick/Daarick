@@ -76,8 +76,8 @@ const BUSINESS_CASES: BusinessCase[] = [
         desc: 'Compara tus notas de compra contra los estados de cuenta bancarios y te avisa de inmediato si hay cobros que no cuadran.'
       }
     ],
-    proofProject: 'Sistema de Extracción de Documentos',
-    proofExplanation: 'Tecnología de lectura visual programada con reglas estrictas que impiden errores humanos al capturar números.',
+    proofProject: 'Extractor de Documentos & Stampy (Telegram Bot)',
+    proofExplanation: 'Tecnología de lectura visual y bot de Telegram (Stampy) con reglas dual-scope que impiden errores humanos al capturar números.',
     actionLabel: 'Consultar solución',
     actionType: 'copilot',
     actionPayload: 'Quiero automatizar la lectura de facturas y tickets a Excel. ¿Cómo se aplicaría a mi negocio?'

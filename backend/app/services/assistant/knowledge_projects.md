@@ -40,3 +40,15 @@
 ## 5. Paralel (Toma de Decisiones de Alta Velocidad)
 - **¿Qué problema resolvió?**: Demostrar cómo procesar cálculos complejos y tomar decisiones en menos de 12 milisegundos dividiendo el trabajo en múltiples núcleos.
 - **¿Cómo se aplica a otros negocios?**: Para procesos industriales, simulaciones o alertas en tiempo real donde la velocidad inmediata es crítica.
+
+---
+
+## 6. Stampy (Auditor Financiero & Gestor de Gastos Dual-Scope vía Telegram)
+- **¿Qué problema resuelve?**: Los dueños de negocio, profesionistas y freelancers mezclan rutinariamente compras personales con gastos corporativos, perdiendo deducciones fiscales clave y enfrentando horas de estrés clasificando tickets al cierre de mes.
+- **¿Qué automatización se aplica?**: 
+  - Un bot inteligente en Telegram con arquitectura *Dual-Scope* que permite registrar gastos y tickets en menos de 3 segundos por mensaje de texto, foto o voz.
+  - El sistema detecta automáticamente la categoría del gasto, el proveedor y el monto, y calcula el IVA acreditable en tiempo real.
+  - Permite alternar instantáneamente entre **Modo Negocio (`BUSINESS`)** y **Modo Personal (`PERSONAL`)**, aislando las cuentas fiscales y sellando cada transacción en un ledger con interfaz industrial táctil.
+  - Cuenta con demo interactiva en vivo en el portafolio en `/demo/stampy` con motor NLP cliente offline y repositorio público en `https://github.com/SirDaarick/Stampy`.
+- **¿Cómo se aplica a otros negocios?**: Ideal para cualquier empresa, consultor o comercio que busque automatizar el control de caja chica, viáticos de empleados o gestión tributaria sin obligar al equipo a aprender sistemas contables complejos.
+

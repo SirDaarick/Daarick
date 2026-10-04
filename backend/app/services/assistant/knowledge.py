@@ -75,14 +75,15 @@ AUTOMATION_CATALOG = {
         "como_aplica": "Conectamos un agente inteligente que responde al momento consultando tu catálogo o disponibilidad de horarios."
     },
     "case-ocr": {
-        "titulo": "Lectura Automática de Facturas y Tickets a Excel",
-        "dolor": "Pasar horas capturando a mano números de facturas, notas y comprobantes a hojas de cálculo.",
+        "titulo": "Lectura Automática de Facturas, Tickets y Gastos",
+        "dolor": "Pasar horas capturando a mano números de facturas, notas y comprobantes a hojas de cálculo o mezclar gastos personales con los del negocio.",
         "soluciones": [
             "Tomas foto al papel o subes el PDF y extrae montos, fechas, RFCs e impuestos a un Excel al instante.",
-            "Cotejo de compras vs pagos: compara estados de cuenta bancarios contra notas y avisa si hay cobros que no cuadran."
+            "Cotejo de compras vs pagos: compara estados de cuenta bancarios contra notas y avisa si hay cobros que no cuadran.",
+            "Auditor de Gastos vía Telegram (Stampy): envías notas de compra o mensajes en segundos y separa cuentas de Negocio vs Personal con cálculo de IVA acreditable."
         ],
-        "proyecto_analogo": "invoicing",
-        "como_aplica": "Lectura visual con validación matemática estricta que impide equivocaciones humanas."
+        "proyecto_analogo": "invoicing y stampy (/demo/stampy)",
+        "como_aplica": "Lectura visual y bot interactivo con validación estricta que impiden errores humanos y recuperan deducciones fiscales."
     },
     "case-shifts": {
         "titulo": "Organización Inteligente de Turnos y Personal",

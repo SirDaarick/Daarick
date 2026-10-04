@@ -1,0 +1,142 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { StampyDemo } from '../../components/StampyDemo';
+---
+
+<Layout
+  title="Stampy // Auditor Financiero & Gastos Telegram · Daarick Systems"
+  description="Demo interactiva de Stampy: auditoría inteligente de tickets y notas de compra vía Telegram con separación dual de gastos personales y de negocio."
+>
+  <div class="max-w-7xl mx-auto px-4 lg:px-8 py-8 flex flex-col gap-10">
+    {/* Navigation & Header */}
+    <div class="flex items-center justify-between pb-4 border-b border-[rgba(147,80,115,0.25)]">
+      <a
+        href="/"
+        class="font-mono text-xs text-[#ddb8ff] hover:text-[#D8B4FE] transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded bg-[rgba(80,45,85,0.24)] border border-[rgba(147,80,115,0.3)]"
+      >
+        <span>&larr;</span>
+        <span>[ Volver al Portafolio ]</span>
+      </a>
+
+      <div class="flex items-center gap-2 font-mono text-xs">
+        <span class="text-[rgba(246,219,192,0.65)] hidden sm:inline">[ DEMO EN VIVO // MOTOR FINTECH CLIENTE ]</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-[#10B981] border border-emerald-500/20">
+          [ ● EN LÍNEA ]
+        </span>
+      </div>
+    </div>
+
+    {/* Project Title & Impact Pitch */}
+    <div class="flex flex-col gap-2 max-w-3xl">
+      <span class="font-mono text-xs text-[#c084fc]">
+        // CONTROL FINANCIERO & AUTOMATIZACIÓN DE TICKETS
+      </span>
+      <h1 class="text-3xl sm:text-5xl font-semibold text-[#F8F4E9] tracking-tight">
+        Stampy: Auditor Financiero Dual-Scope
+      </h1>
+      <p class="text-base sm:text-lg text-[#F6DBC0] leading-relaxed mt-1">
+        Segregación inteligente de gastos de negocio vs gastos personales a través de Telegram, con auditoría contable en tiempo real y cálculo de deducibilidad fiscal.
+      </p>
+    </div>
+
+    {/* 3 Executive Business Cards */}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Card 1 */}
+      <div class="p-5 rounded-xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md flex flex-col justify-between">
+        <div>
+          <span class="font-mono text-[11px] text-[rgba(246,219,192,0.65)] block mb-1">
+            PROBLEMA RESUELTO
+          </span>
+          <h3 class="text-lg font-semibold text-[#F8F4E9]">Finanzas mezcladas y descontrol</h3>
+          <p class="text-sm text-[#F6DBC0] mt-2 leading-relaxed">
+            Emprendedores y freelancers mezclan la tarjeta personal con compras del negocio. A fin de mes, pierden horas ordenando tickets arrugados o pierden deducciones fiscales clave.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)]">
+          <span class="inline-block px-2.5 py-1 rounded bg-[rgba(80,45,85,0.3)] font-mono text-xs text-[#F8F4E9]">
+            ✓ Cero descuadres fiscales
+          </span>
+        </div>
+      </div>
+
+      {/* Card 2 */}
+      <div class="p-5 rounded-xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md flex flex-col justify-between">
+        <div>
+          <span class="font-mono text-[11px] text-[rgba(246,219,192,0.65)] block mb-1">
+            FUNCIONAMIENTO
+          </span>
+          <h3 class="text-lg font-semibold text-[#F8F4E9]">Telegram Bot + Motor Dual-Scope</h3>
+          <p class="text-sm text-[#F6DBC0] mt-2 leading-relaxed">
+            Envías un mensaje de texto o foto del ticket a Telegram en segundos. El sistema interpreta el monto, clasifica el tipo de gasto, sella el ticket y lo envía a tu ledger en la nube.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)]">
+          <span class="inline-block px-2.5 py-1 rounded bg-[rgba(80,45,85,0.3)] font-mono text-xs text-[#ddb8ff]">
+            ⚡ Registro en &lt; 3 segundos
+          </span>
+        </div>
+      </div>
+
+      {/* Card 3 */}
+      <div class="p-5 rounded-xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md flex flex-col justify-between">
+        <div>
+          <span class="font-mono text-[11px] text-[rgba(246,219,192,0.65)] block mb-1">
+            RESULTADOS CLAVE
+          </span>
+          <h3 class="text-lg font-semibold text-[#F8F4E9]">Impacto Operativo</h3>
+          <ul class="text-sm text-[#F6DBC0] mt-2 space-y-1.5">
+            <li class="flex items-center gap-2">
+              <span class="text-[#10B981]">●</span>
+              <span>Ahorro contable: <strong>12 horas/mes</strong></span>
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="text-[#10B981]">●</span>
+              <span>Precisión en categorización: <strong>99.4%</strong></span>
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="text-[#10B981]">●</span>
+              <span>Deducciones no perdidas: <strong>100% de tickets</strong></span>
+            </li>
+          </ul>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)]">
+          <span class="inline-block px-2.5 py-1 rounded bg-emerald-500/10 text-[#10B981] font-mono text-xs border border-emerald-500/20">
+            ★ Monorepo React 19 + FastAPI
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {/* Interactive Simulator Island */}
+    <StampyDemo client:load />
+
+    {/* Conversion CTA */}
+    <div class="p-6 md:p-8 rounded-2xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="max-w-xl">
+        <h3 class="text-xl sm:text-2xl font-semibold text-[#F8F4E9]">
+          ¿Quieres ver el código fuente o desplegar tu propia instancia?
+        </h3>
+        <p class="text-sm text-[#F6DBC0] mt-1">
+          El repositorio completo está disponible con backend en FastAPI, bot de Telegram con webhooks y panel web táctil.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3 w-full sm:w-auto">
+        <a
+          href="https://github.com/SirDaarick/Stampy"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold text-center transition-all shadow-md cursor-pointer"
+        >
+          [ Ver repositorio en GitHub ↗ ]
+        </a>
+        <a
+          href="/"
+          class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] font-mono text-xs text-center transition-all"
+        >
+          [ Volver al portafolio ]
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>

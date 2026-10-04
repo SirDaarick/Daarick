@@ -223,8 +223,13 @@ html.light #conversation-stream [class*="bg-[rgba(30,15,35,0.85"] {
   border-color: rgba(126, 34, 206, 0.35) !important;
 }
 
-/* Input y barra de escritura del chat */
-html.light #chat-window [class*="bg-[rgba(22,11,26"] {
+/* Input y barra de escritura del chat en Modo Claro */
+html.light #chat-window [class*="bg-[rgba(26,12,30"] {
+  background-color: #EFE6DD !important;
+  border-color: rgba(120, 60, 95, 0.25) !important;
+}
+
+html.light #chat-window [class*="bg-[rgba(45,20,52"] {
   background-color: #FFFFFF !important;
   border-color: rgba(120, 60, 95, 0.3) !important;
 }
@@ -235,6 +240,61 @@ html.light #chat-window textarea {
 
 html.light #chat-window textarea::placeholder {
   color: rgba(69, 45, 77, 0.55) !important;
+}
+
+/* Botón Flotante (FAB) de Wiki en Modo Claro */
+html.light .wiki-fab-glow {
+  background-color: #FAF4EE !important;
+  border-color: rgba(126, 34, 206, 0.5) !important;
+  color: #241428 !important;
+  box-shadow: 0 10px 30px rgba(120, 60, 95, 0.15), 0 0 15px rgba(126, 34, 206, 0.2) !important;
+}
+
+html.light .wiki-fab-glow:hover {
+  background-color: #F3EAE0 !important;
+}
+
+html.light .wiki-fab-glow [class*="bg-[#c084fc]/20"] {
+  background-color: rgba(126, 34, 206, 0.15) !important;
+}
+
+/* Globo Flotante Proactivo de Bienvenida en Modo Claro */
+html.light .wiki-bubble-float {
+  background-color: #FAF4EE !important;
+  border-color: rgba(126, 34, 206, 0.45) !important;
+  color: #241428 !important;
+  box-shadow: 0 14px 35px rgba(120, 60, 95, 0.16) !important;
+}
+
+html.light .wiki-bubble-float p {
+  color: #452D4D !important;
+}
+
+html.light .wiki-bubble-float div[class*="bg-[#1A0C1E]"] {
+  background-color: #FAF4EE !important;
+  border-color: rgba(126, 34, 206, 0.45) !important;
+}
+
+/* Tarjeta de Agendado de Google Calendar en Modo Claro */
+html.light [class*="bg-[rgba(26,12,30,0.85]"] {
+  background-color: #FAF5EF !important;
+  border-color: rgba(126, 34, 206, 0.35) !important;
+}
+
+html.light [class*="bg-[rgba(55,26,62"] {
+  background-color: #EDE3DA !important;
+  border-color: rgba(120, 60, 95, 0.25) !important;
+  color: #241428 !important;
+}
+
+html.light [class*="bg-[rgba(55,26,62"]:hover {
+  background-color: #E2D5C8 !important;
+}
+
+html.light [class*="bg-[rgba(20,10,25,0.7]"] {
+  background-color: #FFFFFF !important;
+  border-color: rgba(120, 60, 95, 0.3) !important;
+  color: #241428 !important;
 }
 
 @media (prefers-color-scheme: light) {

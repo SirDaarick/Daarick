@@ -61,5 +61,13 @@ PROJECT_ACTIONS_CATALOG: Dict[str, ProjectAction] = {
         demo_url="https://paralel-iota.vercel.app/",
         github_url="https://github.com/SirDaarick/Paralel",
         action_label="Ver Demo de Paralel"
+    ),
+    "stampy": ProjectAction(
+        id="stampy",
+        title="Stampy (Auditor Financiero & Gastos Telegram)",
+        tagline="Bot en Telegram con segregación Negocio vs Personal y cálculo de impuestos en tiempo real",
+        demo_url="/demo/stampy",
+        github_url="https://github.com/SirDaarick/Stampy",
+        action_label="Probar Demo de Stampy"
     )
 }
