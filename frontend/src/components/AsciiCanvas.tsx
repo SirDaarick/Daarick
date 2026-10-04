@@ -39,11 +39,19 @@ export const AsciiCanvas: React.FC = () => {
     window.addEventListener('resize', resize);
     resize();
 
-    const draw = () => {
-      if (document.hidden) {
-        animationFrameId = requestAnimationFrame(draw);
-        return;
-      }
+    let lastFrameTime = 0;
+    const targetFps = 20;
+    const frameInterval = 1000 / targetFps;
+
+    const draw = (now: number) => {
+      animationFrameId = requestAnimationFrame(draw);
+
+      if (document.hidden) return;
+      if (now - lastFrameTime < frameInterval) return;
+      lastFrameTime = now;
+
+      // En móviles desactivar el repintado continuo pesado para dejar el procesador 100% libre para la interacción
+      if (window.innerWidth < 640) return;
 
       ctx.clearRect(0, 0, width, height);
       ctx.font = `${fontSize}px monospace`;
@@ -63,10 +71,9 @@ export const AsciiCanvas: React.FC = () => {
           ctx.fillText(item.char, c * fontSize, r * fontSize);
         }
       }
-      animationFrameId = requestAnimationFrame(draw);
     };
 
-    draw();
+    animationFrameId = requestAnimationFrame(draw);
 
     return () => {
       window.removeEventListener('resize', resize);

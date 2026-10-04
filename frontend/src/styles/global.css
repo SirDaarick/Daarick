@@ -101,31 +101,41 @@ html, body {
 /* Mobile Responsiveness for 3D Carousel */
 @media (max-width: 640px) {
   .perspective-stage {
-    perspective: 800px;
+    perspective: 700px;
+    overflow-x: clip;
+  }
+  .carousel-3d-card {
+    left: 50% !important;
   }
   .card-center {
-    transform: translate3d(0, 0, 45px) rotateY(0deg) scale(1);
+    transform: translate3d(-50%, 0, 45px) rotateY(0deg) scale(1) !important;
     box-shadow: 0 10px 30px -5px rgba(192, 132, 252, 0.25);
+    z-index: 30;
+    opacity: 1;
   }
   .card-left {
-    transform: translate3d(-48%, 0, -50px) rotateY(20deg) scale(0.82);
+    transform: translate3d(-102%, 0, -45px) rotateY(18deg) scale(0.85) !important;
     opacity: 0.35;
     filter: blur(0.8px);
+    z-index: 20;
   }
   .card-right {
-    transform: translate3d(48%, 0, -50px) rotateY(-20deg) scale(0.82);
+    transform: translate3d(2%, 0, -45px) rotateY(-18deg) scale(0.85) !important;
     opacity: 0.35;
     filter: blur(0.8px);
+    z-index: 20;
   }
   .card-far-right {
-    transform: translate3d(78%, 0, -95px) rotateY(-30deg) scale(0.68);
-    opacity: 0.2;
+    transform: translate3d(55%, 0, -90px) rotateY(-28deg) scale(0.68) !important;
+    opacity: 0.15;
     filter: blur(1.2px);
+    z-index: 10;
   }
   .card-far-left {
-    transform: translate3d(-78%, 0, -95px) rotateY(30deg) scale(0.68);
-    opacity: 0.2;
+    transform: translate3d(-155%, 0, -90px) rotateY(28deg) scale(0.68) !important;
+    opacity: 0.15;
     filter: blur(1.2px);
+    z-index: 10;
   }
 }
 

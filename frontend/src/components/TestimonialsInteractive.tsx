@@ -244,14 +244,43 @@ export default function TestimonialsInteractive() {
     }
   };
 
+  // Soporte dual táctil (Touch Events nativos + Pointer Events para desktop)
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if ((e.target as HTMLElement).closest('button, a, textarea, input')) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffX = touchStartX.current - touchEndX;
+    const diffY = touchStartY.current - touchEndY;
+
+    if (Math.abs(diffX) > 30 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+    }
+  };
+
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') return; // Delegar touch a touch events nativos
     if ((e.target as HTMLElement).closest('button, a, textarea, input')) return;
     isDraggingTestimonials.current = true;
     dragStartX.current = e.clientX;
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {}
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDraggingTestimonials.current) return;
+    if (!isDraggingTestimonials.current || e.pointerType === 'touch') return;
     const distance = dragStartX.current - e.clientX;
     if (Math.abs(distance) > 35) {
       if (distance > 0) {
@@ -263,8 +292,13 @@ export default function TestimonialsInteractive() {
     }
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e?: React.PointerEvent) => {
     isDraggingTestimonials.current = false;
+    if (e) {
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch {}
+    }
   };
 
   // Envío del nuevo veredicto
@@ -400,6 +434,8 @@ export default function TestimonialsInteractive() {
           handlePointerUp();
         }}
         onWheel={handleTestimonialWheel}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}

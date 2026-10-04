@@ -51,28 +51,61 @@ export const CoverFlowCarousel: React.FC = () => {
     }
   };
 
-  // Pointer / Touch Gestures con soporte fluido
+  // Soporte dual táctil (Touch Events nativos + Pointer Events para desktop)
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if ((e.target as HTMLElement).closest('button, a, textarea')) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffX = touchStartX.current - touchEndX;
+    const diffY = touchStartY.current - touchEndY;
+
+    // Si el movimiento horizontal es dominante y mayor a 30px, ejecutar cambio
+    if (Math.abs(diffX) > 30 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) {
+        nextCard();
+      } else {
+        prevCard();
+      }
+    }
+  };
+
+  // Pointer Gestures (Ratón/Trackpad en Desktop)
   const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') return; // Delegar touch a touch events nativos para respuesta inmediata
     if ((e.target as HTMLElement).closest('button, a, textarea')) return;
     isDragging.current = true;
     dragStartX.current = e.clientX;
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {}
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
-    if (!isDragging.current) return;
+    if (!isDragging.current || e.pointerType === 'touch') return;
     const distance = dragStartX.current - e.clientX;
-    if (Math.abs(distance) > 25) {
+    if (Math.abs(distance) > 35) {
       if (distance > 0) {
         nextCard();
       } else {
         prevCard();
       }
-      isDragging.current = false; // Bloquea hasta el siguiente gesto
+      isDragging.current = false;
     }
   };
 
-  const onPointerUp = () => {
+  const onPointerUp = (e: React.PointerEvent) => {
     isDragging.current = false;
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {}
   };
 
   const onPointerCancel = () => {
@@ -123,9 +156,11 @@ export const CoverFlowCarousel: React.FC = () => {
         </div>
       </div>
 
-      {/* 3D Stage Wrapper with Pointer (Mouse + Touch) & Wheel Handlers */}
+      {/* 3D Stage Wrapper with Touch, Pointer (Mouse/Trackpad) & Wheel Handlers */}
       <div
         onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
