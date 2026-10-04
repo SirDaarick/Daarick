@@ -2,6 +2,8 @@
 import Layout from '../layouts/Layout.astro';
 import Hero from '../components/Hero.astro';
 import TechStack from '../components/TechStack.astro';
+import { BusinessSolutions } from '../components/BusinessSolutions';
+import { WorkMethodology } from '../components/WorkMethodology';
 import { CoverFlowCarousel } from '../components/CoverFlowCarousel';
 import Testimonials from '../components/Testimonials.astro';
 ---
@@ -10,29 +12,28 @@ import Testimonials from '../components/Testimonials.astro';
   <div class="max-w-7xl mx-auto px-4 lg:px-8 py-10 flex flex-col gap-16 md:gap-24">
     <Hero />
     <TechStack />
+    <BusinessSolutions client:load />
     <CoverFlowCarousel client:load />
     <Testimonials />
+    <WorkMethodology client:load />
 
     {/* Final Audit & Contact Section */}
     <section class="p-6 md:p-10 rounded-2xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.35)] backdrop-blur-md flex flex-col lg:flex-row items-center justify-between gap-6 relative overflow-hidden">
       <div class="max-w-xl flex flex-col gap-2">
-        <div class="font-mono text-xs text-[#c084fc]">
-          // AUDITORÍA Y AUTOMATIZACIÓN DE PROCESOS
-        </div>
         <h3 class="text-2xl sm:text-3xl font-semibold text-[#F8F4E9]">
           ¿Tienes un proceso manual en tu negocio que consume demasiado tiempo?
         </h3>
         <p class="text-sm text-[#F6DBC0] leading-relaxed">
-          Analizamos en conjunto tus procesos y cuellos de botella, diseñamos una solucion a tu medida, y lo implementamos para que comiences a ahorrar tiempo y dinero :D
+          Analizamos en conjunto tus flujos de trabajo, diseñamos una solución a tu medida y la implementamos para que comiences a ahorrar tiempo y costos operativos :D
         </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full lg:w-auto">
+      <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5 sm:gap-3 w-full lg:w-auto">
         <a
           href="https://wa.me/525578666313"
           target="_blank"
           rel="noopener noreferrer"
-          class="px-4 py-2.5 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-all flex items-center justify-center gap-2 font-mono text-xs active:scale-95 cursor-pointer shadow-sm"
+          class="px-4 py-2.5 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-all flex items-center justify-center gap-2 font-mono text-xs active:scale-95 cursor-pointer shadow-sm min-h-[44px]"
           title="WhatsApp de Erick"
         >
           <svg class="w-4 h-4 fill-current text-[#10B981]" viewBox="0 0 24 24">
@@ -43,7 +44,7 @@ import Testimonials from '../components/Testimonials.astro';
 
         <a
           href="mailto:e.danielgrz10@gmail.com"
-          class="px-4 py-2.5 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-all flex items-center justify-center gap-2 font-mono text-xs active:scale-95 cursor-pointer shadow-sm"
+          class="px-4 py-2.5 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-all flex items-center justify-center gap-2 font-mono text-xs active:scale-95 cursor-pointer shadow-sm min-h-[44px]"
           title="Contacto / Email"
         >
           <svg class="w-4 h-4 fill-current text-[#ffafd5]" viewBox="0 0 24 24">
@@ -56,7 +57,7 @@ import Testimonials from '../components/Testimonials.astro';
           href="https://github.com/SirDaarick"
           target="_blank"
           rel="noopener noreferrer"
-          class="px-4 py-2.5 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-all flex items-center justify-center gap-2 font-mono text-xs active:scale-95 cursor-pointer shadow-sm"
+          class="px-4 py-2.5 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-all flex items-center justify-center gap-2 font-mono text-xs active:scale-95 cursor-pointer shadow-sm min-h-[44px]"
           title="GitHub de Erick"
         >
           <svg class="w-4 h-4 fill-current text-[#ddb8ff]" viewBox="0 0 24 24">
@@ -69,7 +70,7 @@ import Testimonials from '../components/Testimonials.astro';
           href="https://www.linkedin.com/in/erickgarcia-ai/"
           target="_blank"
           rel="noopener noreferrer"
-          class="px-4 py-2.5 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-all flex items-center justify-center gap-2 font-mono text-xs active:scale-95 cursor-pointer shadow-sm"
+          class="px-4 py-2.5 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-all flex items-center justify-center gap-2 font-mono text-xs active:scale-95 cursor-pointer shadow-sm min-h-[44px]"
           title="LinkedIn de Erick"
         >
           <svg class="w-4 h-4 fill-current text-[#c084fc]" viewBox="0 0 24 24">

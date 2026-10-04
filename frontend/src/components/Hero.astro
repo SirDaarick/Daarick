@@ -2,13 +2,7 @@
 // Hero.astro
 ---
 
-<section class="flex flex-col items-start gap-6 pt-4" id="sobre-mi">
-  {/* Status Indicator */}
-  <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[rgba(80,45,85,0.24)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md">
-    <span class="inline-block w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
-    <span class="font-mono text-xs text-[#10B981]">[ Disponible para proyectos de IA y automatización ]</span>
-  </div>
-
+<section class="flex flex-col items-start gap-8 pt-4" id="sobre-mi">
   {/* Two-Column Grid */}
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full items-stretch">
     {/* Left Narrative Block */}
@@ -18,42 +12,42 @@
           Hola, soy Erick. Ingeniero de IA y Automatización.
         </h1>
         <p class="text-base sm:text-lg text-[#F6DBC0] leading-relaxed max-w-2xl">
-          Me apasiona hacer lo tedioso práctico. Disfruto de transformar procesos lentos y propensos al error humano en sistemas autónomos, sencillos y prácticos aplicando Ingeniería de Software e Inteligencia Artificial.
+          Transformo procesos lentos y propensos al error humano en sistemas autónomos, sencillos y prácticos aplicando Ingeniería de Software e Inteligencia Artificial.
         </p>
       </div>
 
       {/* Action Buttons */}
       <div class="flex items-center gap-3 mt-1">
         <a
-          href="#proyectos"
+          href="#soluciones"
           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-semibold backdrop-blur-md transition-all duration-200 shadow-md cursor-pointer active:scale-95"
         >
-          <span>[ Explorar proyectos ]</span>
+          <span>Ver qué podemos automatizar</span>
         </a>
       </div>
     </div>
 
-    {/* Right Card: Sobre Mí */}
-    <div class="lg:col-span-5 flex flex-col justify-between p-6 rounded-xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md relative overflow-hidden">
-      <div class="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs text-[rgba(246,219,192,0.65)]">
+    {/* Right Card: Sobre Mí Minimalista */}
+    <div class="lg:col-span-5 flex flex-col justify-between p-6 rounded-2xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md relative overflow-hidden">
+      <div class="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.2)]">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></span>
           <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></span>
           <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></span>
-          <span class="ml-2 text-[#ddb8ff] font-semibold">Sobre mí</span>
+          <span class="ml-1 text-sm font-semibold text-[#F8F4E9]">Sobre mí</span>
         </div>
-        <span class="text-[#10B981]">[ ACTIVO ]</span>
+        <span class="font-mono text-xs text-[#c084fc]">Ingeniería en IA</span>
       </div>
 
-      <div class="my-auto py-4 flex flex-col gap-3">
-        <p class="text-sm text-[#F6DBC0] leading-relaxed bg-[rgba(21,10,25,0.6)] p-4 rounded-lg border border-[rgba(147,80,115,0.2)]">
-          Soy estudiante de último semestre de Ingeniería en IA en ESCOM IPN. Trabajo en Grupo Promass como Ingeniero de IA, automatizando procesos para mejorar la atención al cliente y operaciones diarias. Me gustan los videojuegos, trabajar en equipo y aprender cosas nuevas :D.
+      <div class="my-auto py-4">
+        <p class="text-sm text-[#F6DBC0] leading-relaxed">
+          Estudiante de último semestre en <strong class="text-[#F8F4E9] font-semibold">ESCOM IPN</strong> e Ingeniero de IA en <strong class="text-[#F8F4E9] font-semibold">Grupo Promass</strong>, donde automatizo procesos para optimizar atención a clientes y operaciones diarias.
         </p>
       </div>
 
       <div class="pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between font-mono text-xs text-[rgba(246,219,192,0.65)]">
-        <span>ESCOM IPN · Grupo Promass</span>
-        <span class="text-[#c084fc]">Ingeniería en IA</span>
+        <span>Enfoque en soluciones prácticas</span>
+        <span class="text-[#10B981]">● Disponible</span>
       </div>
     </div>
   </div>

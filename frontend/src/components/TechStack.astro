@@ -2,9 +2,8 @@
 // TechStack.astro
 const PILLARS = [
   {
-    num: "01",
     title: "Inteligencia Artificial y Agentes",
-    description: "Cerebros de IA y grafos autónomos (LangGraph/LangChain) para procesar documentos, razonar flujos y ejecutar tareas sin alucinar.",
+    description: "Modelos autónomos para procesar documentos, razonar flujos y ejecutar tareas sin alucinaciones.",
     borderColor: "hover:border-[#c084fc]/50",
     badgeBg: "bg-[rgba(192,132,252,0.15)] text-[#c084fc]",
     tools: [
@@ -16,9 +15,8 @@ const PILLARS = [
     ]
   },
   {
-    num: "02",
     title: "Automatización y Lógica Rápida",
-    description: "Motores que conectan sistemas, optimizan procesos pesados y resuelven cálculos o tareas repetitivas en milisegundos.",
+    description: "Motores que conectan sistemas, procesan información masiva y ejecutan tareas repetitivas en milisegundos.",
     borderColor: "hover:border-emerald-500/50",
     badgeBg: "bg-emerald-500/15 text-emerald-400",
     tools: [
@@ -29,9 +27,8 @@ const PILLARS = [
     ]
   },
   {
-    num: "03",
-    title: "Pantallas y Experiencia de Usuario",
-    description: "Páginas web y tableros interactivos claros y sencillos donde cualquier persona puede ver sus resultados y usar el sistema.",
+    title: "Interfaces y Experiencia de Usuario",
+    description: "Paneles web intuitivos y claros donde cualquier miembro de tu equipo puede operar el sistema sin complicaciones.",
     borderColor: "hover:border-sky-500/50",
     badgeBg: "bg-sky-500/15 text-sky-400",
     tools: [
@@ -42,9 +39,8 @@ const PILLARS = [
     ]
   },
   {
-    num: "04",
-    title: "Datos y Servidores Seguros",
-    description: "Almacenamiento protegido, bases de datos confiables y servidores configurados para que la aplicación funcione siempre.",
+    title: "Bases de Datos y Servidores Seguros",
+    description: "Almacenamiento protegido e infraestructura configurada para garantizar disponibilidad continua y confidencialidad.",
     borderColor: "hover:border-amber-400/50",
     badgeBg: "bg-amber-500/15 text-amber-300",
     tools: [
@@ -57,30 +53,22 @@ const PILLARS = [
 ];
 ---
 
-<section class="flex flex-col gap-5 rounded-2xl p-6 sm:p-8 bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md" id="habilidades">
-  {/* Header */}
-  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 pb-4 border-b border-[rgba(147,80,115,0.25)]">
-    <div>
-      <div class="flex items-center gap-2 font-mono text-xs text-[#c084fc]">
-        <span>[ Qué herramientas uso y para qué sirven ]</span>
-      </div>
-      <h2 class="text-2xl sm:text-3xl font-semibold text-[#F8F4E9] mt-1">
-        Cómo construyo soluciones
-      </h2>
-    </div>
-    <span class="font-mono text-xs text-[rgba(246,219,192,0.65)]">
-      Enfoque práctico: del concepto a la operación
+<section class="flex flex-col gap-5" id="habilidades">
+  {/* Header Limpio */}
+  <div class="flex flex-col gap-1 max-w-2xl">
+    <span class="font-mono text-xs text-[#c084fc] font-medium tracking-wide">
+      [ Herramientas y Tecnologías ]
     </span>
+    <h2 class="text-2xl sm:text-3xl font-semibold text-[#F8F4E9] tracking-tight">
+      Cómo construyo las soluciones
+    </h2>
   </div>
 
-  {/* 4 Functional Pillars Grid */}
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+  {/* 4 Pillars Grid */}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-1">
     {PILLARS.map((pillar) => (
-      <div class={`flex flex-col justify-between p-5 rounded-xl bg-[rgba(80,45,85,0.2)] border border-[rgba(147,80,115,0.25)] ${pillar.borderColor} transition-all`}>
+      <div class={`flex flex-col justify-between p-5 rounded-2xl bg-[rgba(32,19,36,0.65)] border border-[rgba(147,80,115,0.25)] ${pillar.borderColor} transition-all`}>
         <div class="flex flex-col gap-2.5">
-          <div class={`w-10 h-10 rounded-lg ${pillar.badgeBg} flex items-center justify-center font-mono text-sm font-bold`}>
-            {pillar.num}
-          </div>
           <h3 class="text-base font-semibold text-[#F8F4E9]">
             {pillar.title}
           </h3>
@@ -92,18 +80,15 @@ const PILLARS = [
         <div class="mt-4 pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center gap-2 flex-wrap">
           {pillar.tools.map((tool) => (
             <div
-              class="group relative flex items-center justify-center w-10 h-10 p-2 rounded-xl bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#c084fc] hover:bg-[rgba(45,20,55,0.9)] hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer shadow-sm"
+              class="group relative flex items-center justify-center w-9 h-9 p-2 rounded-xl bg-[rgba(26,15,30,0.85)] border border-[rgba(147,80,115,0.3)] hover:border-[#c084fc] hover:bg-[rgba(45,20,55,0.9)] transition-all cursor-pointer shadow-sm"
               title={tool.name}
             >
               <img
                 src={tool.icon}
                 alt={tool.name}
-                class="w-5 h-5 object-contain"
+                class="w-4 h-4 object-contain"
                 loading="lazy"
               />
-              <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#1A0F1E] border border-[rgba(147,80,115,0.4)] text-[10px] font-mono text-[#F8F4E9] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-md">
-                {tool.name}
-              </span>
             </div>
           ))}
         </div>

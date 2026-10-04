@@ -66,14 +66,14 @@ export const CoverFlowCarousel: React.FC = () => {
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 font-mono text-xs text-[#c084fc]">
-            <span>[ Casos reales en producción ]</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-semibold text-[#F8F4E9] mt-1.5">
-            Mis proyectos
+          <span className="font-mono text-xs text-[#c084fc] font-medium tracking-wide">
+            [ Proyectos en producción ]
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-semibold text-[#F8F4E9] mt-1">
+            Casos de estudio y sistemas desarrollados
           </h2>
-          <p className="text-sm text-[#F6DBC0] mt-1.5 max-w-2xl leading-relaxed">
-            Presento algunos de los sistemas reales con Integración de IA que más disfruté realizar. Mi objetivo con ellos siempre fue resolver u optimizar un proceso o problema.
+          <p className="text-sm text-[#F6DBC0] mt-1 max-w-2xl leading-relaxed">
+            Sistemas reales con integración de IA e ingeniería de optimización orientados a resolver problemas concretos.
           </p>
         </div>
 

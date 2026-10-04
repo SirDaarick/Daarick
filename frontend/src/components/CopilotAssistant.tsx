@@ -198,7 +198,15 @@ export const CopilotAssistant: React.FC = () => {
         setIsOpen(true);
       };
 
-      const handleGlobalOpen = () => setIsOpen(true);
+      const handleGlobalOpen = (e?: Event) => {
+        setIsOpen(true);
+        const customEvt = e as CustomEvent<{ prompt?: string }>;
+        if (customEvt?.detail?.prompt) {
+          setTimeout(() => {
+            handleSendMessage(customEvt.detail.prompt);
+          }, 200);
+        }
+      };
       window.addEventListener('open-copilot-chat', handleGlobalOpen);
       return () => window.removeEventListener('open-copilot-chat', handleGlobalOpen);
     }
@@ -568,10 +576,10 @@ export const CopilotAssistant: React.FC = () => {
           zIndex: 99999,
           display: isOpen ? 'flex' : 'none'
         }}
-        className={`fixed rounded-2xl bg-[#160B1A] border border-[rgba(147,80,115,0.5)] shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out ${
+        className={`fixed bg-[#160B1A] border border-[rgba(147,80,115,0.5)] shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out z-[99999] ${
           isExpanded
-            ? 'bottom-4 right-4 sm:bottom-8 sm:right-8 w-[calc(100vw-32px)] sm:w-[680px] md:w-[760px] h-[calc(100vh-64px)] sm:h-[720px] max-h-[92vh]'
-            : 'bottom-24 right-4 sm:right-6 w-[calc(100vw-32px)] sm:w-[460px] md:w-[490px] h-[580px] max-h-[82vh]'
+            ? 'inset-x-0 bottom-0 sm:inset-auto sm:bottom-8 sm:right-8 w-full sm:w-[680px] md:w-[760px] h-[92vh] sm:h-[720px] rounded-t-2xl sm:rounded-2xl'
+            : 'inset-x-0 bottom-0 sm:inset-auto sm:bottom-24 sm:right-6 w-full sm:w-[460px] md:w-[490px] h-[85vh] sm:h-[580px] rounded-t-2xl sm:rounded-2xl'
         }`}
         role="dialog"
         aria-label="Daverick Assistant Chat"

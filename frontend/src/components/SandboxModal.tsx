@@ -4,11 +4,19 @@ import { PROJECTS, type ProjectData } from '../data/projects';
 export const SandboxModal: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeKey, setActiveKey] = useState<string>('A');
-  const [scale, setScale] = useState<number>(0.75); // 75% escala por defecto para layout de escritorio óptimo
+  const [scale, setScale] = useState<number>(0.75); // 75% escala por defecto en escritorio
   const [isMaximized, setIsMaximized] = useState<boolean>(false);
   const [showDetails, setShowDetails] = useState<boolean>(true);
   const [iframeKey, setIframeKey] = useState<number>(0);
   const [isIframeLoading, setIsIframeLoading] = useState<boolean>(true);
+
+  // En pantallas móviles fijar escala al 100% para evitar desbordamiento
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+      setScale(1.0);
+      setShowDetails(false); // Colapsar detalles inicialmente en móvil para dar espacio al iframe
+    }
+  }, []);
 
   const currentProject = PROJECTS.find((p) => p.key === activeKey) || PROJECTS[0];
 
@@ -218,8 +226,8 @@ export const SandboxModal: React.FC = () => {
 
               {/* Controles de Escala / Zoom y Acciones */}
               <div className="flex flex-wrap items-center gap-2 ml-auto">
-                {/* Control de Escala / Zoom */}
-                <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[rgba(80,45,85,0.25)] border border-[rgba(147,80,115,0.3)]">
+                {/* Control de Escala / Zoom (Solo visible en tablet y escritorio) */}
+                <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg bg-[rgba(80,45,85,0.25)] border border-[rgba(147,80,115,0.3)]">
                   <span className="text-[10px] text-[rgba(246,219,192,0.65)] hidden md:inline mr-1">
                     Escala:
                   </span>
