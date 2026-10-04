@@ -79,6 +79,9 @@ const INITIAL_SUGGESTIONS = [
 export const CopilotAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  // Animación fluida de apertura y cierre estilo macOS
+  const [isRendered, setIsRendered] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -139,6 +142,26 @@ export const CopilotAssistant: React.FC = () => {
       window.visualViewport?.removeEventListener('scroll', handleResize);
       window.removeEventListener('resize', handleResize);
     };
+  }, [isOpen]);
+
+  // Coordinación de animación estilo macOS (apertura fluida con spring curve y salida acelerada)
+  useEffect(() => {
+    if (isOpen) {
+      setIsRendered(true);
+      const raf1 = requestAnimationFrame(() => {
+        const raf2 = requestAnimationFrame(() => {
+          setIsVisible(true);
+        });
+        return () => cancelAnimationFrame(raf2);
+      });
+      return () => cancelAnimationFrame(raf1);
+    } else {
+      setIsVisible(false);
+      const timer = setTimeout(() => {
+        setIsRendered(false);
+      }, 260); // Coincide con la duración de la transición en global.css
+      return () => clearTimeout(timer);
+    }
   }, [isOpen]);
 
   // Soporte de voz con Web Speech API
@@ -537,48 +560,50 @@ export const CopilotAssistant: React.FC = () => {
   return (
     <>
       {/* 1. VENTANA FLOTANTE DEL CHAT */}
-      <div
-        id="chat-window"
-        style={{
-          zIndex: 99999,
-          display: isOpen ? 'flex' : 'none',
-          ...(viewportHeight !== null
-            ? {
-                height: `${viewportHeight}px`,
-                top: `${viewportOffsetTop}px`,
-                bottom: 'auto'
-              }
-            : {})
-        }}
-        className={`wiki-chat-window fixed bg-[#160B1A] border-0 sm:border border-[rgba(147,80,115,0.5)] shadow-2xl flex flex-col overflow-hidden transition-[width,height,transform] duration-200 ease-out z-[99999] ${
-          isExpanded
-            ? 'inset-0 sm:inset-auto sm:bottom-8 sm:right-8 w-full sm:w-[680px] md:w-[760px] h-full sm:h-[720px] rounded-none sm:rounded-2xl'
-            : 'inset-0 sm:inset-auto sm:bottom-24 sm:right-6 w-full sm:w-[460px] md:w-[490px] h-full sm:h-[580px] rounded-none sm:rounded-2xl'
-        }`}
-        role="dialog"
-        aria-label="Wiki Asesor de Automatización"
-      >
-        {/* Encabezado del Chat */}
-        <div className="wiki-chat-header flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 bg-[rgba(30,15,35,0.98)] border-b border-[rgba(147,80,115,0.3)] shrink-0 select-none">
-          <div className="flex items-center gap-3">
-            <div className="wiki-avatar-box relative flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(80,45,85,0.6)] border border-[rgba(192,132,252,0.4)] text-[#c084fc] shadow-sm">
-              <Dog className="w-5 h-5 text-[#c084fc]" />
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#10B981] ring-2 ring-[#160B1A]"></span>
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="wiki-header-title font-sans text-base font-bold tracking-tight text-[#FFFFFF]">
-                  Wiki
-                </span>
-                <span className="wiki-header-badge px-2 py-0.5 rounded bg-[#c084fc]/20 border border-[#c084fc]/40 text-[#d8b4fe] font-mono text-xs font-bold uppercase tracking-wider">
-                  Asesor
+      {isRendered && (
+        <div
+          id="chat-window"
+          style={{
+            zIndex: 99999,
+            ...(viewportHeight !== null
+              ? {
+                  height: `${viewportHeight}px`,
+                  top: `${viewportOffsetTop}px`,
+                  bottom: 'auto'
+                }
+              : {})
+          }}
+          className={`wiki-chat-window ${
+            isVisible ? 'is-open' : 'is-closed'
+          } fixed bg-[#160B1A] border-0 sm:border border-[rgba(147,80,115,0.5)] shadow-2xl flex flex-col overflow-hidden z-[99999] ${
+            isExpanded
+              ? 'inset-0 sm:inset-auto sm:bottom-8 sm:right-8 w-full sm:w-[680px] md:w-[760px] h-full sm:h-[720px] rounded-none sm:rounded-2xl'
+              : 'inset-0 sm:inset-auto sm:bottom-24 sm:right-6 w-full sm:w-[460px] md:w-[490px] h-full sm:h-[580px] rounded-none sm:rounded-2xl'
+          }`}
+          role="dialog"
+          aria-label="Wiki Asesor de Automatización"
+        >
+          {/* Encabezado del Chat */}
+          <div className="wiki-chat-header flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 bg-[rgba(30,15,35,0.98)] border-b border-[rgba(147,80,115,0.3)] shrink-0 select-none">
+            <div className="flex items-center gap-3">
+              <div className="wiki-avatar-box relative flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(80,45,85,0.6)] border border-[rgba(192,132,252,0.4)] text-[#c084fc] shadow-sm">
+                <Dog className="w-5 h-5 text-[#c084fc]" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#10B981] ring-2 ring-[#160B1A]"></span>
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="wiki-header-title font-sans text-base font-bold tracking-tight text-[#FFFFFF]">
+                    Wiki
+                  </span>
+                  <span className="wiki-header-badge px-2.5 py-0.5 rounded bg-[#c084fc]/20 border border-[#c084fc]/40 text-[#d8b4fe] font-mono text-[13px] font-bold uppercase tracking-wider">
+                    Asesor
+                  </span>
+                </div>
+                <span className="wiki-header-subtitle font-sans text-[13px] sm:text-sm text-[#F6DBC0] font-medium">
+                  Soluciones & Automatización
                 </span>
               </div>
-              <span className="wiki-header-subtitle font-sans text-xs text-[#F6DBC0] font-medium">
-                Soluciones & Automatización
-              </span>
             </div>
-          </div>
 
           <div className="wiki-header-actions flex items-center gap-1 sm:gap-1.5 text-[#F6DBC0]/60">
             <button
@@ -661,11 +686,11 @@ export const CopilotAssistant: React.FC = () => {
                                   <span className="p-1 rounded bg-[#c084fc]/20 text-[#c084fc]">
                                     <Sparkles className="w-4 h-4" />
                                   </span>
-                                  <span className="wiki-options-title font-sans text-sm sm:text-base font-bold text-[#FFFFFF] tracking-tight">
+                                  <span className="wiki-options-title font-sans text-[15px] sm:text-base font-bold text-[#FFFFFF] tracking-tight">
                                     Posibles caminos para tu negocio:
                                   </span>
                                 </div>
-                                <span className="wiki-options-badge font-mono text-xs px-2.5 py-0.5 rounded bg-[rgba(192,132,252,0.2)] text-[#d8b4fe] font-semibold border border-[#c084fc]/30">
+                                <span className="wiki-options-badge font-mono text-xs sm:text-[13px] px-2.5 py-0.5 rounded bg-[rgba(192,132,252,0.2)] text-[#d8b4fe] font-semibold border border-[#c084fc]/30">
                                   {msg.options.length} opciones
                                 </span>
                               </div>
@@ -702,7 +727,7 @@ export const CopilotAssistant: React.FC = () => {
                                       </div>
 
                                       <div className="flex-1 flex flex-col">
-                                        <span className={`wiki-option-text text-[14px] sm:text-[15px] leading-snug ${isSelected ? 'font-bold text-[#FFFFFF]' : 'font-medium text-[#F8F4E9]'}`}>
+                                        <span className={`wiki-option-text text-[15px] sm:text-base leading-snug ${isSelected ? 'font-bold text-[#FFFFFF]' : 'font-medium text-[#F8F4E9]'}`}>
                                           {option}
                                         </span>
                                       </div>
@@ -717,7 +742,7 @@ export const CopilotAssistant: React.FC = () => {
                                     type="button"
                                     disabled={(selectedOptionsMap[msg.id] || []).length === 0}
                                     onClick={() => handleSendSelectedOptions(msg.id)}
-                                    className={`wiki-options-submit-btn w-full py-2.5 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all shadow-md ${
+                                    className={`wiki-options-submit-btn w-full py-3 px-4 rounded-xl font-bold text-[15px] sm:text-base flex items-center justify-center gap-2 transition-all shadow-md ${
                                       (selectedOptionsMap[msg.id] || []).length > 0
                                         ? 'bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] active:scale-[0.98] cursor-pointer'
                                         : 'bg-[rgba(80,45,85,0.4)] text-[rgba(248,244,233,0.4)] border border-[rgba(147,80,115,0.3)] cursor-not-allowed'
@@ -731,7 +756,7 @@ export const CopilotAssistant: React.FC = () => {
                                     {(selectedOptionsMap[msg.id] || []).length > 0 && <Send className="w-4 h-4 ml-1" />}
                                   </button>
 
-                                  <span className="wiki-options-hint text-center font-sans text-xs text-[#d8b4fe]/80 pt-0.5">
+                                  <span className="wiki-options-hint text-center font-sans text-[13px] sm:text-sm text-[#d8b4fe]/85 pt-1">
                                     💡 O si prefieres otra cosa, escribe tu idea libremente aquí abajo 👇
                                   </span>
                                 </div>
@@ -747,16 +772,16 @@ export const CopilotAssistant: React.FC = () => {
                                   <span className="p-1 rounded bg-[#c084fc]/20 text-[#c084fc]">
                                     <Sparkles className="w-4 h-4" />
                                   </span>
-                                  <span className="wiki-project-title font-sans text-sm sm:text-base font-bold text-[#FFFFFF] tracking-tight">
+                                  <span className="wiki-project-title font-sans text-[15px] sm:text-base font-bold text-[#FFFFFF] tracking-tight">
                                     {msg.project_action.title}
                                   </span>
                                 </div>
-                                <span className="wiki-project-badge font-mono text-xs px-2.5 py-0.5 rounded bg-[rgba(192,132,252,0.2)] text-[#d8b4fe] font-semibold border border-[#c084fc]/40">
+                                <span className="wiki-project-badge font-mono text-xs sm:text-[13px] px-2.5 py-0.5 rounded bg-[rgba(192,132,252,0.2)] text-[#d8b4fe] font-semibold border border-[#c084fc]/40">
                                   ✓ Caso Comprobado
                                 </span>
                               </div>
 
-                              <p className="wiki-project-tagline font-sans text-xs sm:text-sm text-[#F8F4E9] leading-relaxed">
+                              <p className="wiki-project-tagline font-sans text-sm sm:text-[15px] text-[#F8F4E9] leading-relaxed">
                                 {msg.project_action.tagline}
                               </p>
 
@@ -766,7 +791,7 @@ export const CopilotAssistant: React.FC = () => {
                                     href={msg.project_action.demo_url}
                                     target={msg.project_action.demo_url.startsWith('http') ? '_blank' : '_self'}
                                     rel="noopener noreferrer"
-                                    className="wiki-project-btn-primary inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-bold text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer"
+                                    className="wiki-project-btn-primary inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-bold text-sm transition-all shadow-md active:scale-95 cursor-pointer"
                                   >
                                     <span>{msg.project_action.action_label || 'Ver Cómo Funciona'}</span>
                                     <ExternalLink className="w-4 h-4" />
@@ -777,7 +802,7 @@ export const CopilotAssistant: React.FC = () => {
                                     href={msg.project_action.github_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="wiki-project-btn-secondary inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[rgba(80,45,85,0.5)] hover:bg-[rgba(80,45,85,0.8)] border border-[rgba(192,132,252,0.4)] text-[#FFFFFF] text-xs sm:text-sm font-semibold transition-all active:scale-95 cursor-pointer"
+                                    className="wiki-project-btn-secondary inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-[rgba(80,45,85,0.5)] hover:bg-[rgba(80,45,85,0.8)] border border-[rgba(192,132,252,0.4)] text-[#FFFFFF] text-sm font-semibold transition-all active:scale-95 cursor-pointer"
                                   >
                                     <GitHubIcon className="w-4 h-4 text-[#ddb8ff]" />
                                     <span>Código</span>
@@ -799,7 +824,7 @@ export const CopilotAssistant: React.FC = () => {
                           {/* BOTONES DE CONTACTO DIRECTO */}
                           {msg.contact_actions && msg.contact_actions.length > 0 && (
                             <div className="mt-3.5 pt-3 border-t border-[rgba(147,80,115,0.35)] flex flex-col gap-2">
-                              <span className="font-sans text-xs text-[#F6DBC0] uppercase tracking-wider font-bold">
+                              <span className="font-sans text-[13px] text-[#F6DBC0] uppercase tracking-wider font-bold">
                                 Canales directos con Erick:
                               </span>
                               <div className="flex flex-wrap items-center gap-2">
@@ -809,7 +834,7 @@ export const CopilotAssistant: React.FC = () => {
                                     href={act.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all shadow-sm active:scale-95 cursor-pointer ${
+                                    className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 cursor-pointer ${
                                       act.type === 'whatsapp'
                                         ? 'bg-[rgba(16,185,129,0.2)] hover:bg-[rgba(16,185,129,0.3)] border border-[#10B981]/50 text-[#34d399]'
                                         : act.type === 'linkedin'
@@ -834,7 +859,7 @@ export const CopilotAssistant: React.FC = () => {
                     </div>
 
                     <span
-                      className={`font-mono text-xs px-1 select-none font-medium ${
+                      className={`font-mono text-[13px] px-1 select-none font-medium ${
                         isBot ? 'text-[#F3E5D8]' : 'text-[#FFFFFF] text-right'
                       }`}
                     >
@@ -851,7 +876,7 @@ export const CopilotAssistant: React.FC = () => {
                         key={sIdx}
                         type="button"
                         onClick={() => handleSendMessage(sug)}
-                        className="wiki-suggestion-chip px-4 py-2 rounded-xl bg-[rgba(58,25,69,0.95)] hover:bg-[#c084fc] hover:text-[#160B1A] border border-[rgba(192,132,252,0.45)] hover:border-[#c084fc] text-[#FFFFFF] text-[13px] sm:text-sm font-semibold transition-all shadow-md flex items-center gap-2 active:scale-95 text-left cursor-pointer"
+                        className="wiki-suggestion-chip px-4 py-2.5 rounded-xl bg-[rgba(58,25,69,0.95)] hover:bg-[#c084fc] hover:text-[#160B1A] border border-[rgba(192,132,252,0.45)] hover:border-[#c084fc] text-[#FFFFFF] text-sm sm:text-[15px] font-semibold transition-all shadow-md flex items-center gap-2 active:scale-95 text-left cursor-pointer"
                       >
                         {sug}
                       </button>
@@ -875,7 +900,7 @@ export const CopilotAssistant: React.FC = () => {
                     <span className="w-2.5 h-2.5 rounded-full bg-[#d8b4fe] animate-bounce [animation-delay:-0.15s]"></span>
                     <span className="w-2.5 h-2.5 rounded-full bg-[#f3e8ff] animate-bounce"></span>
                   </div>
-                  <span className="wiki-thinking-text text-xs sm:text-sm font-sans text-[#FFFFFF] font-medium tracking-wide">
+                  <span className="wiki-thinking-text text-sm sm:text-[15px] font-sans text-[#FFFFFF] font-medium tracking-wide">
                     Wiki está pensando...
                   </span>
                 </div>
@@ -950,21 +975,23 @@ export const CopilotAssistant: React.FC = () => {
           </form>
         </div>
       </div>
+      )}
 
       {/* 2. BOTÓN FLOTANTE (FAB) CON EFECTO DE RESPLANDOR Y GLOBO PROACTIVO */}
       <div
-        style={{ display: isOpen ? 'none' : 'flex' }}
-        className="fixed bottom-6 right-6 z-[99990] flex flex-col items-end gap-2.5 pointer-events-none"
+        className={`wiki-fab-container fixed bottom-6 right-6 z-[99990] flex flex-col items-end gap-2.5 pointer-events-none ${
+          isOpen ? 'is-chat-open' : 'is-chat-closed'
+        }`}
       >
         {/* Globo de bienvenida proactivo */}
         {showWelcomeBubble && !bubbleDismissed && (
           <div className="wiki-bubble-float wiki-bubble-card pointer-events-auto relative max-w-[280px] sm:max-w-[320px] p-4 rounded-2xl bg-[rgba(26,12,30,0.98)] border border-[#c084fc]/60 shadow-2xl backdrop-blur-md text-[#FFFFFF] flex items-start gap-2.5 animate-fadeIn">
             <div className="flex-1 cursor-pointer" onClick={() => { setIsOpen(true); setShowWelcomeBubble(false); }}>
-              <div className="flex items-center gap-1.5 font-sans text-xs text-[#d8b4fe] font-bold uppercase tracking-wider mb-1">
+              <div className="flex items-center gap-1.5 font-sans text-[13px] text-[#d8b4fe] font-bold uppercase tracking-wider mb-1">
                 <Sparkles className="w-3.5 h-3.5 text-[#c084fc]" />
                 <span>¿Tienes un negocio?</span>
               </div>
-              <p className="wiki-bubble-text text-sm text-[#FFFFFF] leading-relaxed font-sans">
+              <p className="wiki-bubble-text text-[15px] text-[#FFFFFF] leading-relaxed font-sans">
                 ¿Qué tarea te quita más tiempo en el día? Pregúntame cómo simplificarla.
               </p>
             </div>
@@ -1004,14 +1031,14 @@ export const CopilotAssistant: React.FC = () => {
           </div>
           <div className="flex flex-col text-left">
             <div className="flex items-center gap-2">
-              <span className="font-sans text-sm font-bold text-[#FFFFFF]">
+              <span className="font-sans text-[15px] font-bold text-[#FFFFFF]">
                 Hablar con Wiki
               </span>
-              <span className="px-1.5 py-0.5 rounded bg-[#10B981]/20 text-[#34d399] font-mono text-[10px] font-semibold border border-[#10B981]/40">
+              <span className="px-2 py-0.5 rounded bg-[#10B981]/20 text-[#34d399] font-mono text-xs font-semibold border border-[#10B981]/40">
                 En vivo
               </span>
             </div>
-            <span className="font-sans text-xs text-[#F6DBC0] font-medium">
+            <span className="font-sans text-[13px] text-[#F6DBC0] font-medium">
               Asesor de soluciones
             </span>
           </div>
