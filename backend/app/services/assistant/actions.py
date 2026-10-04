@@ -66,7 +66,7 @@ PROJECT_ACTIONS_CATALOG: Dict[str, ProjectAction] = {
         id="stampy",
         title="Stampy (Auditor Financiero & Gastos Telegram)",
         tagline="Bot en Telegram con segregación Negocio vs Personal y cálculo de impuestos en tiempo real",
-        demo_url="https://stampy.vercel.app/",
+        demo_url="https://stampy-phi.vercel.app/",
         github_url="https://github.com/SirDaarick/Stampy",
         action_label="Probar Demo de Stampy"
     ),

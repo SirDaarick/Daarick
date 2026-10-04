@@ -82,7 +82,7 @@ AUTOMATION_CATALOG = {
             "Cotejo de compras vs pagos: compara estados de cuenta bancarios contra notas y avisa si hay cobros que no cuadran.",
             "Auditor de Gastos vía Telegram (Stampy): envías notas de compra o mensajes en segundos y separa cuentas de Negocio vs Personal con cálculo de IVA acreditable."
         ],
-        "proyecto_analogo": "invoicing y stampy (https://stampy.vercel.app/)",
+        "proyecto_analogo": "invoicing y stampy (https://stampy-phi.vercel.app/)",
         "como_aplica": "Lectura visual y bot interactivo con validación estricta que impiden errores humanos y recuperan deducciones fiscales."
     },
     "case-shifts": {

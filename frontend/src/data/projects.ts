@@ -218,7 +218,7 @@ export const PROJECTS: ProjectData[] = [
     filename: 'stampy.financial.auditor',
     problem: 'Los emprendedores y freelancers mezclan gastos personales con compras de negocio, perdiendo deducciones fiscales clave y pasando horas clasificando tickets y facturas al cierre contable.',
     solution: 'Un asistente integrado a Telegram que procesa notas de gastos al instante, clasifica el contexto con arquitectura dual-scope (Negocio vs Personal), calcula impuestos acreditables y sincroniza un dashboard táctil.',
-    demoUrl: 'https://stampy.vercel.app/',
+    demoUrl: 'https://stampy-phi.vercel.app/',
     githubUrl: 'https://github.com/SirDaarick/Stampy',
     gifUrl: '/demos/stampy.svg',
     sparklineColor: '#10b981',
