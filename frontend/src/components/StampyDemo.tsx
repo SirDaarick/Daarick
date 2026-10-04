@@ -3,413 +3,368 @@ import {
   Building2, 
   User, 
   Receipt, 
-  Send, 
+  TrendingUp, 
   ShieldCheck, 
-  Sparkles, 
-  Trash2, 
-  RefreshCw, 
-  CheckCircle2, 
-  TrendingUp,
-  Tag,
-  Clock
+  AlertTriangle,
+  ArrowRightLeft,
+  Sparkles,
+  Send
 } from 'lucide-react';
 
 interface ReceiptItem {
   id: string;
   name: string;
   category: string;
-  amount: number;
-  mode: 'BUSINESS' | 'PERSONAL';
+  amount: string;
   status: string;
   time: string;
-  isDeductible: boolean;
+  mode: 'BUSINESS' | 'PERSONAL';
 }
 
-const INITIAL_RECEIPTS: ReceiptItem[] = [
-  {
-    id: 'rec-1',
-    name: 'Central de Abastos S.A.',
-    category: 'Insumo Cocina',
-    amount: 1450.00,
-    mode: 'BUSINESS',
-    status: '[ ✦ AUDITADO // OK ]',
-    time: 'Hoy 11:42 AM',
-    isDeductible: true,
-  },
-  {
-    id: 'rec-2',
-    name: 'CFE Suministrador Básicos',
-    category: 'Gasto Fijo Oficina',
-    amount: 3210.00,
-    mode: 'BUSINESS',
-    status: '[ ✦ AUDITADO // OK ]',
-    time: 'Ayer 04:15 PM',
-    isDeductible: true,
-  },
-  {
-    id: 'rec-3',
-    name: 'Supermercado Central',
-    category: 'Despensa Personal',
-    amount: 890.50,
-    mode: 'PERSONAL',
-    status: '[ ✦ AUDITADO // OK ]',
-    time: 'Ayer 08:30 PM',
-    isDeductible: false,
-  },
-];
-
-const PRESETS = [
-  { label: '🥩 Insumos Restaurante ($650)', text: 'Compré $650 en carne y verduras para el restaurante', mode: 'BUSINESS' as const },
-  { label: '🚕 Uber Cliente ($180)', text: 'Viaje en Uber $180.50 para reunión con cliente', mode: 'BUSINESS' as const },
-  { label: '🛒 Despensa Hogar ($420)', text: 'Pagué $420 en despensa y frutas para la casa', mode: 'PERSONAL' as const },
-  { label: '⛽ Gasolina Reparto ($750)', text: 'Carga de gasolina $750.00 para camioneta de entregas', mode: 'BUSINESS' as const },
-  { label: '☕ Café y Cine ($240)', text: 'Cafetería y boletos de cine $240 fin de semana', mode: 'PERSONAL' as const },
+const PRESET_MESSAGES = [
+  { label: '🥩 Insumo Cocina ($450)', text: 'Gasté $450 en verdura e insumos de cocina', mode: 'BUSINESS' as const },
+  { label: '🚕 Uber Cliente ($180)', text: 'Uber $180.50 visita con cliente corporativo', mode: 'BUSINESS' as const },
+  { label: '🛒 Despensa Hogar ($350)', text: 'Pagué $350 en despensa del hogar', mode: 'PERSONAL' as const },
+  { label: '⛽ Gasolina Reparto ($850)', text: 'Gasolina $850 para camioneta de reparto', mode: 'BUSINESS' as const },
+  { label: '☕ Café y Cine ($220)', text: 'Café y boletos de cine $220 fin de semana', mode: 'PERSONAL' as const },
 ];
 
 export const StampyDemo: React.FC = () => {
   const [activeMode, setActiveMode] = useState<'BUSINESS' | 'PERSONAL'>('BUSINESS');
-  const [inputText, setInputText] = useState('');
   const [isSimulating, setIsSimulating] = useState(false);
-  const [lcdMessage, setLcdMessage] = useState<string>(
-    'STAMPY OS v0.1 // SISTEMA LISTO\nSelecciona un modo y envía un gasto para auditar.'
-  );
-  const [receipts, setReceipts] = useState<ReceiptItem[]>(INITIAL_RECEIPTS);
-  const [lastAuditResult, setLastAuditResult] = useState<{
-    vendor: string;
-    category: string;
-    amount: number;
-    tax: number;
-    mode: 'BUSINESS' | 'PERSONAL';
-  } | null>(null);
+  const [customInput, setCustomInput] = useState('');
+  const [lcdMessage, setLcdMessage] = useState<string | null>(null);
+  const [receiptsList, setReceiptsList] = useState<ReceiptItem[]>([
+    { id: '1', name: 'Central de Abastos S.A.', category: 'Insumo Cocina', amount: '$1,450.00', status: '[ ✦ OK ]', time: 'Hoy 11:42 AM', mode: 'BUSINESS' },
+    { id: '2', name: 'CFE Suministrador', category: 'Gasto Fijo', amount: '$3,210.00', status: '[ ✦ OK ]', time: 'Ayer 04:15 PM', mode: 'BUSINESS' },
+    { id: '3', name: 'Gasolinera Shell #402', category: 'Operativo', amount: '$850.00', status: '[ ✦ OK ]', time: '02 Oct 09:30 AM', mode: 'BUSINESS' },
+    { id: '4', name: 'Supermercado Central', category: 'Despensa Personal', amount: '$620.00', status: '[ ✦ OK ]', time: '01 Oct 07:15 PM', mode: 'PERSONAL' },
+  ]);
 
-  // Client-Side NLP & Audit Engine
-  const parseExpense = (text: string, currentMode: 'BUSINESS' | 'PERSONAL') => {
-    // 1. Extraer monto numérico
-    const amountMatch = text.match(/\$?\s*(\d+([.,]\d{1,2})?)/);
-    const amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : 450.00;
+  const parseTextLocally = (text: string, mode: 'BUSINESS' | 'PERSONAL') => {
+    const numMatch = text.match(/\$?\s*(\d+([.,]\d{1,2})?)/);
+    const amountVal = numMatch ? parseFloat(numMatch[1].replace(',', '.')) : 450.00;
+    const formattedAmount = `$${amountVal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
 
-    // 2. Clasificación semántica por palabras clave
     const lower = text.toLowerCase();
-    let vendor = 'Comercio Local / Varios';
-    let category = currentMode === 'BUSINESS' ? 'Insumos Generales' : 'Gastos Personales';
-    let isDeductible = currentMode === 'BUSINESS';
+    let name = 'Comercio Local / Varios';
+    let category = mode === 'BUSINESS' ? 'Insumos Generales' : 'Gasto Personal';
 
-    if (lower.includes('carne') || lower.includes('verdura') || lower.includes('insumo') || lower.includes('comida') || lower.includes('restaurante')) {
-      vendor = currentMode === 'BUSINESS' ? 'Distribuidora de Alimentos' : 'Supermercado Local';
-      category = currentMode === 'BUSINESS' ? 'Insumos de Cocina' : 'Alimentación Personal';
-    } else if (lower.includes('uber') || lower.includes('taxi') || lower.includes('transporte') || lower.includes('viaje')) {
-      vendor = 'Uber Technologies Inc.';
-      category = currentMode === 'BUSINESS' ? 'Transporte & Logística' : 'Movilidad Privada';
-    } else if (lower.includes('gasolina') || lower.includes('shell') || lower.includes('pemex') || lower.includes('combustible')) {
-      vendor = 'Estación de Servicio Pemex #410';
-      category = currentMode === 'BUSINESS' ? 'Combustible Operativo' : 'Gasolina Auto Propio';
-    } else if (lower.includes('luz') || lower.includes('cfe') || lower.includes('internet') || lower.includes('oficina')) {
-      vendor = 'CFE Suministrador de Servicios';
-      category = 'Servicios Fijos Oficina';
-    } else if (lower.includes('cine') || lower.includes('café') || lower.includes('despensa')) {
-      vendor = 'Comercio Minorista';
-      category = 'Ocio & Hogar';
-      isDeductible = false;
+    if (lower.includes('insumo') || lower.includes('cocina') || lower.includes('fruta') || lower.includes('carne') || lower.includes('verdura')) {
+      name = mode === 'BUSINESS' ? 'Central de Abastos / Insumos' : 'Supermercado Local';
+      category = mode === 'BUSINESS' ? 'Insumo Cocina' : 'Despensa Personal';
+    } else if (lower.includes('uber') || lower.includes('transporte') || lower.includes('taxi')) {
+      name = 'Uber Technologies Inc.';
+      category = mode === 'BUSINESS' ? 'Transporte & Visita' : 'Movilidad Personal';
+    } else if (lower.includes('gasolina') || lower.includes('shell') || lower.includes('combustible')) {
+      name = 'Gasolinera Shell #402';
+      category = mode === 'BUSINESS' ? 'Combustible Operativo' : 'Gasolina Auto Propio';
+    } else if (lower.includes('despensa') || lower.includes('hogar')) {
+      name = 'Supermercado Central';
+      category = 'Despensa Personal';
+    } else if (lower.includes('café') || lower.includes('cine') || lower.includes('cena')) {
+      name = 'Restaurante / Ocio';
+      category = 'Ocio sin culpa';
     }
 
-    const tax = isDeductible ? +(amount * 0.16).toFixed(2) : 0;
-
-    return { vendor, category, amount, tax, isDeductible };
+    return { name, category, formattedAmount };
   };
 
-  const handleSimulate = (textToProcess?: string) => {
-    const rawText = textToProcess || inputText || (activeMode === 'BUSINESS' ? 'Gasté $450 en insumos de cocina' : 'Pagué $350 en despensa');
+  const handleSimulate = (customText?: string) => {
     setIsSimulating(true);
-    setLcdMessage('⏳ AUDITANDO TICKET DE TELEGRAM...\nValidando reglas de segregación ' + activeMode + '...');
+    setLcdMessage('AUDITANDO TICKET DE TELEGRAM... 🔍\nValidando reglas de segregación ' + activeMode + '...');
+
+    const textToSimulate = customText || customInput || (activeMode === 'BUSINESS' 
+      ? 'Gasté $450 en verdura e insumos' 
+      : 'Pagué $350 en despensa del hogar');
 
     setTimeout(() => {
-      const parsed = parseExpense(rawText, activeMode);
-      const isBiz = activeMode === 'BUSINESS';
-      
-      const newReceipt: ReceiptItem = {
-        id: 'rec-' + Date.now(),
-        name: parsed.vendor,
-        category: parsed.category,
-        amount: parsed.amount,
-        mode: activeMode,
-        status: '[ ✦ AUDITADO // OK ]',
-        time: 'Hace un momento',
-        isDeductible: parsed.isDeductible,
-      };
-
-      setReceipts(prev => [newReceipt, ...prev]);
-      setLastAuditResult({
-        vendor: parsed.vendor,
-        category: parsed.category,
-        amount: parsed.amount,
-        tax: parsed.tax,
-        mode: activeMode,
-      });
-
-      setLcdMessage(
-        `[ ✦ TICKET AUDITADO // OK ]\n` +
-        `Proveedor: ${parsed.vendor}\n` +
-        `Categoría: ${parsed.category} (${activeMode})\n` +
-        `Monto: $${parsed.amount.toFixed(2)} MXN ${isBiz ? `| IVA Acred: $${parsed.tax.toFixed(2)}` : '| No deducible'}`
-      );
+      const parsed = parseTextLocally(textToSimulate, activeMode);
+      setLcdMessage(`[ ✦ AUDITADO // OK ]\n${parsed.formattedAmount} MXN registrado en ${parsed.category}.`);
+      setReceiptsList(prev => [
+        {
+          id: 'rec-' + Date.now(),
+          name: parsed.name,
+          category: parsed.category,
+          amount: parsed.formattedAmount,
+          status: '[ ✦ OK ]',
+          time: 'Hace un momento',
+          mode: activeMode,
+        },
+        ...prev
+      ]);
       setIsSimulating(false);
-      setInputText('');
-    }, 450);
+      setCustomInput('');
+    }, 400);
   };
 
-  const handleDelete = (id: string) => {
-    setReceipts(prev => prev.filter(r => r.id !== id));
-  };
-
-  const handleReset = () => {
-    setReceipts(INITIAL_RECEIPTS);
-    setLcdMessage('STAMPY OS v0.1 // SISTEMA LISTO\nSelecciona un modo y envía un gasto para auditar.');
-    setLastAuditResult(null);
-  };
-
-  // Métricas en tiempo real
-  const totalBusiness = receipts
-    .filter(r => r.mode === 'BUSINESS')
-    .reduce((acc, curr) => acc + curr.amount, 0);
-  const totalPersonal = receipts
-    .filter(r => r.mode === 'PERSONAL')
-    .reduce((acc, curr) => acc + curr.amount, 0);
-  const totalDeductibleTax = receipts
-    .filter(r => r.isDeductible)
-    .reduce((acc, curr) => acc + (curr.amount * 0.16), 0);
+  const isBusiness = activeMode === 'BUSINESS';
+  const filteredReceipts = receiptsList.filter(r => r.mode === activeMode);
 
   return (
-    <div className="w-full rounded-2xl bg-[rgba(26,14,31,0.92)] border border-[rgba(147,80,115,0.35)] shadow-2xl p-4 sm:p-6 lg:p-8 flex flex-col gap-6 text-[#F8F4E9]">
-      {/* Header del Simulador con Selector Dual-Scope */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-[rgba(147,80,115,0.25)]">
+    <div className="w-full rounded-2xl bg-[#E2E8F0] text-slate-800 p-4 sm:p-6 lg:p-8 flex flex-col items-center justify-start shadow-2xl border border-slate-300 font-sans select-none">
+      <style>{`
+        .stampy-extrusion {
+          background: #E2E8F0;
+          box-shadow: -6px -6px 14px #FFFFFF, 6px 6px 14px #B8C1CC;
+          border-radius: 0.75rem;
+          transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .stampy-inset {
+          background: #D8DFE9;
+          box-shadow: inset 3px 3px 6px #A9B3BE, inset -3px -3px 6px #FFFFFF;
+          border-radius: 0.75rem;
+        }
+        .stampy-screen {
+          background-color: #064E3B;
+          color: #34D399;
+          text-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5);
+          border-radius: 0.5rem;
+        }
+      `}</style>
+
+      {/* Master Chassis Top Bar */}
+      <header className="w-full max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4 p-4 stampy-extrusion mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-[#10b981] flex items-center justify-center text-slate-950 font-bold text-xl shadow-lg shadow-emerald-500/20">
+          <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold text-xl shadow-md">
             S
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold tracking-tight text-[#F8F4E9]">
-                STAMPY
-              </h2>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                CLIENT-SIDE ENGINE // 100% OFFLINE
-              </span>
-            </div>
-            <p className="text-xs text-[#F6DBC0]/75">
-              Auditor Financiero & Segregación Dual de Gastos
-            </p>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+              STAMPY <span className="text-xs font-mono uppercase bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-semibold">v0.1.0-alpha</span>
+            </h2>
+            <p className="text-xs text-slate-500 font-medium">Auditor Financiero & Gestor de Gastos</p>
           </div>
         </div>
 
-        {/* Switch Dual-Scope (Negocio vs Personal) */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[rgba(18,9,22,0.9)] border border-[rgba(147,80,115,0.3)] shadow-inner">
+        {/* Dual-Scope Mode Switch (Hardware Knurl) */}
+        <div className="stampy-inset p-1.5 flex items-center gap-2">
           <button
             onClick={() => setActiveMode('BUSINESS')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
-              activeMode === 'BUSINESS'
-                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/25'
-                : 'text-[#F6DBC0]/70 hover:text-[#F8F4E9]'
+            className={`px-4 py-2 rounded-lg font-semibold text-xs tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer ${
+              isBusiness 
+                ? 'stampy-extrusion text-emerald-700 font-bold bg-white shadow-sm' 
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Building2 className="w-3.5 h-3.5" />
-            <span>MODO NEGOCIO</span>
+            <Building2 className="w-4 h-4" />
+            <span>Modo Negocio (FinOps)</span>
           </button>
           <button
             onClick={() => setActiveMode('PERSONAL')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
-              activeMode === 'PERSONAL'
-                ? 'bg-[#c084fc] text-[#500989] shadow-md shadow-[#c084fc]/25'
-                : 'text-[#F6DBC0]/70 hover:text-[#F8F4E9]'
+            className={`px-4 py-2 rounded-lg font-semibold text-xs tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer ${
+              !isBusiness 
+                ? 'stampy-extrusion text-indigo-700 font-bold bg-white shadow-sm' 
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <User className="w-3.5 h-3.5" />
-            <span>MODO PERSONAL</span>
+            <User className="w-4 h-4" />
+            <span>Modo Personal (Wealth)</span>
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Pantalla LCD Industrial Retro */}
-      <div className="rounded-xl bg-[#0c1510] border-2 border-emerald-950 p-4 font-mono shadow-inner relative overflow-hidden">
-        <div className="absolute top-2 right-3 flex items-center gap-2 text-[10px] text-emerald-500/60 uppercase tracking-widest select-none">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>LCD AUDIT TELEMETRY</span>
-        </div>
-        <div className="text-[11px] text-emerald-600 mb-1">
-          // CANAL: TELEGRAM_GATEWAY_BOT // SCOPE: {activeMode}
-        </div>
-        <pre className="text-xs sm:text-sm text-emerald-400 whitespace-pre-wrap leading-relaxed font-mono">
-          {lcdMessage}
-        </pre>
-      </div>
+      {/* Main Grid */}
+      <main className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Mascot LCD & Telemetry */}
+        <div className="lg:col-span-1 flex flex-col gap-6">
+          {/* Stampy Hardware Module */}
+          <div className="stampy-extrusion p-6 flex flex-col items-center">
+            {/* Visual Character Stamp */}
+            <div className="relative w-32 h-36 stampy-inset flex flex-col items-center justify-center mb-6 p-4">
+              <div className="text-4xl mb-1 select-none transition-transform hover:scale-110 cursor-pointer">
+                {isBusiness ? '👔' : '🧢'}
+              </div>
+              <div className="w-16 h-10 stampy-screen flex items-center justify-center text-xs font-mono font-bold tracking-widest px-2">
+                {isBusiness ? '[ OK ]' : '[ RELAX ]'}
+              </div>
+              <div className="mt-2 text-[10px] font-mono uppercase text-slate-500 font-semibold tracking-wider">
+                STAMPY BOT
+              </div>
+            </div>
 
-      {/* Presets Rápidos */}
-      <div className="flex flex-col gap-2">
-        <span className="font-mono text-xs text-[#F6DBC0]/70 flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-[#c084fc]" />
-          Casos de prueba preconfigurados (haz clic para auditar):
-        </span>
-        <div className="flex flex-wrap gap-2">
-          {PRESETS.map((preset, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                setActiveMode(preset.mode);
-                handleSimulate(preset.text);
-              }}
+            {/* LCD Telemetry Screen */}
+            <div className="w-full stampy-screen p-4 text-xs space-y-2 mb-4">
+              <div className="flex items-center justify-between text-[10px] opacity-75 border-b border-emerald-800 pb-1">
+                <span>// ESTADO EN VIVO</span>
+                <span className="animate-pulse text-emerald-300">● ACTIVO</span>
+              </div>
+              <p className="font-mono leading-relaxed whitespace-pre-line text-emerald-300">
+                {lcdMessage || (isBusiness 
+                  ? 'MODO NEGOCIO AUDITADO. PRIME COST VIGILADO AL 54.2% (OBJETIVO <= 60%).' 
+                  : 'MODO PERSONAL CALIBRADO. DISTRIBUCIÓN 50/30/20 EQUILIBRADA ESTE MES.')}
+              </p>
+              <div className="text-[10px] text-emerald-400 font-mono pt-1">
+                [ ✦ TELEGRAM: VINCULADO ]
+              </div>
+            </div>
+
+            {/* Presets Rápidos de Simulación */}
+            <div className="w-full flex flex-col gap-2 mb-4">
+              <span className="text-[10px] font-mono uppercase text-slate-500 font-semibold flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-emerald-600" /> Casos Rápidos para Probar:
+              </span>
+              <div className="flex flex-col gap-1.5">
+                {PRESET_MESSAGES.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setActiveMode(preset.mode);
+                      handleSimulate(preset.text);
+                    }}
+                    disabled={isSimulating}
+                    className="text-left px-2.5 py-1.5 rounded-lg text-[11px] font-mono stampy-inset hover:bg-slate-200 text-slate-700 transition-colors truncate cursor-pointer disabled:opacity-50"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Campo Libre para Escribir y Enviar */}
+            <div className="w-full flex gap-1.5 mb-3">
+              <input
+                type="text"
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSimulate()}
+                placeholder="Ej: Gasté $450 en verdura..."
+                className="flex-1 px-3 py-2 text-xs rounded-lg stampy-inset font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder-slate-400"
+              />
+              <button
+                onClick={() => handleSimulate()}
+                disabled={isSimulating}
+                className="px-3 py-2 rounded-lg stampy-extrusion text-emerald-800 hover:bg-emerald-50 font-bold transition-all cursor-pointer disabled:opacity-50"
+                title="Enviar ticket"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Quick Action Button Principal */}
+            <button 
+              onClick={() => handleSimulate()}
               disabled={isSimulating}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition-all cursor-pointer active:scale-95 disabled:opacity-50 ${
-                preset.mode === 'BUSINESS'
-                  ? 'bg-emerald-950/30 hover:bg-emerald-900/40 border-emerald-500/30 text-emerald-300'
-                  : 'bg-purple-950/30 hover:bg-purple-900/40 border-purple-500/30 text-purple-300'
-              }`}
+              className="w-full py-2.5 px-4 stampy-extrusion text-emerald-800 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-emerald-50 transition-opacity disabled:opacity-50 cursor-pointer"
             >
-              {preset.label}
+              <Receipt className="w-4 h-4" />
+              <span>{isSimulating ? 'Stampy Procesando...' : 'Simular Ingesta Telegram'}</span>
             </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Entrada Interactiva de Telegram */}
-      <div className="flex flex-col sm:flex-row gap-2.5">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSimulate()}
-            placeholder={`Escribe un mensaje de gasto (Ej: "Gasté $520 en papelería de oficina")...`}
-            className="w-full px-4 py-2.5 rounded-xl bg-[rgba(18,9,22,0.85)] border border-[rgba(147,80,115,0.4)] text-sm text-[#F8F4E9] placeholder-[rgba(246,219,192,0.4)] focus:outline-none focus:border-[#c084fc] transition-colors"
-          />
-        </div>
-        <button
-          onClick={() => handleSimulate()}
-          disabled={isSimulating}
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-[#10b981] hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-mono text-xs font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-        >
-          <Send className="w-3.5 h-3.5" />
-          <span>{isSimulating ? 'AUDITANDO...' : 'AUDITAR TICKET'}</span>
-        </button>
-      </div>
-
-      {/* Tarjetas de Métricas en Vivo */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-        <div className="p-4 rounded-xl bg-[rgba(18,9,22,0.7)] border border-emerald-500/25 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-[#F6DBC0]/70 font-mono">
-            <span>GASTO NEGOCIO</span>
-            <Building2 className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="mt-2">
-            <span className="text-2xl font-bold font-mono text-emerald-400">
-              ${totalBusiness.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-            </span>
-            <span className="text-[10px] text-emerald-500/80 block mt-0.5">
-              100% Segregado para contabilidad
-            </span>
+
+          {/* Owner's Bridge Card */}
+          <div className="stampy-extrusion p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2 text-slate-700 font-bold text-sm">
+                <ArrowRightLeft className="w-4 h-4 text-emerald-600" />
+                <span>Puente del Sueldo</span>
+              </div>
+              <span className="text-[10px] font-mono uppercase bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-semibold">Atómico</span>
+            </div>
+            <p className="text-xs text-slate-600 mb-3">
+              Nómina del negocio transferida directamente como ingreso a tu patrimonio personal.
+            </p>
+            <div className="stampy-inset p-3 flex items-center justify-between">
+              <span className="text-xs text-slate-500 font-mono">Último retiro:</span>
+              <span className="font-mono font-bold text-sm text-emerald-700">$25,000.00 MXN</span>
+            </div>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-[rgba(18,9,22,0.7)] border border-purple-500/25 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-[#F6DBC0]/70 font-mono">
-            <span>GASTO PERSONAL</span>
-            <User className="w-4 h-4 text-[#c084fc]" />
-          </div>
-          <div className="mt-2">
-            <span className="text-2xl font-bold font-mono text-[#c084fc]">
-              ${totalPersonal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-            </span>
-            <span className="text-[10px] text-purple-400/80 block mt-0.5">
-              Aislado de la cuenta fiscal
-            </span>
-          </div>
-        </div>
+        {/* Right Columns: Metrics & Health */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          {/* Main KPI Panel */}
+          <div className="stampy-extrusion p-6">
+            <h3 className="font-bold text-slate-900 uppercase tracking-wider text-xs mb-4 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-600" />
+              <span>{isBusiness ? 'Salud Operativa (Prime Cost Standard)' : 'Distribución Patrimonial (Regla 50 / 30 / 20)'}</span>
+            </h3>
 
-        <div className="p-4 rounded-xl bg-[rgba(18,9,22,0.7)] border border-[rgba(147,80,115,0.3)] flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-[#F6DBC0]/70 font-mono">
-            <span>IVA ACREDITABLE EST.</span>
-            <TrendingUp className="w-4 h-4 text-amber-400" />
-          </div>
-          <div className="mt-2">
-            <span className="text-2xl font-bold font-mono text-amber-300">
-              ${totalDeductibleTax.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-            </span>
-            <span className="text-[10px] text-[#F6DBC0]/60 block mt-0.5">
-              Calculado sobre base de negocio (16%)
-            </span>
-          </div>
-        </div>
-      </div>
+            {isBusiness ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="stampy-inset p-4">
+                  <div className="text-[10px] font-mono text-slate-500 uppercase">Insumos (COGS)</div>
+                  <div className="text-2xl font-bold font-mono text-slate-900 mt-1">31.4%</div>
+                  <div className="text-[10px] text-emerald-600 font-medium mt-1">✓ Bajo control</div>
+                </div>
+                <div className="stampy-inset p-4">
+                  <div className="text-[10px] font-mono text-slate-500 uppercase">Nómina Total</div>
+                  <div className="text-2xl font-bold font-mono text-slate-900 mt-1">22.8%</div>
+                  <div className="text-[10px] text-emerald-600 font-medium mt-1">✓ En rango esperado</div>
+                </div>
+                <div className="stampy-inset p-4 border border-emerald-300">
+                  <div className="text-[10px] font-mono text-emerald-800 uppercase font-bold">Prime Cost Total</div>
+                  <div className="text-2xl font-bold font-mono text-emerald-700 mt-1">54.2%</div>
+                  <div className="text-[10px] text-emerald-700 font-medium mt-1">Objetivo: &le; 60%</div>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="stampy-inset p-4">
+                  <div className="text-[10px] font-mono text-slate-500 uppercase">50% Necesidades</div>
+                  <div className="text-2xl font-bold font-mono text-slate-900 mt-1">48.5%</div>
+                  <div className="text-[10px] text-indigo-600 font-medium mt-1">Vivienda, despensa, salud</div>
+                </div>
+                <div className="stampy-inset p-4">
+                  <div className="text-[10px] font-mono text-slate-500 uppercase">30% Deseos</div>
+                  <div className="text-2xl font-bold font-mono text-slate-900 mt-1">28.0%</div>
+                  <div className="text-[10px] text-indigo-600 font-medium mt-1">Ocio sin culpa</div>
+                </div>
+                <div className="stampy-inset p-4 border border-indigo-300">
+                  <div className="text-[10px] font-mono text-indigo-800 uppercase font-bold">20% Ahorro / Inversión</div>
+                  <div className="text-2xl font-bold font-mono text-indigo-700 mt-1">23.5%</div>
+                  <div className="text-[10px] text-indigo-700 font-medium mt-1">Superando la meta</div>
+                </div>
+              </div>
+            )}
 
-      {/* Tabla / Ledger de Recibos Auditados */}
-      <div className="flex flex-col gap-3 pt-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-[#F8F4E9] flex items-center gap-2">
-            <Receipt className="w-4 h-4 text-[#c084fc]" />
-            Libro de Tickets Auditados en Tiempo Real
-          </h3>
-          <button
-            onClick={handleReset}
-            className="text-xs font-mono text-[#F6DBC0]/60 hover:text-[#c084fc] flex items-center gap-1 transition-colors cursor-pointer"
-          >
-            <RefreshCw className="w-3 h-3" />
-            <span>Restablecer demo</span>
-          </button>
-        </div>
+            {/* Anomaly / Overprice Alert Banner */}
+            <div className="stampy-inset p-4 flex items-start gap-3 border-l-4 border-amber-500">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900">
+                  {isBusiness ? 'Radar de Sobreprecios: Alerta Activa' : 'Detector de Fugas Hormiga'}
+                </h4>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {isBusiness 
+                    ? 'Proveedor "Distribuidora del Centro" aumentó el precio del aguacate un +24% respecto al promedio de las últimas 3 compras.' 
+                    : 'Se detectaron 3 cargos recurrentes de streaming con nulo uso en los últimos 30 días.'}
+                </p>
+              </div>
+            </div>
+          </div>
 
-        <div className="overflow-x-auto rounded-xl border border-[rgba(147,80,115,0.25)] bg-[rgba(18,9,22,0.6)]">
-          <table className="w-full text-left text-xs font-mono">
-            <thead className="bg-[rgba(35,23,39,0.7)] text-[#F6DBC0]/70 border-b border-[rgba(147,80,115,0.25)]">
-              <tr>
-                <th className="py-2.5 px-3.5">ESTADO</th>
-                <th className="py-2.5 px-3.5">PROVEEDOR / CONCEPTO</th>
-                <th className="py-2.5 px-3.5">CATEGORÍA</th>
-                <th className="py-2.5 px-3.5">ÁMBITO</th>
-                <th className="py-2.5 px-3.5 text-right">MONTO</th>
-                <th className="py-2.5 px-3.5 text-center">ACCIÓN</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[rgba(147,80,115,0.15)]">
-              {receipts.map((r) => (
-                <tr key={r.id} className="hover:bg-[rgba(80,45,85,0.15)] transition-colors">
-                  <td className="py-3 px-3.5">
-                    <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
-                      <CheckCircle2 className="w-3 h-3" />
-                      {r.status}
+          {/* Recent Audited Receipts Table Preview */}
+          <div className="stampy-extrusion p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span>Últimos Comprobantes Auditados ({filteredReceipts.length})</span>
+              </h3>
+              <span className="text-xs font-mono text-slate-500">Scope: {activeMode}</span>
+            </div>
+
+            <div className="space-y-3">
+              {filteredReceipts.map((item) => (
+                <div key={item.id} className="stampy-inset p-3 flex items-center justify-between text-xs">
+                  <div>
+                    <div className="font-semibold text-slate-800">{item.name}</div>
+                    <div className="text-[10px] text-slate-500 font-mono">{item.category} • {item.time}</div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="font-bold font-mono text-slate-900">{item.amount}</span>
+                    <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                      {item.status}
                     </span>
-                  </td>
-                  <td className="py-3 px-3.5 text-[#F8F4E9] font-sans font-medium">
-                    <div>{r.name}</div>
-                    <div className="text-[10px] text-[#F6DBC0]/50 font-mono">{r.time}</div>
-                  </td>
-                  <td className="py-3 px-3.5 text-[#F6DBC0]/80">
-                    {r.category}
-                  </td>
-                  <td className="py-3 px-3.5">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
-                      r.mode === 'BUSINESS'
-                        ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                        : 'bg-purple-500/10 text-purple-300 border-purple-500/30'
-                    }`}>
-                      {r.mode}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3.5 text-right font-bold text-[#F8F4E9]">
-                    ${r.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                  </td>
-                  <td className="py-3 px-3.5 text-center">
-                    <button
-                      onClick={() => handleDelete(r.id)}
-                      title="Eliminar de la simulación"
-                      className="p-1 rounded text-[#F6DBC0]/40 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
