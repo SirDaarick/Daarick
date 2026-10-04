@@ -21,16 +21,46 @@ from app.services.assistant.llm_client import query_llm_for_wiki
 from app.services.calendar_service import calendar_service
 
 def is_user_asking_contact(text: str) -> bool:
-    """Verifica si el usuario pidió explícitamente medios de contacto."""
+    """Verifica si el usuario pidió explícitamente medios de contacto directos con Erick."""
     q = text.lower()
-    contact_keywords = ["whatsapp", "contacto", "correo", "email", "telefono", "teléfono", "escribir a erick", "hablar con erick"]
-    return any(k in q for k in contact_keywords)
+    contact_patterns = [
+        r"(tu|el)\s+whatsapp",
+        r"(numero|número|telefono|teléfono)\s+(de\s+contacto|de\s+erick)?",
+        r"(pásame|pasame|dame|darme)\s+(tu|el)?\s*(contacto|whatsapp|correo|email)",
+        r"correo\s+(de\s+erick|electronico|electrónico)",
+        r"hablar\s+directamente\s+con\s+erick",
+        r"escribir\s+(directamente\s+)?a\s+erick"
+    ]
+    return any(re.search(pat, q) for pat in contact_patterns)
 
 def is_user_asking_booking(text: str) -> bool:
-    """Verifica si el usuario pide agendar o reunirse."""
+    """
+    Verifica si el usuario pide explícitamente agendar una cita o videollamada con Erick.
+    No debe activarse si el usuario menciona 'citas' u 'horarios' como parte del problema de su propio negocio (ej: peluquería, clínica).
+    """
     q = text.lower()
-    booking_keywords = ["agendar", "cita", "llamada", "reunion", "reunión", "videollamada", "calendario", "horario"]
-    return any(k in q for k in booking_keywords)
+
+    # Si habla del negocio, sus clientes/pacientes o su sistema, NO es agendar con Erick
+    business_context_patterns = [
+        r"(para|de|mis)\s+(clientes?|clientas?|pacientes?|alumnos?|usuarios?)",
+        r"(en|para)\s+mi\s+(peluqueria|peluquería|salon|salón|estetica|estética|barberia|barbería|consultorio|negocio|taller|tienda)",
+        r"(sistema|bot|asistente|automatizacion|automatización|app|aplicacion|aplicación|web)\s+(para\s+)?(agendar|citas?|horarios?)",
+        r"agendador\s+(de\s+)?(citas?|turnos?)",
+        r"agendar\s+(citas?|turnos?)\s+por\s+whatsapp"
+    ]
+    if any(re.search(bp, q) for bp in business_context_patterns):
+        if not re.search(r"(con\s+erick|contigo|con\s+ustedes|videollamada\s+de\s+15)", q):
+            return False
+
+    explicit_booking_patterns = [
+        r"(agendar|reservar|tener|hacer)\s+(una\s+)?(videollamada|llamada|reunion|reunión|sesion|sesión)(\s+(breve|de\s+15\s+min|de\s+15\s+minutos))?",
+        r"(agendar|reservar|apartar)\s+(una\s+)?cita\s+(con\s+erick|contigo|para\s+revisar|para\s+el\s+proyecto)",
+        r"(quiero|quisiera|gustaria|gustaría|podemos)\s+(agendar|reunirnos|llamarnos|platicar\s+con\s+erick|hablar\s+con\s+erick)",
+        r"(ver|revisar|mostrar)\s+(el\s+)?(calendario|horarios\s+disponibles?)\s+(de\s+erick|para\s+agendar)?",
+        r"(agendame|agéndame|resérvame)\s+(una\s+)?(llamada|videollamada|espacio|cita)",
+        r"llamada\s+de\s+15\s+min(utos)?"
+    ]
+    return any(re.search(pat, q) for pat in explicit_booking_patterns)
 
 def is_user_asking_pricing(text: str) -> bool:
     """Verifica si el usuario pregunta sobre precios o cotizaciones."""
@@ -65,7 +95,44 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
     """Genera una respuesta de respaldo de alta fidelidad si las cuotas externas se agotan."""
     q = latest_text.lower()
     
-    # 1. Pregunta sobre precios
+    # 0. Solicitud explícita de agendar con Erick (videollamada o cita con Erick)
+    if is_user_asking_booking(latest_text):
+        return {
+            "reply": (
+                "¡Con gusto! Puedes seleccionar el día y la hora que mejor te acomode en el calendario de abajo para una videollamada breve de 15 minutos con Erick, sin ningún compromiso."
+            ),
+            "stage": "CIERRE",
+            "options": [],
+            "project_ref": "ninguno",
+            "client_need_summary": "• Solicitud: Agendado de videollamada de 15 minutos con Erick",
+            "wants_contact": True,
+            "offer_booking": True,
+            "suggestions": ["Platicar por WhatsApp", "Enviar correo"]
+        }
+
+    # 1. Aprobación o satisfacción del cliente con la propuesta previa -> ETAPA CIERRE
+    # Si el usuario dice 'me gusta la opción 1' o 'me interesa la opción 2', está eligiendo una opción, no cerrando.
+    is_picking_option = any(o in q for o in ["opcion", "opción", "opciones"])
+    if not is_picking_option and any(k in q for k in [
+        "me gusta", "me agrada", "suena bien", "suena genial", "excelente", "perfecto",
+        "me interesa", "me parece bien", "me late", "lo quiero", "vamos a darle", "avanzar",
+        "agreguemos", "estoy de acuerdo", "de acuerdo", "trato hecho", "cómo empezamos"
+    ]):
+        return {
+            "reply": (
+                "¡Me alegra muchísimo que te haga sentido la solución! El siguiente paso ideal es agendar una videollamada breve de 15 minutos en el Google Calendar de Erick. "
+                "Así podremos revisar a detalle tu caso, definir el prototipo funcional navegable sin compromiso y resolver cualquier duda, o si prefieres, platicar directamente por WhatsApp."
+            ),
+            "stage": "CIERRE",
+            "options": [],
+            "project_ref": "ninguno",
+            "client_need_summary": "• Negocio: Cliente interesado en avanzar\n• Dolor detectado: Solución validada y aprobada\n• Lo que le interesó: Agendar llamada breve de 15 min o contacto directo",
+            "wants_contact": True,
+            "offer_booking": True,
+            "suggestions": ["Agendar llamada breve", "Platicar por WhatsApp", "Enviar correo"]
+        }
+
+    # 2. Pregunta sobre precios o cotizaciones
     if is_user_asking_pricing(latest_text):
         return {
             "reply": (
@@ -82,7 +149,60 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "suggestions": ["Agendar llamada breve", "¿Cómo funciona el prototipo?", "Platicar por WhatsApp"]
         }
 
-    # 2. Talleres, oficios o micronegocios (costura, reparación, comercio local, etc.)
+    # 3. Salones, peluquerías, barberías y estética
+    if any(k in q for k in ["peluqueria", "peluquería", "salon", "salón", "estetica", "estética", "barberia", "barbería", "corte", "uñas", "spa"]):
+        # A. Si ya eligió una opción o habla de automatizar WhatsApp/horarios
+        if any(o in q for o in ["opcion 1", "opción 1", "opcion 2", "opción 2", "opcion 3", "opción 3", "agendador", "recordatorio", "me interesa esta opción"]):
+            return {
+                "reply": (
+                    "¡Excelente elección! Con un agendador automatizado por WhatsApp, tus clientes pueden ver tus horas libres y apartar su cita directamente, "
+                    "evitando que tengas que interrumpir tu trabajo o atender llamadas mientras cortas el cabello. "
+                    "Tetring es un proyecto comprobado donde resolvemos esta coordinación inteligente de horarios. "
+                    "¿Qué te parece esta propuesta para tu peluquería? ¿Crees que te serviría en tu día a día, o hay algo más que te gustaría agregar o ajustar?"
+                ),
+                "stage": "PROPUESTA",
+                "options": [],
+                "project_ref": "tetring",
+                "client_need_summary": "• Negocio: Peluquería o salón de belleza\n• Dolor detectado: Empalmes de citas y tiempo contestando WhatsApp\n• Lo que le interesó: Agendador automático y recordatorios por WhatsApp",
+                "wants_contact": False,
+                "offer_booking": False,
+                "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]
+            }
+        # B. Si describe su dolor o problema con citas/horarios/tiempo
+        if any(p in q for p in ["empalma", "empalman", "tiempo", "cancelan", "cancela", "agenda", "whatsapp", "horario", "horarios", "turno", "pierdo", "cuesta", "cruzan", "problema"]):
+            return {
+                "reply": (
+                    "¡Te entiendo perfectamente! Cuando estás atendiendo clientes, contestar mensajes y coordinar citas a mano quita muchísimo tiempo y provoca cancelaciones. "
+                    "Te preparé 3 opciones prácticas para automatizar tu negocio. Puedes elegir una o varias para profundizar:"
+                ),
+                "stage": "OPCIONES",
+                "options": [
+                    "Agendador automático por WhatsApp para que tus clientes reserven su hora sin cruces",
+                    "Recordatorios automáticos 2 horas antes de la cita para reducir inasistencias",
+                    "Registro ágil de clientes con notas de preferencias y cortes desde el celular"
+                ],
+                "project_ref": "ninguno",
+                "client_need_summary": "• Negocio: Peluquería o salón de belleza\n• Dolor detectado: Empalmes de horarios y tiempo contestando citas\n• Lo que le interesó: Opciones de agendado y recordatorios automáticos",
+                "wants_contact": False,
+                "offer_booking": False,
+                "suggestions": ["Me gusta la opción 1", "Me interesan las 3", "Tengo otra idea en mente"]
+            }
+        # C. Si apenas está describiendo de qué es su negocio
+        return {
+            "reply": (
+                "¡Excelente negocio! En el área de estética y belleza la atención es continua y cada hora cuenta. "
+                "Para poder darte la mejor recomendación personalizada: ¿cómo manejas hoy las citas de tus clientes y qué tarea del día sientes que te quita más tiempo?"
+            ),
+            "stage": "DESCUBRIR",
+            "options": [],
+            "project_ref": "ninguno",
+            "client_need_summary": "• Negocio: Peluquería o salón de belleza\n• Dolor detectado: Por diagnosticar (manejo de citas y atención)\n• Lo que le interesó: Optimizar agenda y atención a clientes",
+            "wants_contact": False,
+            "offer_booking": False,
+            "suggestions": ["Se me empalman las citas", "Pierdo tiempo en WhatsApp", "Clientes que cancelan a última hora"]
+        }
+
+    # 4. Talleres, oficios o micronegocios (costura, reparación, comercio local, etc.)
     if any(k in q for k in ["taller", "costura", "costuras", "ropa", "artesano", "reparacion", "tienda", "solo", "sola", "propio"]):
         if any(p in q for p in ["tiempo", "papel", "mensaje", "whatsapp", "pedido", "pedidos", "entrega", "cobro", "nota", "pierdo", "cuesta", "tardo"]):
             return {
@@ -117,7 +237,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "suggestions": ["Contestar dudas en WhatsApp", "Avisar entregas y cobros", "Notas y pedidos en papel"]
         }
 
-    # 3. Base de datos / Chatbot / Consultas
+    # 5. Base de datos / Chatbot / Consultas
     if any(k in q for k in ["chatbot", "datos", "alumno", "profesor", "inventario", "consultar", "paidea"]):
         return {
             "reply": (
@@ -134,23 +254,43 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "suggestions": ["Me gusta la idea", "Pensaba en algo más simple", "¿Cómo funciona?"]
         }
 
-    # 4. Horarios o turnos
+    # 6. Horarios o turnos
     if any(k in q for k in ["horario", "horarios", "turno", "turnos", "empalme", "cuadrante"]):
+        # A. Si ya eligió una opción o habla de motor/algoritmo/tetring
+        if any(o in q for o in ["opcion 1", "opción 1", "opcion 2", "opción 2", "opcion 3", "opción 3", "tetring", "motor", "agendador", "me interesa esta opción"]):
+            return {
+                "reply": (
+                    "¡Excelente! Con un motor inteligente como el que diseñamos en Tetring, se coordinan turnos y horarios sin choques automáticamente. "
+                    "¿Qué te parece esta propuesta? ¿Crees que resolvería la organización de tus horarios o hay algo más que te gustaría agregar o ajustar?"
+                ),
+                "stage": "PROPUESTA",
+                "options": [],
+                "project_ref": "tetring",
+                "client_need_summary": "• Negocio: Coordinación de turnos/horarios\n• Dolor detectado: Choques de horarios y cálculo manual\n• Lo que le interesó: Generador de turnos automático",
+                "wants_contact": False,
+                "offer_booking": False,
+                "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]
+            }
+        # B. Si describe su dolor o problema de horarios/turnos
         return {
             "reply": (
-                "Armar horarios de personal o turnos sin choques es perfectamente automatizable con un motor inteligente como en Tetring. "
-                "¿Qué te parece esa propuesta? ¿Crees que resolvería tu organización de turnos o tenías otra idea en mente?"
+                "¡Coordinar horarios y turnos sin choques es un reto que quita muchísimo tiempo! "
+                "Te comparto 3 alternativas comprobadas para resolverlo. Puedes elegir una o varias para profundizar:"
             ),
-            "stage": "PROPUESTA",
-            "options": [],
-            "project_ref": "tetring",
-            "client_need_summary": "• Negocio: Coordinación de turnos/horarios\n• Dolor detectado: Choques de horarios y cálculo manual\n• Lo que le interesó: Generador de turnos automático",
+            "stage": "OPCIONES",
+            "options": [
+                "Generador inteligente de turnos y cuadrantes según disponibilidad sin traslapes",
+                "Portal web o bot para que tu personal o clientes elijan su horario libre",
+                "Notificaciones automáticas por WhatsApp ante confirmaciones o cambios de turno"
+            ],
+            "project_ref": "ninguno",
+            "client_need_summary": "• Negocio: Gestión de turnos y agendas\n• Dolor detectado: Empalmes y cálculo manual de horarios\n• Lo que le interesó: Opciones de calendarización y turnos automáticos",
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["Me gusta la idea", "¿Cómo se implementa?", "Agendar llamada breve"]
+            "suggestions": ["Me gusta la opción 1", "Me interesan las 3", "Tengo otra idea en mente"]
         }
 
-    # 5. Facturas o tickets
+    # 7. Facturas o tickets
     if any(k in q for k in ["factura", "facturas", "ticket", "tickets", "recibo", "ocr", "excel"]):
         return {
             "reply": (
@@ -163,10 +303,10 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "client_need_summary": "• Negocio: Control administrativo y gastos\n• Dolor detectado: Captura manual de tickets y facturas\n• Lo que le interesó: Extractor automático a Excel",
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["Me gusta la idea", "Probar demo", "Agendar llamada breve"]
+            "suggestions": ["Me gusta la idea", "Probar demo", "¿Cuánto tiempo toma implementarlo?"]
         }
 
-    # 6. ERPs, Inventario y Sistemas a Medida
+    # 8. ERPs, Inventario y Sistemas a Medida
     if any(k in q for k in ["erp", "sistema", "gestión", "gestion", "inventario", "stock", "sucursal", "sucursales"]):
         return {
             "reply": (
@@ -179,10 +319,28 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "client_need_summary": "• Negocio: Gestión comercial o pyme\n• Dolor detectado: Falta de integración entre áreas\n• Lo que le interesó: ERP o plataforma a medida",
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["Inventario y stock", "Ventas y clientes", "Agendar llamada de 15 min"]
+            "suggestions": ["Inventario y stock", "Ventas y clientes", "Facturación y pedidos"]
         }
 
-    # 7. Respuesta general amigable (Paso 1 del embudo)
+    # 9. Selección de opción general (cuando el usuario responde 'opción 1', 'me interesa la 2', etc.)
+    if is_picking_option:
+        project_key = "tetring" if any(k in q for k in ["agendador", "cita", "citas", "horario", "turno"]) else "paidea"
+        return {
+            "reply": (
+                "¡Excelente elección! Esta alternativa nos permite resolver de raíz ese dolor operativo "
+                "con una solución práctica y probada que puedas usar desde el primer día. "
+                "¿Qué te parece esta propuesta? ¿Crees que resolvería lo que necesitas en tu día a día, o hay algo más que te gustaría agregar o ajustar?"
+            ),
+            "stage": "PROPUESTA",
+            "options": [],
+            "project_ref": project_key,
+            "client_need_summary": "• Negocio: Por profundizar en llamada\n• Dolor detectado: Tareas repetitivas y gestión diaria\n• Lo que le interesó: Opción seleccionada por el cliente",
+            "wants_contact": False,
+            "offer_booking": False,
+            "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]
+        }
+
+    # 10. Respuesta general amigable (Paso 1 del embudo)
     return {
         "reply": (
             "Para poder darte la mejor recomendación adaptada a tu realidad: "
@@ -261,23 +419,50 @@ async def orchestrate_wiki_turn(
 
     # 4. POLÍTICAS DE ACCIÓN DETERMINISTAS EN EL SERVIDOR
     
-    # Política de proyecto análogo: en etapa OPCIONES no adelantamos la tarjeta de proyecto
+    user_explicitly_asking_booking = is_user_asking_booking(latest_user_text)
+    user_explicitly_asking_contact = is_user_asking_contact(latest_user_text)
+
+    # Si hay opciones en pantalla o la etapa es DESCUBRIR u OPCIONES,
+    # el servidor IMPONE DETERMINISTAMENTE que NO haya agendado ni proyecto anticipado:
+    if options or stage in ["DESCUBRIR", "OPCIONES"]:
+        stage = "OPCIONES" if options else "DESCUBRIR"
+        offer_booking = False
+        wants_contact = False
+        project_ref = "ninguno"
+
+    # Si la etapa es PROPUESTA o PRUEBA, el agendado y contacto quedan estrictamente bloqueados salvo
+    # que el usuario solicite explícitamente agendar videollamada con Erick o pida datos de contacto:
+    if stage in ["PROPUESTA", "PRUEBA"]:
+        if not user_explicitly_asking_booking:
+            offer_booking = False
+        if not user_explicitly_asking_contact:
+            wants_contact = False
+
+    # Política de proyecto análogo:
+    # Solo se muestra en etapas PROPUESTA o PRUEBA. En DESCUBRIR, OPCIONES o CIERRE NO se muestra.
     project_action = None
-    if stage != "OPCIONES" and project_ref in PROJECT_ACTIONS_CATALOG and stage in ["PRUEBA", "PROPUESTA"]:
+    if stage in ["PROPUESTA", "PRUEBA"] and project_ref in PROJECT_ACTIONS_CATALOG:
         project_action = PROJECT_ACTIONS_CATALOG[project_ref]
 
-    # Política de contacto directo:
-    contact_actions = []
-    if is_user_asking_contact(latest_user_text) or (stage == "CIERRE" and wants_contact):
-        contact_actions = CONTACT_BUTTONS
-
     # Política de agendado en Google Calendar:
+    # REGLA DE ORO: La tarjeta de Google Calendar solo se muestra al final (etapa CIERRE),
+    # después de que el cliente evaluó la propuesta adaptada y confirmó que le gusta o está satisfecho.
+    # En etapas DESCUBRIR y OPCIONES está terminantemente prohibido ofrecer calendario.
     booking_action = None
-    should_offer_calendar = (
-        is_user_asking_booking(latest_user_text) or 
-        (stage == "CIERRE" and offer_booking) or
-        is_user_asking_pricing(latest_user_text)
-    )
+
+    should_offer_calendar = False
+    if stage == "CIERRE" and (offer_booking or user_explicitly_asking_booking or is_user_asking_pricing(latest_user_text)):
+        should_offer_calendar = True
+    elif stage in ["PROPUESTA", "PRUEBA"] and user_explicitly_asking_booking:
+        # Si el usuario ya está viendo la propuesta y pide explícitamente agendar con Erick
+        should_offer_calendar = True
+
+    # Política de contacto directo (WhatsApp, Email, LinkedIn):
+    # En CIERRE se muestra para dar alternativas directas de contacto.
+    # En etapas previas, solo si el usuario pide explícitamente comunicarse con Erick.
+    contact_actions = []
+    if user_explicitly_asking_contact or (stage == "CIERRE" and (wants_contact or should_offer_calendar)):
+        contact_actions = CONTACT_BUTTONS
 
     if should_offer_calendar:
         # Resolver fecha preferida (del JSON del LLM o heurística del texto del usuario)
@@ -302,10 +487,22 @@ async def orchestrate_wiki_turn(
                 default_summary=client_need_summary or "• Negocio: Por detallar en llamada\n• Dolor detectado: Optimización de procesos\n• Lo que le interesó: Asesoría técnica con Erick"
             )
 
-    # Limpiar sugerencias
+    # Limpiar sugerencias y contextualizarlas según la etapa
     clean_suggestions = sanitize_suggestions(raw_sug)
+    if stage in ["DESCUBRIR", "OPCIONES", "PROPUESTA"]:
+        clean_suggestions = [
+            s for s in clean_suggestions 
+            if not any(k in s.lower() for k in ["agendar", "videollamada", "calendario", "cita"])
+        ]
     if not clean_suggestions:
-        clean_suggestions = ["¿Cuánto tiempo toma?", "¿Cómo es la metodología?", "Agendar una cita"]
+        if stage == "CIERRE":
+            clean_suggestions = ["Agendar llamada breve", "Platicar por WhatsApp", "¿Cuánto cuesta?"]
+        elif stage == "PROPUESTA":
+            clean_suggestions = ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]
+        elif stage == "OPCIONES":
+            clean_suggestions = ["Me gusta la opción 1", "Me interesan las 3", "Tengo otra idea en mente"]
+        else:
+            clean_suggestions = ["Tengo un negocio propio", "Doy servicios o citas", "Trabajo por mi cuenta"]
 
     # Generar firma HMAC para el nuevo mensaje
     sig = generate_message_signature(reply_text)
