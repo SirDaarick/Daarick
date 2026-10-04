@@ -10,11 +10,11 @@ export const SandboxModal: React.FC = () => {
   const [iframeKey, setIframeKey] = useState<number>(0);
   const [isIframeLoading, setIsIframeLoading] = useState<boolean>(true);
 
-  // En pantallas móviles fijar escala al 100% para evitar desbordamiento
+  // En pantallas móviles fijar escala y asegurar que los detalles siempre estén visibles
   useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 640) {
       setScale(1.0);
-      setShowDetails(false); // Colapsar detalles inicialmente en móvil para dar espacio al iframe
+      setShowDetails(true); // En móvil la explicación debe ser visible de inmediato
     }
   }, []);
 
@@ -156,53 +156,53 @@ export const SandboxModal: React.FC = () => {
             </button>
           </div>
 
-          {/* 3 Pillars Cards: Problema, Solución y Resultados (Colapsable) */}
+          {/* 3 Pillars Cards: Problema, Solución y Resultados */}
           {showDetails && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0 transition-all">
               {/* Card 1: ¿Qué problema existía? */}
-              <div className="flex flex-col p-4 rounded-xl bg-[rgba(35,23,39,0.6)] border border-[rgba(147,80,115,0.3)]">
+              <div className="flex flex-col p-4 sm:p-5 rounded-xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.35)] shadow-sm">
                 <span className="font-mono text-xs text-[#ff5f56] font-semibold mb-1">
                   EL PROBLEMA
                 </span>
                 <h4 className="text-sm font-semibold text-[#F8F4E9] mb-1.5">
-                  ¿Qué problema existía?
+                  ¿Qué cuello de botella existía?
                 </h4>
-                <p className="text-xs text-[#F6DBC0] leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#F6DBC0] leading-relaxed">
                   {currentProject.problem}
                 </p>
               </div>
 
               {/* Card 2: ¿Cómo lo resolvemos? */}
-              <div className="flex flex-col p-4 rounded-xl bg-[rgba(35,23,39,0.6)] border border-[rgba(147,80,115,0.3)]">
+              <div className="flex flex-col p-4 sm:p-5 rounded-xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.35)] shadow-sm">
                 <span className="font-mono text-xs text-[#c084fc] font-semibold mb-1">
-                  LA SOLUCIÓN
+                  LA SOLUCIÓN TÉCNICA
                 </span>
                 <h4 className="text-sm font-semibold text-[#F8F4E9] mb-1.5">
-                  ¿Cómo lo resolvemos?
+                  Arquitectura implementada
                 </h4>
-                <p className="text-xs text-[#F8F4E9] leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#F8F4E9] leading-relaxed">
                   {currentProject.solution}
                 </p>
               </div>
 
               {/* Card 3: Resultados obtenidos */}
-              <div className="flex flex-col p-4 rounded-xl bg-[rgba(35,23,39,0.6)] border border-[rgba(147,80,115,0.3)]">
+              <div className="flex flex-col p-4 sm:p-5 rounded-xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.35)] shadow-sm">
                 <span className="font-mono text-xs text-[#10B981] font-semibold mb-1">
-                  IMPACTO
+                  IMPACTO MEDIBLE
                 </span>
                 <h4 className="text-sm font-semibold text-[#F8F4E9] mb-1.5">
-                  Resultados obtenidos
+                  Resultados en producción
                 </h4>
-                <div className="grid grid-cols-2 gap-2 mt-auto">
+                <div className="grid grid-cols-2 gap-2 mt-auto pt-2">
                   {currentProject.metrics.map((m) => (
                     <div
                       key={m.label}
-                      className="p-2 rounded bg-[rgba(21,10,25,0.8)] border border-[rgba(147,80,115,0.2)]"
+                      className="p-2.5 rounded-lg bg-[rgba(21,10,25,0.85)] border border-[rgba(147,80,115,0.25)]"
                     >
-                      <span className="text-[10px] text-[rgba(246,219,192,0.65)] block">
+                      <span className="text-[10px] text-[rgba(246,219,192,0.75)] block leading-tight">
                         {m.label}
                       </span>
-                      <span className={`font-mono text-xs font-bold ${m.color}`}>
+                      <span className={`font-mono text-xs font-bold ${m.color} mt-0.5 block`}>
                         {m.val}
                       </span>
                     </div>
@@ -212,22 +212,61 @@ export const SandboxModal: React.FC = () => {
             </div>
           )}
 
-          {/* Interactive Live Demo Window (Iframe con Escala Dinámica) */}
-          <div className="flex flex-col rounded-xl border border-[rgba(147,80,115,0.35)] bg-[rgba(18,9,22,0.95)] overflow-hidden shadow-2xl flex-1 min-h-[560px]">
+          {/* En Móvil: CTA Elegante y Limpio con botón 'Ver demo' para no deformar la interfaz */}
+          <div className="flex md:hidden flex-col items-center justify-center p-6 rounded-2xl bg-[rgba(30,15,35,0.85)] border border-[rgba(192,132,252,0.35)] text-center gap-4 my-2 shadow-lg">
+            <div className="flex flex-col gap-1.5">
+              <span className="font-mono text-xs text-[#c084fc] font-semibold">
+                [ Experiencia Interactiva Completa ]
+              </span>
+              <h4 className="text-base font-semibold text-[#F8F4E9]">
+                Prueba {currentProject.title} en vivo
+              </h4>
+              <p className="text-xs text-[#F6DBC0] max-w-xs leading-relaxed">
+                Para que la demo cargue con su diseño óptimo de pantalla completa, ábrela directamente:
+              </p>
+            </div>
+
+            <div className="flex flex-col w-full gap-2.5 pt-1">
+              <a
+                href={currentProject.demoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 px-5 rounded-xl bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+              >
+                <span>Ver demo en vivo</span>
+                <span className="text-sm font-bold">↗</span>
+              </a>
+
+              {currentProject.githubUrl && (
+                <a
+                  href={currentProject.githubUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 px-4 rounded-xl bg-[rgba(80,45,85,0.35)] hover:bg-[rgba(80,45,85,0.55)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-mono text-xs font-medium transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer min-h-[42px]"
+                >
+                  <span>Ver repositorio en GitHub</span>
+                  <span>↗</span>
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* En Desktop/Tablet: Ventana Interactiva con Iframe y Zoom integrado */}
+          <div className="hidden md:flex flex-col rounded-xl border border-[rgba(147,80,115,0.35)] bg-[rgba(18,9,22,0.95)] overflow-hidden shadow-2xl flex-1 min-h-[560px]">
             {/* Browser Header Bar */}
             <div className="flex flex-wrap items-center justify-between gap-2.5 px-4 py-2.5 bg-[rgba(26,15,30,0.95)] border-b border-[rgba(147,80,115,0.25)] font-mono text-xs shrink-0 select-none">
               <div className="flex items-center gap-2 text-[rgba(246,219,192,0.7)] min-w-0">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
                 <span className="text-[#c084fc] font-semibold shrink-0">DEMO EN VIVO:</span>
-                <span className="hidden sm:inline text-xs text-[rgba(246,219,192,0.8)] truncate max-w-xs md:max-w-md">
+                <span className="text-xs text-[rgba(246,219,192,0.8)] truncate max-w-xs md:max-w-md">
                   {currentProject.demoUrl}
                 </span>
               </div>
 
               {/* Controles de Escala / Zoom y Acciones */}
               <div className="flex flex-wrap items-center gap-2 ml-auto">
-                {/* Control de Escala / Zoom (Solo visible en tablet y escritorio) */}
-                <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg bg-[rgba(80,45,85,0.25)] border border-[rgba(147,80,115,0.3)]">
+                {/* Control de Escala / Zoom */}
+                <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[rgba(80,45,85,0.25)] border border-[rgba(147,80,115,0.3)]">
                   <span className="text-[10px] text-[rgba(246,219,192,0.65)] hidden md:inline mr-1">
                     Escala:
                   </span>

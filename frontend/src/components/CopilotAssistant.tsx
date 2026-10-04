@@ -5,19 +5,14 @@ import {
   Mic,
   MicOff,
   X,
-  Minus,
   Maximize2,
   Minimize2,
   Sparkles,
-  MessageSquare,
   RefreshCw,
-  Cpu,
-  CheckCircle2,
-  AlertTriangle,
-  Lightbulb,
   ExternalLink,
   Mail
 } from 'lucide-react';
+import { BookingSlotsCard, type CalendarSlot } from './BookingSlotsCard';
 
 export interface ContactAction {
   type: 'whatsapp' | 'linkedin' | 'email' | string;
@@ -34,16 +29,22 @@ export interface ProjectAction {
   action_label?: string | null;
 }
 
+export interface BookingAction {
+  slots: CalendarSlot[];
+  default_summary?: string;
+}
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
-  feasibility_verdict?: string | null;
-  tech_recommendations?: string[];
+  sig?: string;
+  stage?: string;
   suggestions?: string[];
   contact_actions?: ContactAction[];
   project_action?: ProjectAction | null;
+  booking_action?: BookingAction | null;
 }
 
 const WhatsAppIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
@@ -67,10 +68,10 @@ const GitHubIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' })
 const API_BASE = import.meta.env.PUBLIC_API_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : '');
 
 const INITIAL_SUGGESTIONS = [
-  '✦ ¿Qué proyectos ha creado Erick?',
-  '💬 ¿Es viable automatizar mi soporte o facturas?',
-  '🧠 ¿Por qué no usar IA para contabilidad directa?',
-  '⚡ ¿Cómo contactar a Erick para un proyecto?'
+  'Tengo una idea para automatizar',
+  'Quiero un chatbot para mis clientes',
+  '¿Cómo se manejan los precios?',
+  'Quiero agendar una llamada breve'
 ];
 
 export const CopilotAssistant: React.FC = () => {
@@ -82,15 +83,17 @@ export const CopilotAssistant: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
 
+  const [showWelcomeBubble, setShowWelcomeBubble] = useState(false);
+  const [bubbleDismissed, setBubbleDismissed] = useState(false);
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'init-1',
       role: 'assistant',
       content:
-        '¡Hola! Soy **Wiki**, el copiloto técnico del portafolio.\n\n' +
-        'Puedo resolver dudas sobre la trayectoria y proyectos de Erick (**Graphito**, **Tetring**, **PAIDEA**, **Paralel**), ' +
-        'o evaluar con total honestidad la **viabilidad técnica y arquitectura** de lo que quieras automatizar en tu negocio.\n\n' +
-        '¿En qué te puedo asesorar hoy?',
+        '¡Hola! Soy **Wiki** 👋\n\n' +
+        'Cuéntame qué idea tienes en mente o qué tarea te quita más tiempo en tu negocio, ' +
+        'y te digo con gusto cómo la podemos automatizar de forma sencilla.',
       timestamp: '10:00 AM',
       suggestions: INITIAL_SUGGESTIONS
     }
@@ -101,7 +104,39 @@ export const CopilotAssistant: React.FC = () => {
   const recognitionRef = useRef<any>(null);
   const baseTextRef = useRef('');
 
-  // Inicialización de reconocimiento de voz (Web Speech API)
+  // Adaptación al teclado virtual en móvil
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+  const [viewportOffsetTop, setViewportOffsetTop] = useState(0);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+
+    const handleResize = () => {
+      if (window.innerWidth < 640 && isOpen) {
+        setViewportHeight(window.visualViewport?.height ?? window.innerHeight);
+        setViewportOffsetTop(window.visualViewport?.offsetTop ?? 0);
+      } else {
+        setViewportHeight(null);
+        setViewportOffsetTop(0);
+      }
+    };
+
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', handleResize);
+    window.addEventListener('resize', handleResize);
+
+    if (isOpen) {
+      handleResize();
+    }
+
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isOpen]);
+
+  // Soporte de voz con Web Speech API
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const SpeechRecognition =
@@ -115,33 +150,17 @@ export const CopilotAssistant: React.FC = () => {
         recognition.interimResults = true;
         recognition.lang = 'es-MX';
 
-        recognition.onstart = () => {
-          setIsListening(true);
-        };
-
+        recognition.onstart = () => setIsListening(true);
         recognition.onresult = (event: any) => {
           let currentTranscript = '';
           for (let i = event.resultIndex; i < event.results.length; i++) {
             currentTranscript += event.results[i][0].transcript;
           }
           const base = baseTextRef.current ? `${baseTextRef.current.trim()} ` : '';
-          const newText = `${base}${currentTranscript}`;
-          setInputValue(newText);
-          if (textareaRef.current) {
-            textareaRef.current.style.height = 'auto';
-            textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
-          }
+          setInputValue(`${base}${currentTranscript}`);
         };
-
-        recognition.onerror = (event: any) => {
-          console.warn('Error en reconocimiento de voz:', event.error);
-          setIsListening(false);
-        };
-
-        recognition.onend = () => {
-          setIsListening(false);
-        };
-
+        recognition.onerror = () => setIsListening(false);
+        recognition.onend = () => setIsListening(false);
         recognitionRef.current = recognition;
       }
     }
@@ -152,22 +171,19 @@ export const CopilotAssistant: React.FC = () => {
       alert('Tu navegador no tiene activado el soporte para entrada de voz.');
       return;
     }
-
     if (isListening) {
       recognitionRef.current.stop();
-      setIsListening(false);
     } else {
       baseTextRef.current = inputValue;
       try {
         recognitionRef.current.start();
-        setIsListening(true);
       } catch (err) {
         console.error('Error al iniciar micrófono:', err);
       }
     }
   };
 
-  // Hidratación segura del almacenamiento de sesión en cliente
+  // Hidratación de sesión
   useEffect(() => {
     try {
       const cached = sessionStorage.getItem('daarick_copilot_history');
@@ -184,27 +200,25 @@ export const CopilotAssistant: React.FC = () => {
         prev.map((m) => (m.id === 'init-1' ? { ...m, timestamp: timeStr } : m))
       );
     } catch (e) {
-      console.error('Error restaurando sesión del copiloto:', e);
+      console.error('Error restaurando sesión:', e);
     }
   }, []);
 
-  // Exponer API global en window para accesibilidad y pruebas
+  // Mantener referencia actualizada de handleSendMessage para evitar cierres obsoletos en eventos
+  const handleSendMessageRef = useRef<(text: string) => void>(() => {});
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).__toggleDaarickChat = () => {
-        setIsOpen((prev) => !prev);
-      };
-      (window as any).__openDaarickChat = () => {
-        setIsOpen(true);
-      };
+      (window as any).__toggleDaarickChat = () => setIsOpen((prev) => !prev);
+      (window as any).__openDaarickChat = () => setIsOpen(true);
 
       const handleGlobalOpen = (e?: Event) => {
         setIsOpen(true);
         const customEvt = e as CustomEvent<{ prompt?: string }>;
         if (customEvt?.detail?.prompt) {
           setTimeout(() => {
-            handleSendMessage(customEvt.detail.prompt);
-          }, 200);
+            handleSendMessageRef.current(customEvt.detail.prompt);
+          }, 150);
         }
       };
       window.addEventListener('open-copilot-chat', handleGlobalOpen);
@@ -212,7 +226,7 @@ export const CopilotAssistant: React.FC = () => {
     }
   }, []);
 
-  // Guardar en sessionStorage
+  // Persistir en sessionStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -223,98 +237,50 @@ export const CopilotAssistant: React.FC = () => {
     }
   }, [messages]);
 
-  // Auto-scroll al fondo al llegar un nuevo mensaje
+  // Auto-scroll al final
   useEffect(() => {
     if (isOpen) {
       streamEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isLoading, isOpen]);
 
-  // Enfocar textarea al abrir
+  // Mostrar globo interactivo de bienvenida tras 3.5 segundos si no ha interactuado
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => {
-        textareaRef.current?.focus();
-      }, 150);
-    }
-  }, [isOpen]);
+    if (isOpen || bubbleDismissed || hasInteracted) return;
+    const timer = setTimeout(() => {
+      setShowWelcomeBubble(true);
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, [isOpen, bubbleDismissed, hasInteracted]);
 
-  const handleToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('[Copilot] Toggle clicked. Previous state:', isOpen);
-    setIsOpen((prev) => !prev);
-  };
-
-  const streamPremeditatedText = async (
-    targetId: string,
-    fullText: string,
-    suggestions?: string[],
-    verdict?: string | null,
-    tech?: string[],
-    contactActions?: ContactAction[],
-    projectAction?: ProjectAction | null
-  ) => {
-    const tokens = fullText.split(/(\s+)/);
-    let current = '';
-    for (let i = 0; i < tokens.length; i++) {
-      current += tokens[i];
-      if (tokens[i].trim() || i === tokens.length - 1) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === targetId ? { ...m, content: current } : m))
-        );
-        await new Promise((r) => setTimeout(r, 18));
-      }
-    }
-    setMessages((prev) =>
-      prev.map((m) =>
-        m.id === targetId
-          ? {
-              ...m,
-              content: fullText,
-              feasibility_verdict: verdict,
-              tech_recommendations: tech,
-              contact_actions: contactActions || [],
-              project_action: projectAction || null,
-              suggestions: suggestions && suggestions.length > 0 ? suggestions : INITIAL_SUGGESTIONS
-            }
-          : m
-      )
-    );
-  };
-
+  // Enviar mensaje
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputValue).trim();
     if (!text || isLoading) return;
 
     setHasInteracted(true);
+    setInputValue('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const userMsg: ChatMessage = {
-      id: `usr-${Date.now()}`,
+      id: `user-${Date.now()}`,
       role: 'user',
       content: text,
       timestamp: timeStr
     };
 
     const updatedHistory = [...messages, userMsg];
-    setMessages(updatedHistory);
-    setInputValue('');
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
-
     const botMsgId = `bot-${Date.now()}`;
-    const botTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    // Mensaje inicial del bot preparado para recibir tokens vía SSE
     const initialBotMsg: ChatMessage = {
       id: botMsgId,
       role: 'assistant',
       content: '',
-      timestamp: botTime,
-      suggestions: []
+      timestamp: timeStr
     };
 
     setMessages([...updatedHistory, initialBotMsg]);
@@ -322,12 +288,12 @@ export const CopilotAssistant: React.FC = () => {
 
     try {
       const slidingWindow = updatedHistory.slice(-6);
-
       const payload = {
         messages: slidingWindow.map((m) => ({
           role: m.role,
           content: m.content,
-          timestamp: m.timestamp
+          timestamp: m.timestamp,
+          sig: m.sig
         })),
         current_page: typeof window !== 'undefined' ? window.location.pathname : 'home'
       };
@@ -338,13 +304,8 @@ export const CopilotAssistant: React.FC = () => {
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) {
-        throw new Error(`Error en servidor: ${res.status}`);
-      }
-
-      if (!res.body) {
-        throw new Error('ReadableStream no disponible');
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.body) throw new Error('No stream body');
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder('utf-8');
@@ -367,10 +328,6 @@ export const CopilotAssistant: React.FC = () => {
           try {
             const data = JSON.parse(jsonStr);
 
-            if (data.error) {
-              throw new Error(data.detail || 'Error en stream SSE');
-            }
-
             if (data.token) {
               accumulated += data.token;
               setMessages((prev) =>
@@ -388,10 +345,11 @@ export const CopilotAssistant: React.FC = () => {
                     ? {
                         ...m,
                         content: data.reply || accumulated,
-                        feasibility_verdict: data.feasibility_verdict,
-                        tech_recommendations: data.tech_recommendations,
+                        sig: data.message_sig,
+                        stage: data.stage,
                         contact_actions: data.contact_actions || [],
                         project_action: data.project_action || null,
+                        booking_action: data.booking_action || null,
                         suggestions:
                           data.suggestions && data.suggestions.length > 0
                             ? data.suggestions
@@ -401,99 +359,34 @@ export const CopilotAssistant: React.FC = () => {
                 )
               );
             }
-          } catch (parseErr) {
-            console.warn('Error procesando fragmento SSE:', parseErr);
+          } catch (e) {
+            // Ignorar errores parciales de JSON en chunks
           }
         }
       }
     } catch (err) {
-      console.warn('Fallback a respuesta local asistida progresiva:', err);
-      const isContact = /contacto|whatsapp|correo|agendar|contratar|precio|llamada|reunion/i.test(text);
-      const fallbackContactActions: ContactAction[] = isContact
-        ? [
-            {
-              type: 'whatsapp',
-              label: 'WhatsApp Directo',
-              url: 'https://wa.me/525578666313?text=Hola%20Erick,%20vi%20tu%20portafolio%20y%20me%20gustar%C3%ADa%20platicar%20sobre%20un%20proyecto'
-            },
-            {
-              type: 'linkedin',
-              label: 'LinkedIn',
-              url: 'https://www.linkedin.com/in/erickgarcia-ai/'
-            },
-            {
-              type: 'email',
-              label: 'Enviar Correo',
-              url: 'mailto:e.danielgrz10@gmail.com?subject=Consulta%20desde%20Portafolio'
-            }
-          ]
-        : [];
-
-      let fallbackProjectAction: ProjectAction | null = null;
-      if (/horario|turno|empalme|cuadrante|saes|tetring/i.test(text)) {
-        fallbackProjectAction = {
-          id: 'tetring',
-          title: 'Tetring',
-          tagline: 'Motor combinatorio de satisfacción de restricciones (CSP 42ms) sin empalmes',
-          demo_url: 'https://tetring.vercel.app/',
-          github_url: 'https://github.com/SirDaarick/Tetring',
-          action_label: 'Ver Demo de Tetring'
-        };
-      } else if (/factura|recibo|ticket|albaran|ocr/i.test(text)) {
-        fallbackProjectAction = {
-          id: 'invoicing',
-          title: 'Extractor de Facturas & Documentos',
-          tagline: 'Extracción OCR multimodal con esquemas matemáticos y validación determinista',
-          demo_url: '/demo/invoicing',
-          action_label: 'Probar Sandbox de Facturas'
-        };
-      } else if (/paidea|soporte|atencion|alumno|rubrica|rag/i.test(text)) {
-        fallbackProjectAction = {
-          id: 'paidea',
-          title: 'PAIDEA',
-          tagline: 'Arquitectura multi-agente con RAG sobre documentos y rúbricas (ChromaDB)',
-          demo_url: 'https://paidea-reloaded-xi.vercel.app/',
-          github_url: 'https://github.com/SirDaarick/paidea-reloaded',
-          action_label: 'Ver Demo de PAIDEA'
-        };
-      } else if (/graphito|plagio|copia|ast|tree-sitter/i.test(text)) {
-        fallbackProjectAction = {
-          id: 'graphito',
-          title: 'Graphito',
-          tagline: 'Detección inteligente de plagio semántico y similitud en código (Tree-sitter + LoRA)',
-          demo_url: 'https://graphito-escom.vercel.app/',
-          github_url: 'https://github.com/SirDaarick/Graphito',
-          action_label: 'Ver Demo de Graphito'
-        };
-      } else if (/paralel|latencia|openmp|c\+\+/i.test(text)) {
-        fallbackProjectAction = {
-          id: 'paralel',
-          title: 'Paralel',
-          tagline: 'Motor de IA heurística multihilo en C++ para decisiones en tiempo real (<12ms)',
-          demo_url: 'https://paralel-iota.vercel.app/',
-          github_url: 'https://github.com/SirDaarick/Paralel',
-          action_label: 'Ver Demo de Paralel'
-        };
-      }
-
-      const fallbackText =
-        '**Nota técnica:** No pude conectar con el gateway de FastAPI en este instante, pero te adelanto:\n\n' +
-        '• **Proyectos clave:** Graphito (Tree-sitter + Deep Learning contra plagio), Tetring (CSP 42ms), PAIDEA (RAG con ChromaDB) y Paralel (C++ OpenMP).\n' +
-        '• **Contacto directo:** Puedes escribir a Erick directamente vía WhatsApp, LinkedIn o correo electrónico.';
-
-      await streamPremeditatedText(
-        botMsgId,
-        fallbackText,
-        INITIAL_SUGGESTIONS,
-        null,
-        [],
-        fallbackContactActions,
-        fallbackProjectAction
+      console.warn('Fallback local asistido:', err);
+      // Mensaje de fallback amigable
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === botMsgId
+            ? {
+                ...m,
+                content:
+                  'Para ese proceso, una automatización conectada a tus herramientas ' +
+                  'es totalmente viable y te ahorrará horas de trabajo manual. ' +
+                  '¿Te gustaría agendar una llamada breve de 15 minutos para revisar los detalles con Erick?',
+                suggestions: ['Agendar llamada breve', '¿Cómo son los precios?', 'Ver proyectos']
+              }
+            : m
+        )
       );
     } finally {
       setIsLoading(false);
     }
   };
+
+  handleSendMessageRef.current = handleSendMessage;
 
   const handleReset = () => {
     sessionStorage.removeItem('daarick_copilot_history');
@@ -503,15 +396,14 @@ export const CopilotAssistant: React.FC = () => {
       {
         id: 'init-fresh',
         role: 'assistant',
-        content:
-          'Conversación reiniciada. ¿Qué consulta técnica o proyecto te gustaría explorar ahora?',
+        content: '¡Conversación reiniciada! 👋 Cuéntame qué idea o tarea te gustaría evaluar hoy.',
         timestamp: timeStr,
         suggestions: INITIAL_SUGGESTIONS
       }
     ]);
   };
 
-  // Renderizador seguro de Markdown simple
+  // Renderizador seguro de Markdown con enlaces validados
   const renderFormattedText = (text: string) => {
     const lines = text.split('\n');
     return lines.map((line, idx) => {
@@ -521,7 +413,6 @@ export const CopilotAssistant: React.FC = () => {
 
       const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-');
       const cleanLine = isBullet ? line.replace(/^[•-]\s*/, '') : line;
-
       const parts = cleanLine.split(/(\*\*.*?\*\*)/g);
 
       const content = parts.map((part, pIdx) => {
@@ -534,18 +425,22 @@ export const CopilotAssistant: React.FC = () => {
         }
         const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/);
         if (linkMatch) {
-          return (
-            <a
-              key={pIdx}
-              href={linkMatch[2]}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#c084fc] hover:underline inline-flex items-center gap-1 font-mono text-xs"
-            >
-              {linkMatch[1]}
-              <ExternalLink className="w-3 h-3 inline" />
-            </a>
-          );
+          const href = linkMatch[2];
+          const isSafe = href.startsWith('https://') || href.startsWith('mailto:') || href.startsWith('/');
+          if (isSafe) {
+            return (
+              <a
+                key={pIdx}
+                href={href}
+                target={href.startsWith('http') ? '_blank' : '_self'}
+                rel="noopener noreferrer"
+                className="text-[#c084fc] hover:underline inline-flex items-center gap-1 font-mono text-xs"
+              >
+                {linkMatch[1]}
+                <ExternalLink className="w-3 h-3 inline" />
+              </a>
+            );
+          }
         }
         return <span key={pIdx}>{part}</span>;
       });
@@ -569,37 +464,30 @@ export const CopilotAssistant: React.FC = () => {
 
   return (
     <>
-      {/* 1. VENTANA FLOTANTE DEL CHAT (MODAL / DRAWER) */}
+      {/* 1. VENTANA FLOTANTE DEL CHAT */}
       <div
         id="chat-window"
         style={{
           zIndex: 99999,
-          display: isOpen ? 'flex' : 'none'
+          display: isOpen ? 'flex' : 'none',
+          ...(viewportHeight !== null
+            ? {
+                height: `${viewportHeight}px`,
+                top: `${viewportOffsetTop}px`,
+                bottom: 'auto'
+              }
+            : {})
         }}
-        className={`fixed bg-[#160B1A] border-0 sm:border border-[rgba(147,80,115,0.5)] shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out z-[99999] ${
+        className={`fixed bg-[#160B1A] border-0 sm:border border-[rgba(147,80,115,0.5)] shadow-2xl flex flex-col overflow-hidden transition-[width,height,transform] duration-200 ease-out z-[99999] ${
           isExpanded
             ? 'inset-0 sm:inset-auto sm:bottom-8 sm:right-8 w-full sm:w-[680px] md:w-[760px] h-full sm:h-[720px] rounded-none sm:rounded-2xl'
             : 'inset-0 sm:inset-auto sm:bottom-24 sm:right-6 w-full sm:w-[460px] md:w-[490px] h-full sm:h-[580px] rounded-none sm:rounded-2xl'
         }`}
         role="dialog"
-        aria-label="Daverick Assistant Chat"
+        aria-label="Wiki Asesor de Automatización"
       >
-        {/* Marcadores Crosshairs en las 4 esquinas (Stitch Design Spec - Solo desktop) */}
-        <span className="hidden sm:inline absolute top-2 left-2 text-[#c084fc]/40 font-mono text-[10px] select-none pointer-events-none z-20">
-          +
-        </span>
-        <span className="hidden sm:inline absolute top-2 right-2 text-[#c084fc]/40 font-mono text-[10px] select-none pointer-events-none z-20">
-          +
-        </span>
-        <span className="hidden sm:inline absolute bottom-2 left-2 text-[#c084fc]/40 font-mono text-[10px] select-none pointer-events-none z-20">
-          +
-        </span>
-        <span className="hidden sm:inline absolute bottom-2 right-2 text-[#c084fc]/40 font-mono text-[10px] select-none pointer-events-none z-20">
-          +
-        </span>
-
         {/* Encabezado del Chat */}
-        <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 bg-[rgba(30,15,35,0.98)] border-b border-[rgba(147,80,115,0.3)] shrink-0 select-none pt-safe">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 bg-[rgba(30,15,35,0.98)] border-b border-[rgba(147,80,115,0.3)] shrink-0 select-none">
           <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.4)] text-[#c084fc] shadow-sm">
               <Dog className="w-5 h-5 text-[#c084fc]" />
@@ -611,22 +499,20 @@ export const CopilotAssistant: React.FC = () => {
                   Wiki
                 </span>
                 <span className="px-1.5 py-0.5 rounded bg-[#c084fc]/15 border border-[#c084fc]/30 text-[#c084fc] font-mono text-[10px] font-bold uppercase tracking-wider">
-                  IA
+                  Asesor
                 </span>
               </div>
               <span className="font-mono text-[11px] text-[#F6DBC0]/70">
-                Copiloto Técnico
+                Soluciones & Automatización
               </span>
             </div>
           </div>
 
-          {/* Acciones de la ventana */}
           <div className="flex items-center gap-1 sm:gap-1.5 text-[#F6DBC0]/60">
             <button
               type="button"
               onClick={handleReset}
               title="Reiniciar conversación"
-              aria-label="Reiniciar conversación"
               className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg hover:bg-[rgba(80,45,85,0.5)] hover:text-[#F8F4E9] transition-colors cursor-pointer"
             >
               <RefreshCw className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
@@ -635,46 +521,31 @@ export const CopilotAssistant: React.FC = () => {
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
               title={isExpanded ? 'Restaurar tamaño' : 'Expandir ventana'}
-              aria-label={isExpanded ? 'Restaurar tamaño' : 'Expandir ventana'}
               className="hidden sm:flex w-7 h-7 items-center justify-center rounded hover:bg-[rgba(80,45,85,0.5)] hover:text-[#F8F4E9] transition-colors cursor-pointer"
             >
-              {isExpanded ? (
-                <Minimize2 className="w-3.5 h-3.5" />
-              ) : (
-                <Maximize2 className="w-3.5 h-3.5" />
-              )}
+              {isExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
             </button>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
               title="Cerrar chat"
-              aria-label="Cerrar chat"
-              className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.6)] text-[#F8F4E9] transition-colors cursor-pointer active:scale-95"
+              className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.6)] text-[#F8F4E9] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Flujo de Mensajes (Conversation Stream) */}
+        {/* Flujo de Mensajes */}
         <div
           id="conversation-stream"
           className="flex-1 p-4 sm:p-5 space-y-4 overflow-y-auto font-sans text-sm text-[#F8F4E9] scrollbar-thin scrollbar-thumb-[rgba(147,80,115,0.3)]"
         >
-          {/* Ancla de sesión activa */}
-          <div className="flex justify-center my-1 select-none">
-            <span className="px-3 py-1 rounded-full bg-[rgba(45,20,52,0.6)] border border-[rgba(147,80,115,0.25)] text-[#F6DBC0]/70 font-mono text-[10px] tracking-wider uppercase">
-              [ SESIÓN ACTIVA · ASESORÍA TÉCNICA ]
-            </span>
-          </div>
-
-          {messages.map((msg) => {
+          {messages.map((msg, index) => {
             const isBot = msg.role === 'assistant';
+            const isLastMessage = index === messages.length - 1;
 
-            // Si el mensaje del bot aún no tiene tokens durante el inicio del streaming, el indicador de carga se encarga
-            if (isBot && !msg.content) {
-              return null;
-            }
+            if (isBot && !msg.content) return null;
 
             return (
               <div
@@ -693,7 +564,6 @@ export const CopilotAssistant: React.FC = () => {
                   )}
 
                   <div className="flex flex-col gap-1 w-full">
-                    {/* Burbuja de Mensaje: Fondo sólido de alto contraste para el usuario (adiós degradado ilegible) */}
                     <div
                       className={`p-3.5 rounded-2xl shadow-sm text-sm ${
                         isBot
@@ -705,54 +575,7 @@ export const CopilotAssistant: React.FC = () => {
                         <div className="space-y-1">
                           {renderFormattedText(msg.content)}
 
-                          {/* Veredicto de Viabilidad Técnica si existe */}
-                          {msg.feasibility_verdict && (
-                            <div className="mt-3 pt-2.5 border-t border-[rgba(147,80,115,0.3)] flex flex-wrap items-center gap-2">
-                              {msg.feasibility_verdict === 'ALTA_VIABILIDAD' && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#10B981]/15 border border-[#10B981]/40 text-[#10B981] font-mono text-[10px] font-semibold">
-                                  <CheckCircle2 className="w-3 h-3" />
-                                  [ ✓ ALTA VIABILIDAD TÉCNICA ]
-                                </span>
-                              )}
-                              {msg.feasibility_verdict === 'VIABLE_CON_RESTRICCIONES' && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 font-mono text-[10px] font-semibold">
-                                  <AlertTriangle className="w-3 h-3" />
-                                  [ ⚠️ REQUIERE ARQUITECTURA HÍBRIDA ]
-                                </span>
-                              )}
-                              {msg.feasibility_verdict === 'CASO_DE_ÉXITO' && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#c084fc]/15 border border-[#c084fc]/40 text-[#c084fc] font-mono text-[10px] font-semibold">
-                                  <Sparkles className="w-3 h-3" />
-                                  [ ✦ CASO DE ÉXITO IMPLEMENTADO ]
-                                </span>
-                              )}
-                              {msg.feasibility_verdict === 'ALTA_VIABILIDAD_DETERMINISTA' && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-sky-500/15 border border-sky-500/40 text-sky-300 font-mono text-[10px] font-semibold">
-                                  <Cpu className="w-3 h-3" />
-                                  [ ⚙️ MOTOR DETERMINISTA CSP RECOMENDADO ]
-                                </span>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Stack Técnico Recomendado */}
-                          {msg.tech_recommendations && msg.tech_recommendations.length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-1.5 items-center">
-                              <span className="font-mono text-[10px] text-[#F6DBC0]/60 mr-1">
-                                Stack:
-                              </span>
-                              {msg.tech_recommendations.map((t, tIdx) => (
-                                <span
-                                  key={tIdx}
-                                  className="px-2 py-0.5 rounded bg-[rgba(80,45,85,0.35)] border border-[rgba(147,80,115,0.25)] text-[#F6DBC0] font-mono text-[10px]"
-                                >
-                                  {t}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* TARJETA INTERACTIVA DE PROYECTO ANÁLOGO */}
+                          {/* TARJETA DE PROYECTO COMPROBADO */}
                           {msg.project_action && (
                             <div className="mt-3.5 p-3.5 rounded-xl bg-[rgba(30,15,35,0.85)] border border-[#c084fc]/40 shadow-md flex flex-col gap-2.5">
                               <div className="flex items-center justify-between gap-2">
@@ -764,8 +587,8 @@ export const CopilotAssistant: React.FC = () => {
                                     {msg.project_action.title}
                                   </span>
                                 </div>
-                                <span className="font-mono text-[10px] uppercase px-2 py-0.5 rounded bg-[rgba(192,132,252,0.15)] text-[#c084fc] font-semibold border border-[#c084fc]/30">
-                                  Caso Análogo
+                                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[rgba(192,132,252,0.15)] text-[#c084fc] font-semibold border border-[#c084fc]/30">
+                                  ✓ Caso Comprobado
                                 </span>
                               </div>
 
@@ -779,10 +602,10 @@ export const CopilotAssistant: React.FC = () => {
                                     href={msg.project_action.demo_url}
                                     target={msg.project_action.demo_url.startsWith('http') ? '_blank' : '_self'}
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-semibold text-xs transition-all shadow-md active:scale-95 cursor-pointer group"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-semibold text-xs transition-all shadow-md active:scale-95 cursor-pointer"
                                   >
-                                    <span>{msg.project_action.action_label || 'Ver Proyecto'}</span>
-                                    <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                    <span>{msg.project_action.action_label || 'Ver Cómo Funciona'}</span>
+                                    <ExternalLink className="w-3.5 h-3.5" />
                                   </a>
                                 )}
                                 {msg.project_action.github_url && (
@@ -800,7 +623,16 @@ export const CopilotAssistant: React.FC = () => {
                             </div>
                           )}
 
-                          {/* BOTONES DE ACCIÓN DE CONTACTO DIRECTO */}
+                          {/* ACCIÓN DE AGENDADO DIRECTO EN GOOGLE CALENDAR */}
+                          {msg.booking_action && msg.booking_action.slots && msg.booking_action.slots.length > 0 && (
+                            <BookingSlotsCard
+                              slots={msg.booking_action.slots}
+                              defaultSummary={msg.booking_action.default_summary}
+                              apiBase={API_BASE}
+                            />
+                          )}
+
+                          {/* BOTONES DE CONTACTO DIRECTO */}
                           {msg.contact_actions && msg.contact_actions.length > 0 && (
                             <div className="mt-3 pt-2.5 border-t border-[rgba(147,80,115,0.35)] flex flex-col gap-2">
                               <span className="font-mono text-[10px] text-[#F6DBC0]/70 uppercase tracking-wider font-semibold">
@@ -815,10 +647,10 @@ export const CopilotAssistant: React.FC = () => {
                                     rel="noopener noreferrer"
                                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-medium transition-all shadow-sm active:scale-95 cursor-pointer ${
                                       act.type === 'whatsapp'
-                                        ? 'bg-[rgba(16,185,129,0.15)] hover:bg-[rgba(16,185,129,0.25)] border border-[#10B981]/40 hover:border-[#10B981] text-[#10B981] hover:text-[#6ee7b7]'
+                                        ? 'bg-[rgba(16,185,129,0.15)] hover:bg-[rgba(16,185,129,0.25)] border border-[#10B981]/40 text-[#10B981]'
                                         : act.type === 'linkedin'
-                                        ? 'bg-[rgba(192,132,252,0.15)] hover:bg-[rgba(192,132,252,0.25)] border border-[#c084fc]/40 hover:border-[#c084fc] text-[#c084fc] hover:text-[#e9d5ff]'
-                                        : 'bg-[rgba(255,175,213,0.15)] hover:bg-[rgba(255,175,213,0.25)] border border-[#ffafd5]/40 hover:border-[#ffafd5] text-[#ffafd5] hover:text-[#ffe4e6]'
+                                        ? 'bg-[rgba(192,132,252,0.15)] hover:bg-[rgba(192,132,252,0.25)] border border-[#c084fc]/40 text-[#c084fc]'
+                                        : 'bg-[rgba(255,175,213,0.15)] hover:bg-[rgba(255,175,213,0.25)] border border-[#ffafd5]/40 text-[#ffafd5]'
                                     }`}
                                   >
                                     {act.type === 'whatsapp' && <WhatsAppIcon className="w-3.5 h-3.5 text-[#10B981]" />}
@@ -837,19 +669,18 @@ export const CopilotAssistant: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Timestamp */}
                     <span
                       className={`font-mono text-[10px] px-1 select-none ${
                         isBot ? 'text-[#F6DBC0]/50' : 'text-[#F6DBC0]/70 text-right'
                       }`}
                     >
-                      {msg.timestamp} · {isBot ? 'IA AUTÓNOMA' : 'ENVIADO'}
+                      {msg.timestamp}
                     </span>
                   </div>
                 </div>
 
-                {/* Sugerencias o chips de seguimiento tras el último mensaje del bot */}
-                {isBot && msg.suggestions && msg.suggestions.length > 0 && (
+                {/* SUGERENCIAS: Solo se muestran en el último mensaje para no saturar la pantalla */}
+                {isBot && isLastMessage && msg.suggestions && msg.suggestions.length > 0 && !isLoading && (
                   <div className="pt-2 pl-9 flex flex-wrap gap-1.5 max-w-full">
                     {msg.suggestions.map((sug, sIdx) => (
                       <button
@@ -867,7 +698,7 @@ export const CopilotAssistant: React.FC = () => {
             );
           })}
 
-          {/* Estado de Carga (Typing indicator mientras espera el primer token) */}
+          {/* Estado de carga durante el análisis */}
           {isLoading && (!messages[messages.length - 1]?.content || messages[messages.length - 1]?.role === 'user') && (
             <div className="flex items-start gap-2.5 max-w-[85%]">
               <div className="w-7 h-7 rounded-md bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.3)] flex items-center justify-center shrink-0 text-[#c084fc] mt-1 shadow-sm animate-pulse">
@@ -876,7 +707,7 @@ export const CopilotAssistant: React.FC = () => {
               <div className="flex flex-col gap-1">
                 <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-[rgba(45,20,52,0.65)] border border-[rgba(147,80,115,0.35)] text-[#F6DBC0] font-mono text-xs flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-[#c084fc] animate-ping" />
-                  <span>[ Analizando viabilidad técnica... ]</span>
+                  <span>[ Revisando cómo automatizar tu idea... ]</span>
                 </div>
               </div>
             </div>
@@ -885,126 +716,130 @@ export const CopilotAssistant: React.FC = () => {
           <div ref={streamEndRef} />
         </div>
 
-        {/* Barra de Entrada de Texto con Guardrail Anti-Biblia */}
-        <div className="p-3.5 bg-[rgba(30,15,35,0.95)] border-t border-[rgba(147,80,115,0.3)] shrink-0">
+        {/* Barra de Entrada (Input Area) */}
+        <div className="p-3 sm:p-4 bg-[rgba(26,12,30,0.95)] border-t border-[rgba(147,80,115,0.3)] shrink-0">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSendMessage();
             }}
-            className="flex flex-col gap-1.5"
+            className="flex items-end gap-2"
           >
-            <div className="flex items-end gap-2">
-              <div className="flex-1 flex items-start gap-2 px-3.5 py-2.5 rounded-xl bg-[rgba(22,11,26,0.9)] border border-[rgba(147,80,115,0.35)] focus-within:border-[#c084fc]/60 transition-all shadow-inner">
-                <span className="text-[#c084fc] font-mono text-sm font-bold select-none mt-0.5">&gt;</span>
-                <textarea
-                  ref={textareaRef}
-                  rows={1}
-                  maxLength={1200}
-                  value={inputValue}
-                  onChange={(e) => {
-                    setInputValue(e.target.value);
-                    e.target.style.height = 'auto';
-                    e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  placeholder={
-                    isListening
-                      ? 'Escuchando tu voz... habla ahora'
-                      : 'Pregunta sobre proyectos o viabilidad...'
+            <div className="relative flex-1 rounded-xl bg-[rgba(45,20,52,0.5)] border border-[rgba(147,80,115,0.35)] focus-within:border-[#c084fc] transition-colors">
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${Math.min(e.target.scrollHeight, 100)}px`;
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
                   }
-                  className="w-full bg-transparent border-0 p-0 text-[#F8F4E9] placeholder-[#F6DBC0]/40 focus:ring-0 text-sm focus:outline-none font-sans resize-none overflow-y-auto leading-relaxed max-h-[120px]"
-                />
-              </div>
+                }}
+                placeholder="Escribe tu idea o proceso a automatizar..."
+                rows={1}
+                maxLength={800}
+                className="w-full px-3.5 py-2.5 bg-transparent text-sm text-[#F8F4E9] placeholder-[#F6DBC0]/40 resize-none focus:outline-none"
+              />
+            </div>
 
-              {/* Botón de Entrada por Voz */}
+            {speechSupported && (
               <button
                 type="button"
                 onClick={handleToggleVoice}
-                title={isListening ? 'Detener dictado por voz (escuchando...)' : 'Dictar por voz'}
-                aria-label={isListening ? 'Detener dictado por voz' : 'Dictar por voz'}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 shrink-0 cursor-pointer ${
+                className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
                   isListening
-                    ? 'bg-rose-500/25 border border-rose-500 text-rose-300 animate-pulse ring-2 ring-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.4)]'
-                    : 'bg-[rgba(80,45,85,0.4)] hover:bg-[rgba(80,45,85,0.7)] text-[#F6DBC0] border border-[rgba(147,80,115,0.3)] hover:text-[#F8F4E9]'
+                    ? 'bg-rose-500/20 border-rose-500 text-rose-300 animate-pulse'
+                    : 'bg-[rgba(45,20,52,0.5)] border-[rgba(147,80,115,0.35)] text-[#F6DBC0]/70 hover:text-[#F8F4E9]'
                 }`}
+                title={isListening ? 'Detener micrófono' : 'Hablar por micrófono'}
               >
-                {isListening ? <MicOff className="w-4 h-4 text-rose-300" /> : <Mic className="w-4 h-4" />}
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
               </button>
-
-              {/* Botón de Enviar (Solo el Iconito) */}
-              <button
-                type="submit"
-                disabled={isLoading || !inputValue.trim()}
-                title="Enviar mensaje"
-                aria-label="Enviar mensaje"
-                className="w-10 h-10 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] flex items-center justify-center transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed shrink-0 shadow-md cursor-pointer"
-              >
-                <Send className="w-4 h-4 ml-0.5" />
-              </button>
-            </div>
-
-            {/* Contador de caracteres discreto cuando el texto se alarga */}
-            {inputValue.length > 600 && (
-              <div className="flex justify-end px-1">
-                <span
-                  className={`font-mono text-[10px] ${
-                    inputValue.length > 1100 ? 'text-amber-400' : 'text-[#F6DBC0]/50'
-                  }`}
-                >
-                  {inputValue.length} / 1200 caracteres (Escudo de contexto activo)
-                </span>
-              </div>
             )}
+
+            <button
+              type="submit"
+              disabled={isLoading || !inputValue.trim()}
+              className="p-2.5 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] disabled:opacity-40 text-[#160B1A] transition-all cursor-pointer shadow-md active:scale-95"
+              title="Enviar mensaje"
+            >
+              <Send className="w-4 h-4" />
+            </button>
           </form>
         </div>
       </div>
 
-      {/* 2. BOTÓN LANZADOR FLOTANTE (FAB) CON GLOW & MICRO-TOOLTIP */}
-      <aside
-        style={{ zIndex: 99998 }}
-        className="fixed bottom-6 right-6 flex items-center gap-3 select-none"
+      {/* 2. BOTÓN FLOTANTE (FAB) CON EFECTO DE RESPLANDOR Y GLOBO PROACTIVO */}
+      <div
+        style={{ display: isOpen ? 'none' : 'flex' }}
+        className="fixed bottom-6 right-6 z-[99990] flex flex-col items-end gap-2.5 pointer-events-none"
       >
-        {/* Micro-Tooltip / Noticia discreta antes de interactuar */}
-        {!isOpen && !hasInteracted && (
-          <button
-            type="button"
-            onClick={handleToggle}
-            className="cursor-pointer hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[rgba(30,15,35,0.95)] border border-[rgba(147,80,115,0.4)] text-[#F6DBC0] shadow-xl font-mono text-xs hover:border-[#c084fc]/60 transition-all animate-bounce"
-          >
-            <span className="inline-block w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
-            <span>¿Dudas sobre IA? Pregúntale a Wiki</span>
-          </button>
+        {/* Globo de bienvenida proactivo */}
+        {showWelcomeBubble && !bubbleDismissed && (
+          <div className="wiki-bubble-float pointer-events-auto relative max-w-[270px] sm:max-w-[310px] p-3.5 rounded-2xl bg-[rgba(26,12,30,0.95)] border border-[#c084fc]/50 shadow-2xl backdrop-blur-md text-[#F8F4E9] flex items-start gap-2.5 animate-fadeIn">
+            <div className="flex-1 cursor-pointer" onClick={() => { setIsOpen(true); setShowWelcomeBubble(false); }}>
+              <div className="flex items-center gap-1.5 font-mono text-[10px] text-[#c084fc] font-bold uppercase tracking-wider mb-1">
+                <Sparkles className="w-3 h-3 text-[#c084fc]" />
+                <span>¿Tienes una idea?</span>
+              </div>
+              <p className="text-xs text-[#F6DBC0]/90 leading-relaxed font-sans">
+                ¿Qué proceso te quita más tiempo? Pregúntame si es viable automatizarlo.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowWelcomeBubble(false);
+                setBubbleDismissed(true);
+              }}
+              className="text-[#F6DBC0]/50 hover:text-[#F8F4E9] p-0.5 rounded cursor-pointer"
+              title="Cerrar mensaje"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+            {/* Flechita del globo apuntando hacia el botón */}
+            <div className="absolute -bottom-1.5 right-8 w-3 h-3 bg-[#1A0C1E] border-r border-b border-[#c084fc]/50 transform rotate-45" />
+          </div>
         )}
 
-        {/* Botón Circular con Resplandor Ambiental */}
-        <div className="relative group">
-          <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#c084fc] to-[#d8b4fe] opacity-60 blur-md group-hover:opacity-100 transition duration-300 pointer-events-none"></div>
-
-          <button
-            type="button"
-            aria-label={isOpen ? 'Cerrar Wiki' : 'Abrir Wiki'}
-            onClick={handleToggle}
-            className="relative z-10 w-14 h-14 rounded-full bg-gradient-to-tr from-[#935073] via-[#a855f7] to-[#c084fc] text-[#160B1A] flex items-center justify-center shadow-2xl transition-transform duration-200 group-hover:scale-105 active:scale-95 cursor-pointer"
-          >
-            {isOpen ? (
-              <X className="w-6 h-6 text-[#160B1A]" />
-            ) : (
-              <Dog className="w-6 h-6 text-[#160B1A]" />
-            )}
-
-            {/* Indicador de estado en vivo */}
-            <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-[#10B981] shadow-sm ring-2 ring-[#160B1A] pointer-events-none"></span>
-          </button>
-        </div>
-      </aside>
+        {/* Botón Flotante con Resplandor (Glow Pulse) */}
+        <button
+          type="button"
+          onClick={() => {
+            setIsOpen(true);
+            setShowWelcomeBubble(false);
+          }}
+          className="pointer-events-auto wiki-fab-glow items-center gap-3 px-4 py-3 rounded-2xl bg-[rgba(26,12,30,0.94)] hover:bg-[rgba(45,20,52,0.98)] border border-[#c084fc]/50 text-[#F8F4E9] shadow-2xl backdrop-blur-md transition-all active:scale-95 cursor-pointer group flex"
+        >
+          <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-[#c084fc]/20 text-[#c084fc]">
+            <Dog className="w-5 h-5 text-[#c084fc] group-hover:scale-110 transition-transform" />
+            {/* Anillo de pulso verde en vivo */}
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#10B981] ring-2 ring-[#160B1A]"></span>
+            </span>
+          </div>
+          <div className="flex flex-col text-left">
+            <div className="flex items-center gap-2">
+              <span className="font-sans text-xs font-bold text-[#F8F4E9]">
+                Hablar con Wiki
+              </span>
+              <span className="px-1.5 py-0.2 rounded bg-[#10B981]/15 text-[#10B981] font-mono text-[9px] font-semibold border border-[#10B981]/30">
+                En vivo
+              </span>
+            </div>
+            <span className="font-mono text-[10px] text-[#F6DBC0]/70">
+              ¿Cómo automatizar tu idea?
+            </span>
+          </div>
+        </button>
+      </div>
     </>
   );
 };
-
-export default CopilotAssistant;

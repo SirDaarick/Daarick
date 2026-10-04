@@ -2,52 +2,67 @@
 // Hero.astro
 ---
 
-<section class="flex flex-col items-start gap-8 pt-4" id="sobre-mi">
-  {/* Two-Column Grid */}
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full items-stretch">
-    {/* Left Narrative Block */}
-    <div class="lg:col-span-7 flex flex-col justify-between gap-6">
-      <div class="flex flex-col gap-4">
-        <h1 class="text-3xl sm:text-5xl font-semibold text-[#F8F4E9] tracking-tight leading-tight">
-          Hola, soy Erick. Ingeniero de IA y Automatización.
+<section class="flex flex-col items-start gap-8 pt-2 sm:pt-4" id="sobre-mi">
+  {/* Two-Column Grid con narrativa de alto impacto */}
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 w-full items-stretch">
+    {/* Left Narrative Block: Propuesta de Valor Directa */}
+    <div class="lg:col-span-7 flex flex-col justify-between gap-5 sm:gap-6">
+      <div class="flex flex-col gap-3 sm:gap-4">
+        <div class="inline-flex items-center gap-2 self-start px-2.5 py-1 rounded-full bg-[rgba(80,45,85,0.4)] border border-[rgba(192,132,252,0.3)]">
+          <span class="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+          <span class="font-mono text-xs text-[#c084fc] font-medium tracking-wide">
+            Erick · Ingeniero de IA & Software
+          </span>
+        </div>
+
+        <h1 class="text-3xl sm:text-5xl font-bold text-[#F8F4E9] tracking-tight leading-tight">
+          Elimino el trabajo manual repetitivo en tu negocio construyendo <span class="text-[#c084fc]">sistemas con IA que sí funcionan</span>.
         </h1>
-        <p class="text-base sm:text-lg text-[#F6DBC0] leading-relaxed max-w-2xl">
-          Transformo procesos lentos y propensos al error humano en sistemas autónomos, sencillos y prácticos aplicando Ingeniería de Software e Inteligencia Artificial.
+
+        <p class="text-base sm:text-lg text-[#F6DBC0] leading-relaxed max-w-2xl font-normal">
+          Desde responder consultas de clientes y agendar citas automáticamente, hasta saber todo sobre tu negocio. Céntrate en lo más importante.
         </p>
       </div>
 
       {/* Action Buttons */}
-      <div class="flex items-center gap-3 mt-1">
+      <div class="flex flex-wrap items-center gap-3 pt-1">
         <a
           href="#soluciones"
-          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-semibold backdrop-blur-md transition-all duration-200 shadow-md cursor-pointer active:scale-95"
+          class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all duration-200 shadow-md cursor-pointer active:scale-95"
         >
-          <span>Ver qué podemos automatizar</span>
+          <span>Explorar soluciones automáticas</span>
+          <span aria-hidden="true">&darr;</span>
+        </a>
+        <a
+          href="#proyectos"
+          class="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-[rgba(80,45,85,0.25)] hover:bg-[rgba(80,45,85,0.45)] border border-[rgba(147,80,115,0.35)] text-[#F8F4E9] font-mono text-xs font-medium transition-all duration-200 cursor-pointer active:scale-95"
+        >
+          <span>Ver sistemas en producción</span>
         </a>
       </div>
     </div>
 
-    {/* Right Card: Sobre Mí Minimalista */}
-    <div class="lg:col-span-5 flex flex-col justify-between p-6 rounded-2xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] backdrop-blur-md relative overflow-hidden">
-      <div class="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.2)]">
+    {/* Right Card: Sobre mí / Perfil Técnico (Ajustado y fiel a la versión original) */}
+    <div class="lg:col-span-5 flex flex-col justify-between p-5 rounded-2xl bg-[rgba(32,19,36,0.8)] border border-[rgba(147,80,115,0.35)] backdrop-blur-md relative overflow-hidden shadow-lg self-center w-full">
+      <div class="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)]">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></span>
           <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></span>
           <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></span>
-          <span class="ml-1 text-sm font-semibold text-[#F8F4E9]">Sobre mí</span>
+          <span class="ml-1 text-xs sm:text-sm font-semibold text-[#F8F4E9]">Sobre mí</span>
         </div>
-        <span class="font-mono text-xs text-[#c084fc]">Ingeniería en IA</span>
+        <span class="font-mono text-xs text-[#c084fc] font-medium">Ingeniería en IA</span>
       </div>
 
-      <div class="my-auto py-4">
-        <p class="text-sm text-[#F6DBC0] leading-relaxed">
+      <div class="py-3 flex flex-col gap-2">
+        <p class="text-xs sm:text-sm text-[#F6DBC0] leading-relaxed">
           Estudiante de último semestre en <strong class="text-[#F8F4E9] font-semibold">ESCOM IPN</strong> e Ingeniero de IA en <strong class="text-[#F8F4E9] font-semibold">Grupo Promass</strong>, donde automatizo procesos para optimizar atención a clientes y operaciones diarias.
         </p>
       </div>
 
-      <div class="pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between font-mono text-xs text-[rgba(246,219,192,0.65)]">
+      <div class="pt-3 border-t border-[rgba(147,80,115,0.25)] flex items-center justify-between font-mono text-xs text-[rgba(246,219,192,0.8)]">
         <span>Enfoque en soluciones prácticas</span>
-        <span class="text-[#10B981]">● Disponible</span>
+        <span class="text-[#10B981] font-semibold">● Disponible</span>
       </div>
     </div>
   </div>

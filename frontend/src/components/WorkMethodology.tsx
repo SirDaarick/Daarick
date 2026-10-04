@@ -138,54 +138,62 @@ export const WorkMethodology: React.FC = () => {
           {/* Línea conectora vertical entre nodos (Solo en desktop/tablet grande) */}
           <div className="hidden lg:block absolute left-[2.6rem] top-7 bottom-7 w-0.5 bg-[rgba(147,80,115,0.25)] -z-0" />
 
-          {/* En móvil: selector de solo circulitos deslizable horizontalmente / En desktop: fila vertical completa */}
-          <div className="flex lg:flex-col items-center lg:items-stretch gap-2.5 sm:gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 scrollbar-none snap-x relative z-10 px-1 py-1">
-            {STEPS.map((step, idx) => {
-              const isActive = idx === activeStepIndex;
+          {/* En móvil: selector minimalista de solo circulitos con línea conectora horizontal. En desktop: columna vertical con títulos y tiempos */}
+          <div className="relative">
+            {/* Línea horizontal en móvil que conecta los circulitos */}
+            <div className="block lg:hidden absolute top-1/2 left-4 right-4 h-0.5 bg-[rgba(147,80,115,0.3)] -translate-y-1/2 -z-0" />
 
-              return (
-                <button
-                  key={step.id}
-                  type="button"
-                  onMouseEnter={() => handleStepSelect(idx, false)}
-                  onClick={() => handleStepSelect(idx, true)}
-                  className={`flex items-center justify-center lg:justify-between p-2 lg:p-3 rounded-xl transition-all duration-150 text-left cursor-pointer shrink-0 snap-center min-w-[52px] sm:min-w-[56px] lg:min-w-0 ${
-                    isActive
-                      ? 'bg-[rgba(80,45,85,0.55)] border border-[rgba(147,80,115,0.5)] text-[#F8F4E9] shadow-sm'
-                      : 'bg-[rgba(26,15,30,0.5)] lg:bg-transparent hover:bg-[rgba(45,20,55,0.3)] border border-[rgba(147,80,115,0.2)] lg:border-transparent text-[rgba(246,219,192,0.65)] hover:text-[#F8F4E9]'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                    {/* Nodo circular con número (En móvil solo se ve este circulito con número) */}
-                    <div
-                      className={`w-9 h-9 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-mono text-xs font-bold shrink-0 transition-all duration-200 ${
-                        isActive
-                          ? 'bg-[#10B981] text-[#150a19] scale-105 shadow-[0_0_12px_rgba(16,185,129,0.35)]'
-                          : 'bg-[rgba(26,15,30,0.9)] text-[rgba(246,219,192,0.6)] border border-[rgba(147,80,115,0.3)]'
-                      }`}
-                    >
-                      {step.num}
-                    </div>
+            <div className="flex lg:flex-col items-center lg:items-stretch justify-between lg:justify-start gap-2 overflow-x-auto lg:overflow-x-visible pb-1 lg:pb-0 scrollbar-none snap-x relative z-10 px-1 py-1">
+              {STEPS.map((step, idx) => {
+                const isActive = idx === activeStepIndex;
 
-                    {/* Título (Oculto en móvil para mostrar solo los circulitos) */}
-                    <span className="hidden lg:inline text-sm font-medium truncate">
-                      {step.shortTitle}
-                    </span>
-                  </div>
-
-                  {/* Badge de Tiempo (Oculto en móvil) */}
-                  <span
-                    className={`hidden lg:inline font-mono text-[10px] px-2 py-0.5 rounded shrink-0 ml-1.5 ${
+                return (
+                  <button
+                    key={step.id}
+                    type="button"
+                    onMouseEnter={() => handleStepSelect(idx, false)}
+                    onClick={() => handleStepSelect(idx, true)}
+                    className={`transition-all duration-150 text-left cursor-pointer shrink-0 snap-center ${
+                      /* En móvil es un círculo puro sin bordes de caja exterior */
+                      'p-0 lg:p-3 rounded-full lg:rounded-xl flex items-center justify-center lg:justify-between'
+                    } ${
                       isActive
-                        ? 'bg-[rgba(16,185,129,0.15)] text-[#10B981]'
-                        : 'text-[rgba(246,219,192,0.4)]'
+                        ? 'lg:bg-[rgba(80,45,85,0.55)] lg:border lg:border-[rgba(147,80,115,0.5)] text-[#F8F4E9] lg:shadow-sm'
+                        : 'lg:bg-transparent hover:lg:bg-[rgba(45,20,55,0.3)] lg:border lg:border-transparent text-[rgba(246,219,192,0.65)] hover:text-[#F8F4E9]'
                     }`}
                   >
-                    {step.timeTag}
-                  </span>
-                </button>
-              );
-            })}
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                      {/* Nodo circular con número */}
+                      <div
+                        className={`w-10 h-10 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-mono text-xs font-bold shrink-0 transition-all duration-200 ${
+                          isActive
+                            ? 'bg-[#10B981] text-[#150a19] scale-110 shadow-[0_0_14px_rgba(16,185,129,0.45)] ring-2 ring-[#c084fc]/50'
+                            : 'bg-[rgba(26,15,30,0.95)] text-[rgba(246,219,192,0.7)] border border-[rgba(147,80,115,0.4)] hover:border-[#c084fc]/60'
+                        }`}
+                      >
+                        {step.num}
+                      </div>
+
+                      {/* Título (Oculto en móvil, visible en desktop) */}
+                      <span className="hidden lg:inline text-sm font-medium truncate">
+                        {step.shortTitle}
+                      </span>
+                    </div>
+
+                    {/* Badge de Tiempo (Oculto en móvil) */}
+                    <span
+                      className={`hidden lg:inline font-mono text-[10px] px-2 py-0.5 rounded shrink-0 ml-1.5 ${
+                        isActive
+                          ? 'bg-[rgba(16,185,129,0.15)] text-[#10B981]'
+                          : 'text-[rgba(246,219,192,0.4)]'
+                      }`}
+                    >
+                      {step.timeTag}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

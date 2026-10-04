@@ -1,28 +1,458 @@
 @import "tailwindcss";
 
 @theme {
-  --color-canvas-base: #160B1A;
-  --color-canvas-elevated: #1E0F23;
-  --color-surface-card: rgba(80, 45, 85, 0.24);
-  --color-surface-card-hover: rgba(80, 45, 85, 0.38);
-  --color-border-plum: rgba(147, 80, 115, 0.28);
-  --color-border-active: rgba(192, 132, 252, 0.50);
-  --color-text-ivory: #F8F4E9;
-  --color-text-peach: #F6DBC0;
-  --color-text-muted: rgba(246, 219, 192, 0.65);
+  --color-canvas-base: #140817;
+  --color-canvas-elevated: #1B0C1F;
+  --color-surface-card: rgba(80, 45, 85, 0.28);
+  --color-surface-card-hover: rgba(80, 45, 85, 0.42);
+  --color-border-plum: rgba(160, 95, 130, 0.35);
+  --color-border-active: rgba(192, 132, 252, 0.65);
+  --color-text-ivory: #FCFBF7;
+  --color-text-peach: #FBF0E4;
+  --color-text-muted: rgba(251, 240, 228, 0.82);
   --color-primary-container: #C084FC;
-  --color-accent-glow: #D8B4FE;
-  --color-accent-plum: #935073;
+  --color-accent-glow: #E9D5FF;
+  --color-accent-plum: #A35A80;
   --color-status-live: #10B981;
 
   --font-mono: 'JetBrains Mono', monospace;
   --font-sans: 'Inter', sans-serif;
 }
 
+/* ========================================================
+   LIGHT MODE DEFINITIONS (Editorial Warm Sand / Low-Glare Theme)
+   ======================================================== */
+html.light {
+  --color-canvas-base: #F5EFEB;
+  --color-canvas-elevated: #ECE4DC;
+  --color-surface-card: rgba(230, 220, 212, 0.85);
+  --color-surface-card-hover: rgba(222, 210, 200, 0.95);
+  --color-border-plum: rgba(120, 60, 95, 0.28);
+  --color-border-active: rgba(147, 51, 234, 0.65);
+  --color-text-ivory: #241428;
+  --color-text-peach: #452D4D;
+  --color-text-muted: rgba(69, 45, 77, 0.88);
+  --color-primary-container: #7E22CE;
+  --color-accent-glow: #9333EA;
+  --color-accent-plum: #581C3F;
+  --color-status-live: #047857;
+}
+
+html.light body {
+  background-color: #F5EFEB !important;
+  color: #241428 !important;
+}
+
+html.light header {
+  background-color: rgba(245, 239, 235, 0.92) !important;
+  border-color: rgba(120, 60, 95, 0.22) !important;
+}
+
+html.light footer {
+  background-color: #EAE2D8 !important;
+  border-color: rgba(120, 60, 95, 0.22) !important;
+}
+
+html.light .carousel-3d-card {
+  background-color: #EDE5DC !important;
+  border-color: rgba(120, 60, 95, 0.3) !important;
+  box-shadow: 0 15px 35px rgba(80, 45, 85, 0.08) !important;
+}
+
+html.light .card-center {
+  background-color: #FAF4EE !important;
+  border-color: rgba(126, 34, 206, 0.55) !important;
+  box-shadow: 0 20px 40px -10px rgba(126, 34, 206, 0.16), 0 0 20px rgba(147, 51, 234, 0.1) !important;
+}
+
+html.light [class*="bg-[rgba(32,19,36"],
+html.light [class*="bg-[rgba(35,23,39"],
+html.light [class*="bg-[rgba(26,15,30"],
+html.light [class*="bg-[rgba(24,13,28"],
+html.light [class*="bg-[rgba(30,15,35"],
+html.light [class*="bg-[rgba(38,20,46"],
+html.light [class*="bg-[rgba(28,16,32"],
+html.light [class*="bg-[rgba(26,14,30"] {
+  background-color: #EDE5DD !important;
+  border-color: rgba(120, 60, 95, 0.28) !important;
+}
+
+/* Testimonio expandido en Modo Claro (Tarjeta activa de veredicto) */
+html.light [class*="bg-[rgba(38,20,46,0.98]"] {
+  background-color: #FAF4EE !important;
+  border-color: #7E22CE !important;
+  box-shadow: 0 14px 36px rgba(120, 60, 95, 0.12), 0 0 20px rgba(126, 34, 206, 0.15) !important;
+}
+
+/* Bloques de antes y después dentro del testimonio expandido */
+html.light [class*="bg-[rgba(255,95,86,0.08]"] {
+  background-color: #FDF2F2 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+html.light [class*="bg-[rgba(16,185,129,0.08]"] {
+  background-color: #ECFDF5 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+html.light [class*="bg-[rgba(192,132,252,0.08]"] {
+  background-color: #F5EEFA !important;
+  border-color: rgba(126, 34, 206, 0.25) !important;
+}
+
+html.light [class*="bg-[rgba(80,45,85,0.2"],
+html.light [class*="bg-[rgba(80,45,85,0.3"],
+html.light [class*="bg-[rgba(80,45,85,0.4"],
+html.light [class*="bg-[rgba(80,45,85,0.5"] {
+  background-color: rgba(228, 214, 226, 0.75) !important;
+  border-color: rgba(120, 60, 95, 0.25) !important;
+}
+
+html.light [class*="bg-[rgba(20,10,24"],
+html.light [class*="bg-[rgba(21,10,25"] {
+  background-color: #E2D7CC !important;
+  border-color: rgba(120, 60, 95, 0.2) !important;
+}
+
+html.light [class*="text-[#F8F4E9]"] {
+  color: #241428 !important;
+}
+
+html.light [class*="text-[#F6DBC0]"] {
+  color: #452D4D !important;
+}
+
+html.light [class*="text-[rgba(246,219,192"] {
+  color: rgba(69, 45, 77, 0.88) !important;
+}
+
+/* Realce de alto contraste para letras de colores en modo claro (WCAG AAA) */
+html.light [class*="text-[#c084fc]"],
+html.light [class*="text-[#ddb8ff]"],
+html.light [class*="text-[#D8B4FE]"] {
+  color: #7E22CE !important; /* Púrpura profundo con 7:1 de contraste en vez de lavanda pálido */
+}
+
+html.light [class*="text-[#10B981]"],
+html.light [class*="text-emerald-400"] {
+  color: #047857 !important; /* Esmeralda oscuro nítido y legible en vez de verde fluorescente */
+}
+
+html.light [class*="text-[#ffafd5]"] {
+  color: #9D174D !important; /* Rosa magenta intenso legible en vez de rosa pastel pálido */
+}
+
+html.light [class*="text-sky-400"] {
+  color: #0369A1 !important; /* Azul cerúleo nítido */
+}
+
+html.light [class*="text-amber-300"] {
+  color: #B45309 !important; /* Ámbar tostado legible */
+}
+
+/* Botones y enlaces interactivos en Modo Claro: feedback táctil y visual evidente */
+html.light a[class*="bg-[#c084fc]"],
+html.light button[class*="bg-[#c084fc]"] {
+  background-color: #7E22CE !important;
+  color: #FFFFFF !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+html.light a[class*="bg-[#c084fc]"]:hover,
+html.light button[class*="bg-[#c084fc]"]:hover {
+  background-color: #6B21A8 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px -4px rgba(126, 34, 206, 0.4) !important;
+}
+
+html.light [class*="bg-[rgba(80,45,85,0.2"]:hover,
+html.light [class*="bg-[rgba(80,45,85,0.3"]:hover,
+html.light [class*="bg-[rgba(80,45,85,0.4"]:hover {
+  background-color: rgba(215, 195, 215, 0.95) !important;
+  border-color: rgba(120, 60, 95, 0.45) !important;
+  color: #1E1222 !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Chat Wiki: Cuadros de texto, mensajes y barra de entrada en modo claro */
+html.light #chat-window {
+  background-color: #F8F3ED !important;
+  border-color: rgba(120, 60, 95, 0.3) !important;
+  color: #241428 !important;
+}
+
+html.light #chat-window header,
+html.light #chat-window [class*="bg-[rgba(30,15,35"] {
+  background-color: #EFE6DD !important;
+  border-color: rgba(120, 60, 95, 0.22) !important;
+}
+
+/* Área de conversación y burbujas de mensaje */
+html.light #conversation-stream {
+  background-color: #F8F3ED !important;
+}
+
+/* Burbuja del Bot Wiki en Modo Claro */
+html.light [class*="rounded-tl-sm bg-[rgba(45,20,52"] {
+  background-color: #ECE3DB !important;
+  border-color: rgba(120, 60, 95, 0.25) !important;
+  color: #241428 !important;
+}
+
+/* Burbuja del Usuario en Modo Claro */
+html.light [class*="rounded-tr-sm bg-[#381a3e"] {
+  background-color: #7E22CE !important;
+  border-color: #6B21A8 !important;
+  color: #FAF5FF !important; /* Texto blanco en la burbuja del usuario para máxima legibilidad */
+}
+
+/* Chips de sugerencias del chat en Modo Claro */
+html.light #conversation-stream button[class*="bg-[rgba(45,20,52"] {
+  background-color: #ECE3DB !important;
+  border-color: rgba(120, 60, 95, 0.25) !important;
+  color: #452D4D !important;
+}
+html.light #conversation-stream button[class*="bg-[rgba(45,20,52"]:hover {
+  background-color: #E2D7CC !important;
+  color: #241428 !important;
+}
+
+/* Tarjeta interactiva de proyecto o recomendación dentro del chat */
+html.light #conversation-stream [class*="bg-[rgba(30,15,35,0.85"] {
+  background-color: #FAF5EF !important;
+  border-color: rgba(126, 34, 206, 0.35) !important;
+}
+
+/* Input y barra de escritura del chat */
+html.light #chat-window [class*="bg-[rgba(22,11,26"] {
+  background-color: #FFFFFF !important;
+  border-color: rgba(120, 60, 95, 0.3) !important;
+}
+
+html.light #chat-window textarea {
+  color: #241428 !important;
+}
+
+html.light #chat-window textarea::placeholder {
+  color: rgba(69, 45, 77, 0.55) !important;
+}
+
+@media (prefers-color-scheme: light) {
+  html:not(.dark) {
+    --color-canvas-base: #F5EFEB;
+    --color-canvas-elevated: #ECE4DC;
+    --color-surface-card: rgba(230, 220, 212, 0.85);
+    --color-surface-card-hover: rgba(222, 210, 200, 0.95);
+    --color-border-plum: rgba(120, 60, 95, 0.28);
+    --color-border-active: rgba(147, 51, 234, 0.65);
+    --color-text-ivory: #241428;
+    --color-text-peach: #452D4D;
+    --color-text-muted: rgba(69, 45, 77, 0.88);
+    --color-primary-container: #7E22CE;
+    --color-accent-glow: #9333EA;
+    --color-accent-plum: #581C3F;
+    --color-status-live: #047857;
+  }
+
+  html:not(.dark) body {
+    background-color: #F5EFEB !important;
+    color: #241428 !important;
+  }
+
+  html:not(.dark) header {
+    background-color: rgba(245, 239, 235, 0.92) !important;
+    border-color: rgba(120, 60, 95, 0.22) !important;
+  }
+
+  html:not(.dark) footer {
+    background-color: #EAE2D8 !important;
+    border-color: rgba(120, 60, 95, 0.22) !important;
+  }
+
+  html:not(.dark) .carousel-3d-card {
+    background-color: #EDE5DC !important;
+    border-color: rgba(120, 60, 95, 0.3) !important;
+    box-shadow: 0 15px 35px rgba(80, 45, 85, 0.08) !important;
+  }
+
+  html:not(.dark) .card-center {
+    background-color: #FAF4EE !important;
+    border-color: rgba(126, 34, 206, 0.55) !important;
+    box-shadow: 0 20px 40px -10px rgba(126, 34, 206, 0.16), 0 0 20px rgba(147, 51, 234, 0.1) !important;
+  }
+
+  html:not(.dark) [class*="bg-[rgba(32,19,36"],
+  html:not(.dark) [class*="bg-[rgba(35,23,39"],
+  html:not(.dark) [class*="bg-[rgba(26,15,30"],
+  html:not(.dark) [class*="bg-[rgba(24,13,28"],
+  html:not(.dark) [class*="bg-[rgba(30,15,35"],
+  html:not(.dark) [class*="bg-[rgba(38,20,46"],
+  html:not(.dark) [class*="bg-[rgba(28,16,32"],
+  html:not(.dark) [class*="bg-[rgba(26,14,30"] {
+    background-color: #EDE5DD !important;
+    border-color: rgba(120, 60, 95, 0.28) !important;
+  }
+
+  /* Testimonio expandido en Modo Claro (Tarjeta activa de veredicto) */
+  html:not(.dark) [class*="bg-[rgba(38,20,46,0.98]"] {
+    background-color: #FAF4EE !important;
+    border-color: #7E22CE !important;
+    box-shadow: 0 14px 36px rgba(120, 60, 95, 0.12), 0 0 20px rgba(126, 34, 206, 0.15) !important;
+  }
+
+  /* Bloques de antes y después dentro del testimonio expandido */
+  html:not(.dark) [class*="bg-[rgba(255,95,86,0.08]"] {
+    background-color: #FDF2F2 !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+  }
+
+  html:not(.dark) [class*="bg-[rgba(16,185,129,0.08]"] {
+    background-color: #ECFDF5 !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+  }
+
+  html:not(.dark) [class*="bg-[rgba(192,132,252,0.08]"] {
+    background-color: #F5EEFA !important;
+    border-color: rgba(126, 34, 206, 0.25) !important;
+  }
+
+  html:not(.dark) [class*="bg-[rgba(80,45,85,0.2"],
+  html:not(.dark) [class*="bg-[rgba(80,45,85,0.3"],
+  html:not(.dark) [class*="bg-[rgba(80,45,85,0.4"],
+  html:not(.dark) [class*="bg-[rgba(80,45,85,0.5"] {
+    background-color: rgba(228, 214, 226, 0.75) !important;
+    border-color: rgba(120, 60, 95, 0.25) !important;
+  }
+
+  html:not(.dark) [class*="bg-[rgba(20,10,24"],
+  html:not(.dark) [class*="bg-[rgba(21,10,25"] {
+    background-color: #E2D7CC !important;
+    border-color: rgba(120, 60, 95, 0.2) !important;
+  }
+
+  html:not(.dark) [class*="text-[#F8F4E9]"] {
+    color: #241428 !important;
+  }
+
+  html:not(.dark) [class*="text-[#F6DBC0]"] {
+    color: #452D4D !important;
+  }
+
+  html:not(.dark) [class*="text-[rgba(246,219,192"] {
+    color: rgba(69, 45, 77, 0.88) !important;
+  }
+
+  /* Realce de alto contraste para letras de colores en modo claro (WCAG AAA) */
+  html:not(.dark) [class*="text-[#c084fc]"],
+  html:not(.dark) [class*="text-[#ddb8ff]"],
+  html:not(.dark) [class*="text-[#D8B4FE]"] {
+    color: #7E22CE !important;
+  }
+
+  html:not(.dark) [class*="text-[#10B981]"],
+  html:not(.dark) [class*="text-emerald-400"] {
+    color: #047857 !important;
+  }
+
+  html:not(.dark) [class*="text-[#ffafd5]"] {
+    color: #9D174D !important;
+  }
+
+  html:not(.dark) [class*="text-sky-400"] {
+    color: #0369A1 !important;
+  }
+
+  html:not(.dark) [class*="text-amber-300"] {
+    color: #B45309 !important;
+  }
+
+  /* Botones y enlaces interactivos en Modo Claro */
+  html:not(.dark) a[class*="bg-[#c084fc]"],
+  html:not(.dark) button[class*="bg-[#c084fc]"] {
+    background-color: #7E22CE !important;
+    color: #FFFFFF !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  html:not(.dark) a[class*="bg-[#c084fc]"]:hover,
+  html:not(.dark) button[class*="bg-[#c084fc]"]:hover {
+    background-color: #6B21A8 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px -4px rgba(126, 34, 206, 0.4) !important;
+  }
+
+  html:not(.dark) [class*="bg-[rgba(80,45,85,0.2"]:hover,
+  html:not(.dark) [class*="bg-[rgba(80,45,85,0.3"]:hover,
+  html:not(.dark) [class*="bg-[rgba(80,45,85,0.4"]:hover {
+    background-color: rgba(215, 195, 215, 0.95) !important;
+    border-color: rgba(120, 60, 95, 0.45) !important;
+    color: #1E1222 !important;
+    transform: translateY(-1px) !important;
+  }
+
+  /* Chat Wiki: Cuadros de texto, mensajes y barra de entrada en modo claro */
+  html:not(.dark) #chat-window {
+    background-color: #F8F3ED !important;
+    border-color: rgba(120, 60, 95, 0.3) !important;
+    color: #241428 !important;
+  }
+
+  html:not(.dark) #chat-window header,
+  html:not(.dark) #chat-window [class*="bg-[rgba(30,15,35"] {
+    background-color: #EFE6DD !important;
+    border-color: rgba(120, 60, 95, 0.22) !important;
+  }
+
+  html:not(.dark) #conversation-stream {
+    background-color: #F8F3ED !important;
+  }
+
+  html:not(.dark) [class*="rounded-tl-sm bg-[rgba(45,20,52"] {
+    background-color: #ECE3DB !important;
+    border-color: rgba(120, 60, 95, 0.25) !important;
+    color: #241428 !important;
+  }
+
+  html:not(.dark) [class*="rounded-tr-sm bg-[#381a3e"] {
+    background-color: #7E22CE !important;
+    border-color: #6B21A8 !important;
+    color: #FAF5FF !important;
+  }
+
+  html:not(.dark) #conversation-stream button[class*="bg-[rgba(45,20,52"] {
+    background-color: #ECE3DB !important;
+    border-color: rgba(120, 60, 95, 0.25) !important;
+    color: #452D4D !important;
+  }
+  html:not(.dark) #conversation-stream button[class*="bg-[rgba(45,20,52"]:hover {
+    background-color: #E2D7CC !important;
+    color: #241428 !important;
+  }
+
+  html:not(.dark) #conversation-stream [class*="bg-[rgba(30,15,35,0.85"] {
+    background-color: #FAF5EF !important;
+    border-color: rgba(126, 34, 206, 0.35) !important;
+  }
+
+  html:not(.dark) #chat-window [class*="bg-[rgba(22,11,26"] {
+    background-color: #FFFFFF !important;
+    border-color: rgba(120, 60, 95, 0.3) !important;
+  }
+
+  html:not(.dark) #chat-window textarea {
+    color: #241428 !important;
+  }
+
+  html:not(.dark) #chat-window textarea::placeholder {
+    color: rgba(69, 45, 77, 0.55) !important;
+  }
+}
+
 html, body {
   max-width: 100%;
   overflow-x: hidden;
   position: relative;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 /* 3D Carousel Stage Styles */
@@ -34,67 +464,75 @@ html, body {
 .carousel-3d-card {
   transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
   transform-style: preserve-3d;
-  will-change: transform, opacity, z-index;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .card-center {
-  transform: translate3d(0, 0, 80px) rotateY(0deg) scale(1.02);
+  transform: translate3d(0, 0, 80px) rotateY(0deg) scale(1) !important;
   z-index: 30;
-  opacity: 1;
-  filter: blur(0px);
+  opacity: 1 !important;
+  filter: none !important;
   box-shadow: 0 20px 45px -10px rgba(192, 132, 252, 0.25), 0 0 25px rgba(221, 184, 255, 0.15);
-  border-color: rgba(192, 132, 252, 0.6);
+  border-color: rgba(192, 132, 252, 0.6) !important;
 }
 
 .card-left {
   transform: translate3d(-34%, 0, -40px) rotateY(16deg) scale(0.9);
   z-index: 20;
-  opacity: 0.65;
-  filter: blur(0.6px);
+  opacity: 0.75;
+  filter: none;
   cursor: pointer;
 }
 
 .card-left:hover {
-  opacity: 0.85;
+  opacity: 0.95;
   transform: translate3d(-32%, 0, -20px) rotateY(12deg) scale(0.93);
 }
 
 .card-right {
   transform: translate3d(35%, 0, -35px) rotateY(-18deg) scale(0.88);
   z-index: 20;
-  opacity: 0.75;
-  filter: blur(0.4px);
+  opacity: 0.8;
+  filter: none;
   cursor: pointer;
 }
 
 .card-right:hover {
-  opacity: 0.9;
+  opacity: 0.95;
   transform: translate3d(33%, 0, -20px) rotateY(-14deg) scale(0.91);
 }
 
 .card-far-right {
   transform: translate3d(68%, 0, -85px) rotateY(-28deg) scale(0.76);
   z-index: 10;
-  opacity: 0.45;
-  filter: blur(0.8px);
+  opacity: 0.55;
+  filter: none;
   cursor: pointer;
 }
 
 .card-far-right:hover {
-  opacity: 0.7;
+  opacity: 0.8;
   transform: translate3d(65%, 0, -65px) rotateY(-24deg) scale(0.8);
 }
 
 .card-far-left {
   transform: translate3d(-68%, 0, -85px) rotateY(28deg) scale(0.76);
   z-index: 10;
-  opacity: 0.45;
-  filter: blur(0.8px);
+  opacity: 0.55;
+  filter: none;
   cursor: pointer;
 }
 
 .card-far-left:hover {
-  opacity: 0.7;
+  opacity: 0.8;
   transform: translate3d(-65%, 0, -65px) rotateY(24deg) scale(0.8);
 }
 
@@ -112,29 +550,30 @@ html, body {
     box-shadow: 0 10px 30px -5px rgba(192, 132, 252, 0.25);
     z-index: 30;
     opacity: 1;
+    filter: none;
   }
   .card-left {
     transform: translate3d(-102%, 0, -45px) rotateY(18deg) scale(0.85) !important;
-    opacity: 0.35;
-    filter: blur(0.8px);
+    opacity: 0.45;
+    filter: none;
     z-index: 20;
   }
   .card-right {
     transform: translate3d(2%, 0, -45px) rotateY(-18deg) scale(0.85) !important;
-    opacity: 0.35;
-    filter: blur(0.8px);
+    opacity: 0.45;
+    filter: none;
     z-index: 20;
   }
   .card-far-right {
     transform: translate3d(55%, 0, -90px) rotateY(-28deg) scale(0.68) !important;
-    opacity: 0.15;
-    filter: blur(1.2px);
+    opacity: 0.25;
+    filter: none;
     z-index: 10;
   }
   .card-far-left {
     transform: translate3d(-155%, 0, -90px) rotateY(28deg) scale(0.68) !important;
-    opacity: 0.15;
-    filter: blur(1.2px);
+    opacity: 0.25;
+    filter: none;
     z-index: 10;
   }
 }
@@ -150,4 +589,33 @@ html, body {
   .carousel-3d-card {
     transition: none !important;
   }
+}
+
+/* Keyframes para el Botón y Globo Flotante de Wiki */
+@keyframes wikiGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(192, 132, 252, 0.3), 0 0 30px rgba(163, 90, 128, 0.2);
+    border-color: rgba(192, 132, 252, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(192, 132, 252, 0.65), 0 0 50px rgba(192, 132, 252, 0.35);
+    border-color: rgba(192, 132, 252, 0.85);
+  }
+}
+
+@keyframes wikiFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.wiki-fab-glow {
+  animation: wikiGlowPulse 3s infinite ease-in-out;
+}
+
+.wiki-bubble-float {
+  animation: wikiFloat 3.5s infinite ease-in-out;
 }

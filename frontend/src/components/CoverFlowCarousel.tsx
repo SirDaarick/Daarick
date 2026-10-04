@@ -195,7 +195,7 @@ export const CoverFlowCarousel: React.FC = () => {
               onMouseLeave={() => {
                 if (isCenter) setIsPaused(false);
               }}
-              className={`carousel-3d-card ${positionClass} absolute w-[92%] sm:w-full max-w-[390px] sm:max-w-[490px] p-5 sm:p-6 rounded-2xl bg-[rgba(26,15,30,0.97)] border border-[rgba(147,80,115,0.4)] backdrop-blur-xl flex flex-col justify-between transition-all shadow-[0_25px_60px_rgba(0,0,0,0.6)] min-h-[440px] sm:min-h-[460px]`}
+              className={`carousel-3d-card ${positionClass} absolute w-[92%] sm:w-full max-w-[390px] sm:max-w-[490px] p-5 sm:p-6 rounded-2xl bg-[#1C0F22] border border-[rgba(147,80,115,0.45)] flex flex-col justify-between transition-all shadow-[0_25px_60px_rgba(0,0,0,0.65)] min-h-[440px] sm:min-h-[460px]`}
             >
               {/* Corner Crosshairs */}
               <div className="absolute top-2 left-2 font-mono text-xs text-[#c084fc] select-none">+</div>

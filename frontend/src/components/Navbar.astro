@@ -61,7 +61,69 @@
           </svg>
           <span class="hidden sm:inline">Email</span>
         </a>
+
+        {/* Botón de alternancia de tema (Modo Claro / Oscuro según sistema o preferencia manual) */}
+        <button
+          id="theme-toggle-btn"
+          type="button"
+          class="p-2 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.38)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] hover:text-[#F8F4E9] transition-colors flex items-center justify-center font-mono text-xs active:scale-95 cursor-pointer"
+          title="Cambiar tema (Claro / Oscuro)"
+          aria-label="Cambiar tema"
+        >
+          {/* Icono Luna (Visible en modo claro) */}
+          <svg id="theme-moon-icon" class="w-4 h-4 hidden fill-current text-[#702652]" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          {/* Icono Sol (Visible en modo oscuro) */}
+          <svg id="theme-sun-icon" class="w-4 h-4 block fill-current text-[#ffbd2e]" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5"></circle>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
       </nav>
     </div>
   </div>
 </header>
+
+<script is:inline>
+  function updateThemeIcons() {
+    const isLight = document.documentElement.classList.contains('light');
+    const moon = document.getElementById('theme-moon-icon');
+    const sun = document.getElementById('theme-sun-icon');
+    if (moon && sun) {
+      if (isLight) {
+        moon.classList.remove('hidden');
+        moon.classList.add('block');
+        sun.classList.remove('block');
+        sun.classList.add('hidden');
+      } else {
+        sun.classList.remove('hidden');
+        sun.classList.add('block');
+        moon.classList.remove('block');
+        moon.classList.add('hidden');
+      }
+    }
+  }
+
+  // Sincronizar iconos en la carga
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateThemeIcons);
+  } else {
+    updateThemeIcons();
+  }
+
+  // Click handler
+  document.getElementById('theme-toggle-btn')?.addEventListener('click', () => {
+    const isCurrentlyDark = !document.documentElement.classList.contains('light');
+    if (isCurrentlyDark) {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+      localStorage.setItem('theme', 'dark');
+    }
+    updateThemeIcons();
+  });
+</script>

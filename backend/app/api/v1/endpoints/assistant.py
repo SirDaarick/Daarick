@@ -1,46 +1,34 @@
-from fastapi import APIRouter, HTTPException
+"""
+Endpoints de la API para el asistente Wiki y el agendado de citas con Google Calendar.
+"""
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from app.schemas.assistant import ChatRequest, ChatResponse
-from app.services.assistant_engine import (
-    process_chat,
-    stream_chat_sse,
-    OPENROUTER_API_KEY,
-    OPENROUTER_CHEAP_MODEL,
-    OPENROUTER_ROUTER_MODEL,
-    GEMINI_API_KEY,
-    GEMINI_FAST_MODEL,
-    GEMINI_HEAVY_MODEL
-)
+from app.schemas.assistant import ChatRequest, ChatResponse, BookSlotRequest, BookSlotResponse
+from app.services.assistant.orchestrator import orchestrate_wiki_turn, stream_wiki_sse
+from app.services.calendar_service import calendar_service
 
 router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_interaction(request: ChatRequest):
-    """
-    Endpoint interactivo para 'Wiki', el copiloto técnico del portafolio.
-    Aplica arquitectura Multi-Tier:
-    - Tier 1: Router de decisión (Jev / System One)
-    - Tier 2A: Modelo ágil para consultas simples y reescritura guiada (Gemini Flash vía Google AI Pro)
-    - Tier 2B: Modelo pesado para razonamiento profundo de arquitectura (Gemini Pro vía Google AI Pro)
-    - Tier 3: Motor semántico determinista local de respaldo garantizado (0 costo, 100% fidelidad)
-    """
+async def chat_interaction(request: ChatRequest, req: Request):
+    """Endpoint directo para interacción no-stream con Wiki."""
     try:
-        response = await process_chat(request.model_dump())
+        http_client = req.app.state.http_client
+        response = await orchestrate_wiki_turn(http_client, request.messages)
         return response
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error en el motor de Wiki: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error interno al procesar la respuesta.")
 
 @router.post("/chat/stream")
-async def chat_interaction_stream(request: ChatRequest):
+async def chat_interaction_stream(request: ChatRequest, req: Request):
     """
-    Endpoint interactivo con Server-Sent Events (SSE) para 'Wiki'.
-    Transmite la respuesta token a token en tiempo real.
-    Si la respuesta es premeditada (respuestas deterministas locales o de alcance),
-    se transmite poco a poco para mantener una experiencia uniforme e indistinguible.
+    Endpoint interactivo con Server-Sent Events (SSE).
+    Transmite el texto token por token en tiempo real y finaliza con las acciones resueltas.
     """
     try:
+        http_client = req.app.state.http_client
         return StreamingResponse(
-            stream_chat_sse(request.model_dump()),
+            stream_wiki_sse(http_client, request.messages),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
@@ -49,32 +37,53 @@ async def chat_interaction_stream(request: ChatRequest):
             }
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error en el stream de Wiki: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error al iniciar la transmisión de chat.")
+
+@router.get("/availability")
+async def get_booking_availability(req: Request):
+    """Retorna los próximos huecos de agenda disponibles en Google Calendar."""
+    try:
+        http_client = req.app.state.http_client
+        slots = await calendar_service.get_available_slots(http_client, max_slots=6)
+        return {"slots": slots}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error al consultar disponibilidad.")
+
+@router.post("/book", response_model=BookSlotResponse)
+async def book_calendar_slot(request: BookSlotRequest, req: Request):
+    """
+    Reserva un hueco en Google Calendar y crea la reunión en Google Meet.
+    Incluye protección contra honeypot y verificación determinista de disponibilidad.
+    """
+    # 1. Filtro anti-bots honeypot
+    if request.honeypot:
+        return BookSlotResponse(success=True, message="Solicitud recibida.")
+
+    try:
+        http_client = req.app.state.http_client
+        res = await calendar_service.create_calendar_event(
+            client=http_client,
+            start_iso=request.start_iso,
+            end_iso=request.end_iso,
+            client_name=request.client_name,
+            client_email=request.client_email,
+            need_summary=request.need_summary or ""
+        )
+        return BookSlotResponse(
+            success=res.get("success", False),
+            message=res.get("message", ""),
+            event_id=res.get("event_id"),
+            meet_link=res.get("meet_link")
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"No se pudo completar la reservación: {str(e)}")
 
 @router.get("/status")
 async def assistant_status():
-    """Retorna el estado de disponibilidad de Wiki y la configuración multi-tier activa."""
+    """Retorna el estado de operatividad de Wiki."""
     return {
         "status": "online",
         "agent": "Wiki",
-        "version": "3.1.0",
-        "architecture": "multi_tier_google_ai_pro",
-        "google_ai_pro": {
-            "configured": bool(GEMINI_API_KEY),
-            "fast_model": GEMINI_FAST_MODEL,
-            "heavy_model": GEMINI_HEAVY_MODEL
-        },
-        "openrouter": {
-            "configured": bool(OPENROUTER_API_KEY),
-            "router_model": OPENROUTER_ROUTER_MODEL,
-            "cheap_model": OPENROUTER_CHEAP_MODEL
-        },
-        "local_fallback": "active_guaranteed",
-        "capabilities": [
-            "anti_biblia_shield",
-            "sliding_window_memory",
-            "out_of_scope_guardrail",
-            "grounded_rewriting",
-            "multi_tier_model_routing"
-        ]
+        "version": "2.0.0",
+        "calendar_connected": calendar_service.is_configured()
     }

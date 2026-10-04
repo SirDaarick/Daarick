@@ -21,7 +21,7 @@ const {
 <html lang="es" class="dark scroll-smooth">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -30,8 +30,39 @@ const {
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <script is:inline>
+      (function() {
+        try {
+          const stored = localStorage.getItem('theme');
+          const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+          
+          function applyTheme(isDark) {
+            if (isDark) {
+              document.documentElement.classList.add('dark');
+              document.documentElement.classList.remove('light');
+            } else {
+              document.documentElement.classList.remove('dark');
+              document.documentElement.classList.add('light');
+            }
+          }
+
+          if (stored) {
+            applyTheme(stored === 'dark');
+          } else {
+            applyTheme(mediaQuery.matches);
+          }
+
+          // Escuchar cambios en la preferencia del sistema operativo si no se ha forzado manualmente
+          mediaQuery.addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+              applyTheme(e.matches);
+            }
+          });
+        } catch (_) {}
+      })();
+    </script>
   </head>
-  <body class="bg-[#160B1A] font-sans text-[#F8F4E9] min-h-screen relative selection:bg-[#c084fc] selection:text-[#500989] overflow-x-hidden">
+  <body class="bg-[var(--color-canvas-base,#160B1A)] font-sans text-[var(--color-text-ivory,#F8F4E9)] min-h-screen relative selection:bg-[#c084fc] selection:text-[#500989] overflow-x-hidden">
     {/* Subtle Grid Pattern Background */}
     <div class="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-10">
       <div class="absolute inset-0 bg-[radial-gradient(#ddb8ff_1px,transparent_1px)] [background-size:24px_24px]"></div>
