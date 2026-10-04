@@ -51,7 +51,7 @@ class BookSlotRequest(BaseModel):
     end_iso: str = Field(..., description="Horario de fin seleccionado")
     client_name: str = Field(..., min_length=2, max_length=100, description="Nombre del cliente")
     client_email: str = Field(..., min_length=5, max_length=150, description="Correo electrónico del cliente")
-    need_summary: Optional[str] = Field("", max_length=500, description="Resumen de la idea o automatización")
+    need_summary: Optional[str] = Field("", max_length=1500, description="Resumen estructurado de la necesidad e interés del cliente")
     honeypot: Optional[str] = Field(None, description="Campo anti-bots oculto")
 
 class BookSlotResponse(BaseModel):

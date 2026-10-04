@@ -217,13 +217,18 @@ class CalendarService:
             "Content-Type": "application/json"
         }
 
-        clean_summary = need_summary.strip() if need_summary else "Evaluación de automatización / proyecto"
+        clean_summary = need_summary.strip() if need_summary else "Evaluación de automatización y soluciones de software a medida"
         description = (
-            f"Llamada de diagnóstico técnico y automatización con Erick Daniel.\n\n"
-            f"• Cliente: {client_name}\n"
-            f"• Correo: {client_email}\n"
-            f"• Proyecto o idea a evaluar: {clean_summary}\n\n"
-            f"Agendado automáticamente a través del asistente Wiki del portafolio."
+            f"🗓️ LLAMADA DE DIAGNÓSTICO Y ASESORÍA TÉCNICA - DAARICK\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"👤 DATOS DEL CLIENTE:\n"
+            f"• Nombre: {client_name}\n"
+            f"• Correo: {client_email}\n\n"
+            f"📋 RESUMEN DE LO QUE LE INTERESÓ AL CLIENTE (WIKI):\n"
+            f"{clean_summary}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🤖 Agendado automáticamente por Wiki (Asesor Daarick)\n"
+            f"🔗 Enlace de Google Meet adjunto en esta invitación."
         )
 
         event_payload = {

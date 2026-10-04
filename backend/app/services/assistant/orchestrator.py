@@ -69,80 +69,107 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
     if is_user_asking_pricing(latest_text):
         return {
             "reply": (
-                "Regularmente no se cobra nada por adelantado; el pago inicial del desarrollo se realiza "
-                "una vez que apruebas el prototipo funcional interactivo. Posteriormente, en producción, "
-                "se maneja una cuota mensual por soporte y mejoras continuas. El costo se adapta a la complejidad de cada idea. "
+                "Para el desarrollo no se cobra nada por adelantado; el pago inicial se realiza "
+                "una vez que apruebas el prototipo navegable. Después se maneja una cuota mensual por soporte y mejoras. "
                 "¿Te gustaría agendar una llamada breve de 15 minutos para aterrizar tu proyecto?"
             ),
             "stage": "CIERRE",
             "project_ref": "ninguno",
-            "client_need_summary": "Consulta de precios y alcance",
+            "client_need_summary": "• Negocio: Consulta de alcance\n• Dolor detectado: Precios y viabilidad\n• Lo que le interesó: Conocer esquema de trabajo y prototipo sin anticipo",
             "wants_contact": False,
             "offer_booking": True,
-            "suggestions": ["Agendar llamada breve", "¿Cómo funciona el prototipo?", "Ver casos realizados"]
+            "suggestions": ["Agendar llamada breve", "¿Cómo funciona el prototipo?", "Platicar por WhatsApp"]
         }
 
-    # 2. Base de datos / Chatbot
+    # 2. Talleres, oficios o micronegocios (costura, reparación, comercio local, etc.)
+    if any(k in q for k in ["taller", "costura", "costuras", "ropa", "artesano", "reparacion", "tienda", "solo", "sola", "propio"]):
+        return {
+            "reply": (
+                "¡Qué gran oficio! Cuando estás al frente de un taller o negocio propio, cada detalle cuenta. "
+                "Para poder orientarte con algo que realmente te sirva a tu medida: "
+                "¿cómo atiendes hoy a tus clientes y qué tarea del día sientes que te quita más tiempo?"
+            ),
+            "stage": "EXPLORAR",
+            "project_ref": "paidea",
+            "client_need_summary": "• Negocio: Taller u oficio propio\n• Dolor detectado: Por diagnosticar (tiempo en atención/pedidos)\n• Lo que le interesó: Simplificar su día a día y tareas repetitivas",
+            "wants_contact": False,
+            "offer_booking": False,
+            "suggestions": ["Contestar dudas en WhatsApp", "Avisar entregas y cobros", "Notas y pedidos en papel"]
+        }
+
+    # 3. Base de datos / Chatbot / Consultas
     if any(k in q for k in ["chatbot", "datos", "alumno", "profesor", "inventario", "consultar", "paidea"]):
         return {
             "reply": (
-                "Es totalmente viable crear un asistente que responda preguntas consultando tu base de datos en tiempo real. "
-                "Un caso parecido es PAIDEA, donde el agente responde dudas sobre alumnos, calificaciones y trámites sin intervención manual. "
-                "¿Te gustaría implementarlo en WhatsApp o en tu página web?"
+                "Es totalmente viable crear un asistente que responda preguntas consultando tu información automáticamente. "
+                "Un caso parecido es PAIDEA, donde el agente responde dudas sin intervención manual. "
+                "¿Qué te parece esta idea? ¿Crees que te serviría en tu día a día, o tenías en mente algo diferente?"
             ),
-            "stage": "PRUEBA",
+            "stage": "PROPUESTA",
             "project_ref": "paidea",
-            "client_need_summary": "Chatbot para consultar base de datos",
+            "client_need_summary": "• Negocio: Consultas de clientes o base de datos\n• Dolor detectado: Tiempo respondiendo lo mismo repetidamente\n• Lo que le interesó: Asistente automatizado inteligente",
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["En WhatsApp", "En mi página web", "Agendar llamada breve"]
+            "suggestions": ["Me gusta la idea", "Pensaba en algo más simple", "¿Cómo funciona?"]
         }
 
-    # 3. Horarios o turnos
+    # 4. Horarios o turnos
     if any(k in q for k in ["horario", "horarios", "turno", "turnos", "empalme", "cuadrante"]):
         return {
             "reply": (
-                "Armar horarios de personal o turnos sin choques es perfectamente automatizable. "
-                "En el proyecto Tetring implementamos un motor que evalúa miles de combinaciones en milisegundos "
-                "para encontrar el rol perfecto sin empalmes. ¿Qué tipo de horarios manejas hoy?"
+                "Armar horarios de personal o turnos sin choques es perfectamente automatizable con un motor inteligente como en Tetring. "
+                "¿Qué te parece esa propuesta? ¿Crees que resolvería tu organización de turnos o tenías otra idea en mente?"
             ),
-            "stage": "PRUEBA",
+            "stage": "PROPUESTA",
             "project_ref": "tetring",
-            "client_need_summary": "Organización de turnos y horarios",
+            "client_need_summary": "• Negocio: Coordinación de turnos/horarios\n• Dolor detectado: Choques de horarios y cálculo manual\n• Lo que le interesó: Generador de turnos automático",
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["Turnos rotativos", "Horarios fijos", "¿Cómo agendar?"]
+            "suggestions": ["Me gusta la idea", "¿Cómo se implementa?", "Agendar llamada breve"]
         }
 
-    # 4. Facturas o tickets
+    # 5. Facturas o tickets
     if any(k in q for k in ["factura", "facturas", "ticket", "tickets", "recibo", "ocr", "excel"]):
         return {
             "reply": (
-                "Extraer datos de facturas y tickets a Excel de forma automática evita horas de captura manual. "
-                "Contamos con una demo interactiva de extracción de documentos con validación matemática de totales que puedes probar. "
-                "¿Manejas principalmente PDFs o fotos de tickets?"
+                "Extraer datos de facturas y tickets a Excel de forma automática evita horas de captura manual, como en nuestra demo de extracción. "
+                "¿Crees que una herramienta así te ahorraría tiempo, o qué proceso te interesa más mejorar?"
             ),
-            "stage": "PRUEBA",
+            "stage": "PROPUESTA",
             "project_ref": "invoicing",
-            "client_need_summary": "Extracción automática de facturas a Excel",
+            "client_need_summary": "• Negocio: Control administrativo y gastos\n• Dolor detectado: Captura manual de tickets y facturas\n• Lo que le interesó: Extractor automático a Excel",
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["Facturas en PDF", "Tickets en foto", "Probar demo"]
+            "suggestions": ["Me gusta la idea", "Probar demo", "Agendar llamada breve"]
         }
 
-    # 5. Respuesta general amigable
+    # 6. ERPs, Inventario y Sistemas a Medida
+    if any(k in q for k in ["erp", "sistema", "gestión", "gestion", "inventario", "stock", "sucursal", "sucursales"]):
+        return {
+            "reply": (
+                "¡Totalmente factible! Desarrollamos sistemas y ERPs a medida para centralizar inventarios, ventas, pedidos y clientes en un solo panel. "
+                "Para poder proponerte la mejor arquitectura: ¿qué procesos son los que hoy más te urge conectar o sincronizar?"
+            ),
+            "stage": "PROPUESTA",
+            "project_ref": "ninguno",
+            "client_need_summary": "• Negocio: Gestión comercial o pyme\n• Dolor detectado: Falta de integración entre áreas\n• Lo que le interesó: ERP o plataforma a medida",
+            "wants_contact": False,
+            "offer_booking": False,
+            "suggestions": ["Inventario y stock", "Ventas y clientes", "Agendar llamada de 15 min"]
+        }
+
+    # 7. Respuesta general amigable (Paso 1 del embudo)
     return {
         "reply": (
-            "Esa idea es completamente viable de automatizar y te ahorrará tiempo en tareas repetitivas. "
-            "Primero diseñamos un prototipo navegable para que compruebes cómo funcionará antes del desarrollo. "
-            "¿Te gustaría que revisemos los detalles en una breve videollamada?"
+            "Para poder darte la mejor recomendación adaptada a tu realidad: "
+            "¿de qué es tu negocio o qué actividad realizas, y trabajas por tu cuenta o con equipo?"
         ),
-        "stage": "PROPUESTA",
+        "stage": "DESCUBRIR",
         "project_ref": "ninguno",
-        "client_need_summary": "Idea de automatización para negocio",
+        "client_need_summary": "• Negocio: Por especificar\n• Dolor detectado: Por diagnosticar\n• Lo que le interesó: Asesoría general",
         "wants_contact": False,
         "offer_booking": False,
-        "suggestions": ["¿Cómo es la metodología?", "Ver proyectos realizados", "Agendar videollamada"]
+        "suggestions": ["Tengo un taller o tienda propia", "Trabajo por mi cuenta", "Tengo un equipo pequeño"]
     }
 
 async def orchestrate_wiki_turn(
@@ -152,12 +179,12 @@ async def orchestrate_wiki_turn(
     """Procesa un turno conversacional aplicando guardrails, LLM y políticas de acción deterministas."""
     if not raw_messages:
         return ChatResponse(
-            reply="¡Hola! Soy Wiki 👋 Cuéntame qué idea tienes en mente o qué proceso repetitivo te quita más tiempo en tu negocio, y te digo cómo lo podemos automatizar de forma sencilla.",
+            reply="¡Hola! Soy Wiki 👋 Estoy aquí para ayudarte a que tu trabajo sea más sencillo y te rinda más el día.\n\nPara empezar a orientarte, ¿de qué es tu negocio o a qué te dedicas?",
             suggestions=[
-                "Tengo una idea para mi negocio",
-                "Quiero un chatbot para mis clientes",
-                "¿Cómo se manejan los precios?",
-                "Quiero agendar una llamada breve"
+                "Tengo un taller o tienda propia",
+                "Vendo productos o hago entregas",
+                "Doy servicios o consultas",
+                "Trabajo por mi cuenta"
             ],
             stage="DESCUBRIR",
             source="wiki_local"
@@ -241,7 +268,7 @@ async def orchestrate_wiki_turn(
         if slots:
             booking_action = BookingAction(
                 slots=slots,
-                default_summary=client_need_summary or "Asesoría y automatización para negocio"
+                default_summary=client_need_summary or "• Negocio: Por detallar en llamada\n• Dolor detectado: Optimización de procesos\n• Lo que le interesó: Asesoría técnica con Erick"
             )
 
     # Limpiar sugerencias
@@ -283,7 +310,7 @@ async def stream_wiki_sse(
                 data_obj = {"token": buffer}
                 yield f"data: {json.dumps(data_obj, ensure_ascii=False)}\n\n"
                 buffer = ""
-                await asyncio.sleep(0.005)
+                await asyncio.sleep(0.025)
 
         if buffer:
             data_obj = {"token": buffer}

@@ -70,18 +70,18 @@ export const BookingSlotsCard: React.FC<BookingActionProps> = ({
 
   if (status === 'success') {
     return (
-      <div className="mt-3.5 p-4 rounded-xl bg-[rgba(16,185,129,0.1)] border border-[#10B981]/40 text-[#F8F4E9] flex flex-col gap-2.5">
-        <div className="flex items-center gap-2 text-[#10B981]">
+      <div className="mt-3.5 p-4 rounded-xl bg-[rgba(16,185,129,0.15)] border border-[#10B981]/50 text-[#FFFFFF] flex flex-col gap-2.5">
+        <div className="flex items-center gap-2 text-[#34d399]">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
-          <span className="font-mono text-xs font-bold uppercase tracking-wider">
+          <span className="font-sans text-sm font-bold uppercase tracking-wider">
             ¡Cita confirmada en Google Calendar!
           </span>
         </div>
-        <p className="text-xs text-[#F6DBC0]/90 leading-relaxed font-sans">
-          {message}
+        <p className="text-sm text-[#F8F4E9] leading-relaxed font-sans">
+          {message} Te enviamos la confirmación con el enlace de Google Meet a tu correo.
         </p>
         {selectedSlot && (
-          <div className="p-2 rounded bg-[rgba(0,0,0,0.3)] font-mono text-xs text-[#6ee7b7]">
+          <div className="p-2.5 rounded-lg bg-[rgba(0,0,0,0.35)] font-sans text-sm text-[#6ee7b7] font-medium">
             📅 {selectedSlot.label}
           </div>
         )}
@@ -90,7 +90,7 @@ export const BookingSlotsCard: React.FC<BookingActionProps> = ({
             href={meetLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-[#10B981] underline hover:text-[#6ee7b7] font-mono mt-1"
+            className="inline-flex items-center gap-1.5 text-sm text-[#34d399] underline hover:text-[#a7f3d0] font-sans font-semibold mt-1"
           >
             Enlace de Google Meet: {meetLink}
           </a>
@@ -100,27 +100,27 @@ export const BookingSlotsCard: React.FC<BookingActionProps> = ({
   }
 
   return (
-    <div className="mt-3.5 p-3.5 rounded-xl bg-[rgba(26,12,30,0.85)] border border-[#c084fc]/35 shadow-lg flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-2 border-b border-[rgba(147,80,115,0.25)] pb-2">
+    <div className="mt-3.5 p-4 rounded-xl bg-[rgba(26,12,30,0.95)] border border-[#c084fc]/50 shadow-lg flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-2 border-b border-[rgba(147,80,115,0.3)] pb-2.5">
         <div className="flex items-center gap-2">
-          <span className="p-1 rounded bg-[#c084fc]/20 text-[#c084fc]">
-            <Calendar className="w-3.5 h-3.5" />
+          <span className="p-1.5 rounded-lg bg-[#c084fc]/20 text-[#c084fc]">
+            <Calendar className="w-4 h-4" />
           </span>
-          <span className="font-mono text-xs font-bold text-[#F8F4E9]">
+          <span className="font-sans text-sm font-bold text-[#FFFFFF]">
             Agendar llamada breve (15-20 min)
           </span>
         </div>
-        <span className="font-mono text-[10px] text-[#c084fc] bg-[#c084fc]/15 px-2 py-0.5 rounded border border-[#c084fc]/30">
+        <span className="font-mono text-xs text-[#d8b4fe] bg-[#c084fc]/20 px-2 py-0.5 rounded font-semibold border border-[#c084fc]/40">
           Google Calendar
         </span>
       </div>
 
-      <p className="font-sans text-xs text-[#F6DBC0]/85 leading-relaxed">
+      <p className="font-sans text-sm text-[#F8F4E9] leading-relaxed">
         Elige un horario disponible para revisar tu idea con Erick:
       </p>
 
       {/* Selector de Horarios */}
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         {slots.map((slot, idx) => {
           const isSelected = selectedSlot?.start_iso === slot.start_iso;
           return (
@@ -128,17 +128,17 @@ export const BookingSlotsCard: React.FC<BookingActionProps> = ({
               key={idx}
               type="button"
               onClick={() => setSelectedSlot(slot)}
-              className={`w-full text-left px-3 py-2 rounded-lg font-mono text-xs transition-all flex items-center justify-between cursor-pointer ${
+              className={`w-full text-left px-3.5 py-2.5 rounded-lg font-sans text-sm transition-all flex items-center justify-between cursor-pointer ${
                 isSelected
                   ? 'bg-[#c084fc] text-[#160B1A] font-bold shadow-md'
-                  : 'bg-[rgba(55,26,62,0.5)] hover:bg-[rgba(80,45,85,0.5)] border border-[rgba(147,80,115,0.3)] text-[#F6DBC0]'
+                  : 'bg-[rgba(55,26,62,0.65)] hover:bg-[rgba(80,45,85,0.7)] border border-[rgba(192,132,252,0.35)] text-[#FFFFFF]'
               }`}
             >
-              <span className="flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5 opacity-80" />
-                <span>{slot.label}</span>
+              <span className="flex items-center gap-2.5">
+                <Clock className="w-4 h-4 opacity-80" />
+                <span className="font-medium">{slot.label}</span>
               </span>
-              <span className="text-[10px] uppercase opacity-75">
+              <span className="text-xs uppercase font-bold opacity-85">
                 {isSelected ? 'Seleccionado' : 'Elegir'}
               </span>
             </button>
@@ -148,32 +148,32 @@ export const BookingSlotsCard: React.FC<BookingActionProps> = ({
 
       {/* Formulario de confirmación al elegir un horario */}
       {selectedSlot && (
-        <form onSubmit={handleSubmit} className="pt-2 flex flex-col gap-2.5 animate-fadeIn">
-          <div className="text-[11px] font-mono text-[#ddb8ff]">
-            Confirmar para: <span className="font-bold">{selectedSlot.label}</span>
+        <form onSubmit={handleSubmit} className="pt-2 flex flex-col gap-3 animate-fadeIn">
+          <div className="text-xs font-sans text-[#d8b4fe] font-semibold">
+            Confirmar para: <span className="font-bold text-white">{selectedSlot.label}</span>
           </div>
 
           <div className="relative">
-            <User className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[#F6DBC0]/50" />
+            <User className="w-4 h-4 absolute left-3 top-3 text-[#F6DBC0]/70" />
             <input
               type="text"
               required
               placeholder="Tu nombre completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[rgba(20,10,25,0.7)] border border-[rgba(147,80,115,0.35)] text-xs text-[#F8F4E9] focus:outline-none focus:border-[#c084fc]"
+              className="w-full pl-9 pr-3.5 py-2 rounded-lg bg-[rgba(20,10,25,0.85)] border border-[rgba(192,132,252,0.4)] text-sm text-[#FFFFFF] placeholder-[#F6DBC0]/70 focus:outline-none focus:border-[#c084fc]"
             />
           </div>
 
           <div className="relative">
-            <Mail className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[#F6DBC0]/50" />
+            <Mail className="w-4 h-4 absolute left-3 top-3 text-[#F6DBC0]/70" />
             <input
               type="email"
               required
               placeholder="Tu correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[rgba(20,10,25,0.7)] border border-[rgba(147,80,115,0.35)] text-xs text-[#F8F4E9] focus:outline-none focus:border-[#c084fc]"
+              className="w-full pl-9 pr-3.5 py-2 rounded-lg bg-[rgba(20,10,25,0.85)] border border-[rgba(192,132,252,0.4)] text-sm text-[#FFFFFF] placeholder-[#F6DBC0]/70 focus:outline-none focus:border-[#c084fc]"
             />
           </div>
 
@@ -188,16 +188,16 @@ export const BookingSlotsCard: React.FC<BookingActionProps> = ({
           />
 
           {status === 'error' && (
-            <span className="text-[11px] font-mono text-rose-300">{message}</span>
+            <span className="text-xs font-sans text-rose-300 font-semibold">{message}</span>
           )}
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-1 py-2 px-3 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] active:scale-95 text-[#160B1A] font-semibold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md disabled:opacity-50"
+            className="w-full mt-1 py-2.5 px-4 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] active:scale-95 text-[#160B1A] font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
           >
             <span>{isSubmitting ? 'Reservando en Google Calendar...' : 'Confirmar y Recibir Invitación'}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-4 h-4" />
           </button>
         </form>
       )}
