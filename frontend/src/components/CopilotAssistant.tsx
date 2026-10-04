@@ -10,7 +10,8 @@ import {
   Sparkles,
   RefreshCw,
   ExternalLink,
-  Mail
+  Mail,
+  Check
 } from 'lucide-react';
 import { BookingSlotsCard, type CalendarSlot } from './BookingSlotsCard';
 
@@ -41,6 +42,7 @@ interface ChatMessage {
   timestamp: string;
   sig?: string;
   stage?: string;
+  options?: string[];
   suggestions?: string[];
   contact_actions?: ContactAction[];
   project_action?: ProjectAction | null;
@@ -98,10 +100,14 @@ export const CopilotAssistant: React.FC = () => {
     }
   ]);
 
+  const conversationStreamRef = useRef<HTMLDivElement>(null);
   const streamEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
   const baseTextRef = useRef('');
+
+  // Selección de opciones múltiples interactiva (estilo Claude)
+  const [selectedOptionsMap, setSelectedOptionsMap] = useState<Record<string, string[]>>({});
 
   // Adaptación al teclado virtual en móvil
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
@@ -236,12 +242,75 @@ export const CopilotAssistant: React.FC = () => {
     }
   }, [messages]);
 
-  // Auto-scroll al final
+  // Scroll robusto hacia el final del flujo de mensajes (tanto de contenedor como de marcador final)
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    if (conversationStreamRef.current) {
+      conversationStreamRef.current.scrollTo({
+        top: conversationStreamRef.current.scrollHeight,
+        behavior
+      });
+    }
+    streamEndRef.current?.scrollIntoView({ behavior, block: 'end' });
+  };
+
+  const toggleOption = (msgId: string, option: string) => {
+    setSelectedOptionsMap((prev) => {
+      const current = prev[msgId] || [];
+      const exists = current.includes(option);
+      const updated = exists
+        ? current.filter((o) => o !== option)
+        : [...current, option];
+      return { ...prev, [msgId]: updated };
+    });
+  };
+
+  const handleSendSelectedOptions = (msgId: string) => {
+    const selected = selectedOptionsMap[msgId] || [];
+    if (selected.length === 0 || isLoading) return;
+
+    let formattedText = '';
+    if (selected.length === 1) {
+      formattedText = `Me interesa esta opción para mi negocio:\n• ${selected[0]}`;
+    } else {
+      formattedText =
+        `Me interesan estas ${selected.length} opciones para mi negocio:\n` +
+        selected.map((s) => `• ${s}`).join('\n');
+    }
+    handleSendMessage(formattedText);
+  };
+
+  // Auto-scroll al final ante mensajes nuevos o estado de carga
   useEffect(() => {
     if (isOpen) {
-      streamEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      scrollToBottom('smooth');
     }
-  }, [messages, isLoading, isOpen]);
+  }, [messages, isLoading]);
+
+  // Auto-scroll al abrir el chat (inmediato y tras cálculo de dimensiones)
+  useEffect(() => {
+    if (isOpen) {
+      scrollToBottom('auto');
+      const t1 = setTimeout(() => scrollToBottom('smooth'), 80);
+      const t2 = setTimeout(() => scrollToBottom('smooth'), 250);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [isOpen]);
+
+  // Auto-scroll reactivo cuando el teclado virtual en móvil abre o cierra (cambia viewportHeight)
+  useEffect(() => {
+    if (isOpen && viewportHeight !== null) {
+      scrollToBottom('smooth');
+      const t1 = setTimeout(() => scrollToBottom('smooth'), 100);
+      const t2 = setTimeout(() => scrollToBottom('smooth'), 280);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [viewportHeight, isOpen]);
 
   // Mostrar globo interactivo de bienvenida tras 3.5 segundos si no ha interactuado
   useEffect(() => {
@@ -346,6 +415,7 @@ export const CopilotAssistant: React.FC = () => {
                         content: data.reply || accumulated,
                         sig: data.message_sig,
                         stage: data.stage,
+                        options: data.options || [],
                         contact_actions: data.contact_actions || [],
                         project_action: data.project_action || null,
                         booking_action: data.booking_action || null,
@@ -375,6 +445,7 @@ export const CopilotAssistant: React.FC = () => {
                   'Para ese proceso, una automatización conectada a tus herramientas ' +
                   'es totalmente viable y te ahorrará horas de trabajo manual. ' +
                   '¿Te gustaría agendar una llamada breve de 15 minutos para revisar los detalles con Erick?',
+                options: [],
                 suggestions: ['Agendar llamada breve', '¿Cómo son los precios?', 'Ver proyectos']
               }
             : m
@@ -540,7 +611,8 @@ export const CopilotAssistant: React.FC = () => {
         {/* Flujo de Mensajes */}
         <div
           id="conversation-stream"
-          className="flex-1 p-4 sm:p-5 space-y-4 overflow-y-auto font-sans text-sm text-[#F8F4E9] scrollbar-thin scrollbar-thumb-[rgba(147,80,115,0.3)]"
+          ref={conversationStreamRef}
+          className="flex-1 min-h-0 p-4 sm:p-5 space-y-4 overflow-y-auto font-sans text-sm text-[#F8F4E9] scrollbar-thin scrollbar-thumb-[rgba(147,80,115,0.3)]"
         >
           {messages.map((msg, index) => {
             const isBot = msg.role === 'assistant';
@@ -579,6 +651,92 @@ export const CopilotAssistant: React.FC = () => {
                           {/* Cursor parpadeante durante streaming */}
                           {isLastMessage && isLoading && msg.content && (
                             <span className="inline-block w-2 h-4 ml-1 bg-[#c084fc] animate-pulse align-middle" />
+                          )}
+
+                          {/* TARJETA DE SELECCIÓN INTERACTIVA DE 3 OPCIONES (ESTILO CLAUDE) */}
+                          {msg.options && msg.options.length > 0 && (
+                            <div className="mt-3.5 p-3.5 sm:p-4 rounded-xl bg-[rgba(24,10,28,0.95)] border border-[#c084fc]/50 shadow-lg flex flex-col gap-3">
+                              <div className="flex items-center justify-between gap-2 border-b border-[rgba(147,80,115,0.3)] pb-2.5">
+                                <div className="flex items-center gap-2">
+                                  <span className="p-1 rounded bg-[#c084fc]/20 text-[#c084fc]">
+                                    <Sparkles className="w-4 h-4" />
+                                  </span>
+                                  <span className="font-sans text-sm sm:text-base font-bold text-[#FFFFFF] tracking-tight">
+                                    Posibles caminos para tu negocio:
+                                  </span>
+                                </div>
+                                <span className="font-mono text-xs px-2.5 py-0.5 rounded bg-[rgba(192,132,252,0.2)] text-[#d8b4fe] font-semibold border border-[#c084fc]/30">
+                                  {msg.options.length} opciones
+                                </span>
+                              </div>
+
+                              <div className="flex flex-col gap-2">
+                                {msg.options.map((option, optIdx) => {
+                                  const isSelected = (selectedOptionsMap[msg.id] || []).includes(option);
+                                  const isInteractive = isLastMessage && !isLoading;
+
+                                  return (
+                                    <button
+                                      key={optIdx}
+                                      type="button"
+                                      disabled={!isInteractive}
+                                      onClick={() => isInteractive && toggleOption(msg.id, option)}
+                                      aria-checked={isSelected}
+                                      role="checkbox"
+                                      className={`w-full p-3 sm:p-3.5 rounded-xl text-left flex items-start gap-3 transition-all duration-150 select-none ${
+                                        !isInteractive
+                                          ? 'bg-[rgba(42,18,50,0.5)] border border-[rgba(147,80,115,0.25)] text-[#e2d4e7] opacity-80 cursor-default'
+                                          : isSelected
+                                          ? 'bg-[rgba(92,36,112,0.85)] border-2 border-[#c084fc] text-[#FFFFFF] shadow-[0_0_15px_rgba(192,132,252,0.3)] cursor-pointer scale-[1.01]'
+                                          : 'bg-[rgba(48,22,58,0.65)] hover:bg-[rgba(72,32,86,0.8)] border border-[rgba(192,132,252,0.35)] text-[#F8F4E9] cursor-pointer'
+                                      }`}
+                                    >
+                                      <div
+                                        className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 border transition-all ${
+                                          isSelected
+                                            ? 'bg-[#c084fc] border-[#c084fc] text-[#160B1A]'
+                                            : 'bg-[rgba(30,12,36,0.6)] border-[rgba(192,132,252,0.5)] text-transparent'
+                                        }`}
+                                      >
+                                        <Check className={`w-3.5 h-3.5 stroke-[3] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
+                                      </div>
+
+                                      <div className="flex-1 flex flex-col">
+                                        <span className={`text-[14px] sm:text-[15px] leading-snug ${isSelected ? 'font-bold text-[#FFFFFF]' : 'font-medium text-[#F8F4E9]'}`}>
+                                          {option}
+                                        </span>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              {isLastMessage && !isLoading && (
+                                <div className="pt-1.5 flex flex-col gap-2">
+                                  <button
+                                    type="button"
+                                    disabled={(selectedOptionsMap[msg.id] || []).length === 0}
+                                    onClick={() => handleSendSelectedOptions(msg.id)}
+                                    className={`w-full py-2.5 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all shadow-md ${
+                                      (selectedOptionsMap[msg.id] || []).length > 0
+                                        ? 'bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] active:scale-[0.98] cursor-pointer'
+                                        : 'bg-[rgba(80,45,85,0.4)] text-[rgba(248,244,233,0.4)] border border-[rgba(147,80,115,0.3)] cursor-not-allowed'
+                                    }`}
+                                  >
+                                    <span>
+                                      {(selectedOptionsMap[msg.id] || []).length > 0
+                                        ? `Continuar con las seleccionadas (${(selectedOptionsMap[msg.id] || []).length})`
+                                        : 'Selecciona una o más opciones para continuar'}
+                                    </span>
+                                    {(selectedOptionsMap[msg.id] || []).length > 0 && <Send className="w-4 h-4 ml-1" />}
+                                  </button>
+
+                                  <span className="text-center font-sans text-xs text-[#d8b4fe]/80 pt-0.5">
+                                    💡 O si prefieres otra cosa, escribe tu idea libremente aquí abajo 👇
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           )}
 
                           {/* TARJETA DE PROYECTO COMPROBADO */}
@@ -685,8 +843,8 @@ export const CopilotAssistant: React.FC = () => {
                   </div>
                 </div>
 
-                {/* SUGERENCIAS: Solo se muestran en el último mensaje para no saturar la pantalla */}
-                {isBot && isLastMessage && msg.suggestions && msg.suggestions.length > 0 && !isLoading && (
+                {/* SUGERENCIAS: Solo se muestran en el último mensaje si no hay opciones interactivas */}
+                {isBot && isLastMessage && msg.suggestions && msg.suggestions.length > 0 && !isLoading && (!msg.options || msg.options.length === 0) && (
                   <div className="pt-2.5 pl-10 flex flex-wrap gap-2 max-w-full">
                     {msg.suggestions.map((sug, sIdx) => (
                       <button
@@ -741,6 +899,13 @@ export const CopilotAssistant: React.FC = () => {
               <textarea
                 ref={textareaRef}
                 value={inputValue}
+                onFocus={() => {
+                  setTimeout(() => scrollToBottom('smooth'), 120);
+                  setTimeout(() => scrollToBottom('smooth'), 300);
+                }}
+                onClick={() => {
+                  setTimeout(() => scrollToBottom('smooth'), 120);
+                }}
                 onChange={(e) => {
                   setInputValue(e.target.value);
                   e.target.style.height = 'auto';

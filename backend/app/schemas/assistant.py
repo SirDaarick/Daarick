@@ -31,6 +31,7 @@ class ChatMessage(BaseModel):
     content: str = Field(..., max_length=4000, description="Contenido del mensaje")
     timestamp: Optional[str] = Field(None, description="Hora de envío formateada")
     sig: Optional[str] = Field(None, description="Firma criptográfica HMAC del turno del asistente")
+    options: Optional[List[str]] = Field(default_factory=list, description="Opciones o rutas de automatización interactivas")
 
 class ChatRequest(BaseModel):
     messages: List[ChatMessage] = Field(..., min_length=1, max_length=15, description="Historial de mensajes recientes")
@@ -39,7 +40,8 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str = Field(..., description="Respuesta del asistente breve y en lenguaje de negocio")
     suggestions: List[str] = Field(default_factory=list, description="Tarjetas de mensajes sugeridos para el usuario")
-    stage: Optional[str] = Field("DESCUBRIR", description="Etapa del embudo: DESCUBRIR, PROPUESTA, PRUEBA, CIERRE, FUERA_DE_ALCANCE")
+    options: Optional[List[str]] = Field(default_factory=list, description="Lista de 3 opciones o rutas de automatización para que el usuario elija")
+    stage: Optional[str] = Field("DESCUBRIR", description="Etapa del embudo: DESCUBRIR, OPCIONES, PROPUESTA, PRUEBA, CIERRE, FUERA_DE_ALCANCE")
     source: str = Field("wiki_engine", description="Motor de generación")
     contact_actions: Optional[List[ContactAction]] = Field(default_factory=list, description="Botones de contacto directo")
     project_action: Optional[ProjectAction] = Field(None, description="Tarjeta de caso análogo comprobado")

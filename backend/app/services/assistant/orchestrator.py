@@ -74,6 +74,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
                 "¿Te gustaría agendar una llamada breve de 15 minutos para aterrizar tu proyecto?"
             ),
             "stage": "CIERRE",
+            "options": [],
             "project_ref": "ninguno",
             "client_need_summary": "• Negocio: Consulta de alcance\n• Dolor detectado: Precios y viabilidad\n• Lo que le interesó: Conocer esquema de trabajo y prototipo sin anticipo",
             "wants_contact": False,
@@ -83,14 +84,33 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
 
     # 2. Talleres, oficios o micronegocios (costura, reparación, comercio local, etc.)
     if any(k in q for k in ["taller", "costura", "costuras", "ropa", "artesano", "reparacion", "tienda", "solo", "sola", "propio"]):
+        if any(p in q for p in ["tiempo", "papel", "mensaje", "whatsapp", "pedido", "pedidos", "entrega", "cobro", "nota", "pierdo", "cuesta", "tardo"]):
+            return {
+                "reply": (
+                    "¡Entiendo perfectamente! Cuando estás al frente del negocio, anotar a mano y responder mensajes quita mucho tiempo. "
+                    "Te preparé 3 opciones prácticas que podemos implementar a tu medida. Puedes seleccionar una o varias para evaluar el camino:"
+                ),
+                "stage": "OPCIONES",
+                "options": [
+                    "Avisos automáticos a clientes por WhatsApp cuando su trabajo o prenda esté lista",
+                    "Registro ágil de pedidos, medidas y notas desde el celular sin papel",
+                    "Recordatorios automáticos de cobros y abonos pendientes"
+                ],
+                "project_ref": "ninguno",
+                "client_need_summary": "• Negocio: Taller u oficio propio\n• Dolor detectado: Tareas manuales y tiempo en avisos/pedidos\n• Lo que le interesó: Opciones de automatización ágil",
+                "wants_contact": False,
+                "offer_booking": False,
+                "suggestions": ["Me gusta la opción 1", "Me interesan las 3", "Tengo otra idea en mente"]
+            }
         return {
             "reply": (
                 "¡Qué gran oficio! Cuando estás al frente de un taller o negocio propio, cada detalle cuenta. "
                 "Para poder orientarte con algo que realmente te sirva a tu medida: "
                 "¿cómo atiendes hoy a tus clientes y qué tarea del día sientes que te quita más tiempo?"
             ),
-            "stage": "EXPLORAR",
-            "project_ref": "paidea",
+            "stage": "DESCUBRIR",
+            "options": [],
+            "project_ref": "ninguno",
             "client_need_summary": "• Negocio: Taller u oficio propio\n• Dolor detectado: Por diagnosticar (tiempo en atención/pedidos)\n• Lo que le interesó: Simplificar su día a día y tareas repetitivas",
             "wants_contact": False,
             "offer_booking": False,
@@ -106,6 +126,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
                 "¿Qué te parece esta idea? ¿Crees que te serviría en tu día a día, o tenías en mente algo diferente?"
             ),
             "stage": "PROPUESTA",
+            "options": [],
             "project_ref": "paidea",
             "client_need_summary": "• Negocio: Consultas de clientes o base de datos\n• Dolor detectado: Tiempo respondiendo lo mismo repetidamente\n• Lo que le interesó: Asistente automatizado inteligente",
             "wants_contact": False,
@@ -121,6 +142,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
                 "¿Qué te parece esa propuesta? ¿Crees que resolvería tu organización de turnos o tenías otra idea en mente?"
             ),
             "stage": "PROPUESTA",
+            "options": [],
             "project_ref": "tetring",
             "client_need_summary": "• Negocio: Coordinación de turnos/horarios\n• Dolor detectado: Choques de horarios y cálculo manual\n• Lo que le interesó: Generador de turnos automático",
             "wants_contact": False,
@@ -136,6 +158,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
                 "¿Crees que una herramienta así te ahorraría tiempo, o qué proceso te interesa más mejorar?"
             ),
             "stage": "PROPUESTA",
+            "options": [],
             "project_ref": "invoicing",
             "client_need_summary": "• Negocio: Control administrativo y gastos\n• Dolor detectado: Captura manual de tickets y facturas\n• Lo que le interesó: Extractor automático a Excel",
             "wants_contact": False,
@@ -151,6 +174,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
                 "Para poder proponerte la mejor arquitectura: ¿qué procesos son los que hoy más te urge conectar o sincronizar?"
             ),
             "stage": "PROPUESTA",
+            "options": [],
             "project_ref": "ninguno",
             "client_need_summary": "• Negocio: Gestión comercial o pyme\n• Dolor detectado: Falta de integración entre áreas\n• Lo que le interesó: ERP o plataforma a medida",
             "wants_contact": False,
@@ -165,6 +189,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "¿de qué es tu negocio o qué actividad realizas, y trabajas por tu cuenta o con equipo?"
         ),
         "stage": "DESCUBRIR",
+        "options": [],
         "project_ref": "ninguno",
         "client_need_summary": "• Negocio: Por especificar\n• Dolor detectado: Por diagnosticar\n• Lo que le interesó: Asesoría general",
         "wants_contact": False,
@@ -186,6 +211,7 @@ async def orchestrate_wiki_turn(
                 "Doy servicios o consultas",
                 "Trabajo por mi cuenta"
             ],
+            options=[],
             stage="DESCUBRIR",
             source="wiki_local"
         )
@@ -208,6 +234,7 @@ async def orchestrate_wiki_turn(
                 "¿Qué proyectos ha desarrollado Erick?",
                 "Quiero agendar una videollamada"
             ],
+            options=[],
             stage="FUERA_DE_ALCANCE",
             source="guardrail_shield",
             message_sig=sig
@@ -227,12 +254,16 @@ async def orchestrate_wiki_turn(
     wants_contact = llm_output.get("wants_contact", False)
     offer_booking = llm_output.get("offer_booking", False)
     raw_sug = llm_output.get("suggestions", [])
+    raw_options = llm_output.get("options", [])
+    options = []
+    if isinstance(raw_options, list):
+        options = [str(opt).strip() for opt in raw_options if str(opt).strip()][:3]
 
     # 4. POLÍTICAS DE ACCIÓN DETERMINISTAS EN EL SERVIDOR
     
-    # Política de proyecto análogo:
+    # Política de proyecto análogo: en etapa OPCIONES no adelantamos la tarjeta de proyecto
     project_action = None
-    if project_ref in PROJECT_ACTIONS_CATALOG and stage in ["PRUEBA", "PROPUESTA"]:
+    if stage != "OPCIONES" and project_ref in PROJECT_ACTIONS_CATALOG and stage in ["PRUEBA", "PROPUESTA"]:
         project_action = PROJECT_ACTIONS_CATALOG[project_ref]
 
     # Política de contacto directo:
@@ -282,6 +313,7 @@ async def orchestrate_wiki_turn(
     return ChatResponse(
         reply=reply_text,
         suggestions=clean_suggestions,
+        options=options,
         stage=stage,
         source="wiki_engine",
         contact_actions=contact_actions,
@@ -321,6 +353,7 @@ async def stream_wiki_sse(
             "done": True,
             "reply": reply_text,
             "suggestions": response.suggestions,
+            "options": response.options or [],
             "stage": response.stage,
             "source": response.source,
             "contact_actions": [c.model_dump() for c in response.contact_actions] if response.contact_actions else [],

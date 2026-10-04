@@ -67,7 +67,7 @@ async def call_openrouter_model(
         "model": model_name,
         "messages": formatted_msgs,
         "temperature": 0.35,
-        "max_tokens": 450,
+        "max_tokens": 600,
         "response_format": {"type": "json_object"}
     }
 
@@ -112,7 +112,7 @@ async def call_gemini_direct(
         "systemInstruction": {"parts": [{"text": WIKI_SYSTEM_PROMPT}]},
         "generationConfig": {
             "temperature": 0.35,
-            "maxOutputTokens": 450,
+            "maxOutputTokens": 600,
             "responseMimeType": "application/json",
             "responseSchema": GEMINI_RESPONSE_SCHEMA
         }
