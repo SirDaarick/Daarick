@@ -15,73 +15,12 @@ interface Testimonial {
   created_at: string;
 }
 
-const SEED_TESTIMONIALS: Testimonial[] = [
-  {
-    id: "seed-1",
-    system: "Tetring",
-    author_name: "Elena M.",
-    author_role: "Gerente de Finanzas y Control de Gestión",
-    before: "El equipo dedicaba más de 35 horas semanales a cotejar facturas PDF a mano en hojas de cálculo, con un margen de error del 8% en capturas.",
-    after: "Extrajimos 12.000 facturas sin intervención manual. La conciliación bajó a segundos y el margen de error se redujo a cero este trimestre.",
-    extra_comments: "La interfaz es intuitiva y el OCR determinista ahorra semanas enteras de auditoría tributaria.",
-    headline: "Automatizó 12.000 facturas ahorrando 35h semanales, pero requiere que los PDFs no sean fotos borrosas.",
-    approved: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "seed-2",
-    system: "Graphito",
-    author_name: "Carlos R.",
-    author_role: "Director de Operaciones y Logística",
-    before: "Para resolver cuellos de botella en rutas de distribución nos tomaba 40 minutos evaluar manualmente grafos y árboles de decisión en papel.",
-    after: "El evaluador de grafos redujo el análisis de 40 minutos a 1.2 segundos con visualización interactiva en tiempo real.",
-    extra_comments: "Ver los nodos iluminarse y recalcular la ruta óptima en segundos nos dio control absoluto de nuestras operaciones.",
-    headline: "Bajó el análisis de rutas de 40 min a 1.2s en incidencias, aunque la curva de aprendizaje inicial toma un par de días.",
-    approved: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "seed-3",
-    system: "PAIDEA",
-    author_name: "Marcos T.",
-    author_role: "Tech Lead & Enterprise Architect",
-    before: "Los modelos de lenguaje comerciales alucinaban respuestas ambiguas al consultar manuales técnicos internos de más de 800 páginas.",
-    after: "La arquitectura RAG con ChromaDB responde con fuentes exactas y cero alucinaciones con latencia menor a 400ms.",
-    extra_comments: "Es el primer sistema de agentes que podemos desplegar a producción sin miedo a respuestas inventadas.",
-    headline: "Respuestas técnicas exactas en <400ms sin alucinaciones, pero necesita buena indexación previa de documentos.",
-    approved: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "seed-4",
-    system: "Paralel",
-    author_name: "Sofía V.",
-    author_role: "Científica de Datos y Rendimiento",
-    before: "Nuestros scripts en Python tardaban más de 2 horas en procesar simulaciones masivas de datos debido al bloqueo del GIL y ejecución secuencial.",
-    after: "Con el runtime concurrente en C++ paralelizado, el tiempo de ejecución cayó de 2 horas a solo 4 minutos.",
-    extra_comments: "Aprovecha al máximo todos los núcleos de CPU del servidor sin complejidad innecesaria en el código.",
-    headline: "Simulaciones masivas pasaron de 2 horas a 4 minutos en C++, aunque el consumo de RAM sube con datasets gigantes.",
-    approved: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "seed-5",
-    system: "Tetring",
-    author_name: "Rodrigo A.",
-    author_role: "Fundador de Startup B2B",
-    before: "Perdíamos contratos porque tardábamos 3 días en emitir estados de cuenta validados para nuestros clientes corporativos.",
-    after: "Ahora el pipeline procesa y valida los balances en menos de 10 segundos directamente desde la web.",
-    extra_comments: "Excelente solución. Nos permitió cerrar clientes corporativos que exigían validación inmediata sin esperas.",
-    headline: "Estados de cuenta validados en 10s en vez de 3 días para clientes B2B, acelerando el cierre de contratos.",
-    approved: true,
-    created_at: new Date().toISOString()
-  }
-];
-
 export default function TestimonialsInteractive() {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(SEED_TESTIMONIALS);
-  // Lista circular infinita: 3 bloques (clones antes, originales centro, clones después)
-  const [displayIndex, setDisplayIndex] = useState(SEED_TESTIMONIALS.length);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Lista circular infinita: 5 bloques continuos (2 a la izquierda, Set 2 al centro, 2 a la derecha)
+  const [displayIndex, setDisplayIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
   const [cardStep, setCardStep] = useState(410);
   const [visibleCount, setVisibleCount] = useState(3);
@@ -92,16 +31,22 @@ export default function TestimonialsInteractive() {
   const trackRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const isMovingRef = useRef(false);
+  const animTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const N = testimonials.length;
+  const isCarousel = N > visibleCount;
   const activeIndex = N > 0 ? ((displayIndex % N) + N) % N : 0;
 
-  // Triplicar lista para buffer circular continuo
+  // 5 conjuntos idénticos para tener margen de sobra a ambos lados y evitar cualquier hueco
   const displayItems = useMemo(() => {
     if (testimonials.length === 0) return [];
     return [
-      ...testimonials.map((t) => ({ ...t, _virtualKey: `set0-${t.id}` })),
-      ...testimonials.map((t) => ({ ...t, _virtualKey: `set1-${t.id}` })),
-      ...testimonials.map((t) => ({ ...t, _virtualKey: `set2-${t.id}` }))
+      ...testimonials.map((t, i) => ({ ...t, _virtualKey: `set0-${t.id}-${i}` })),
+      ...testimonials.map((t, i) => ({ ...t, _virtualKey: `set1-${t.id}-${i}` })),
+      ...testimonials.map((t, i) => ({ ...t, _virtualKey: `set2-${t.id}-${i}` })),
+      ...testimonials.map((t, i) => ({ ...t, _virtualKey: `set3-${t.id}-${i}` })),
+      ...testimonials.map((t, i) => ({ ...t, _virtualKey: `set4-${t.id}-${i}` }))
     ];
   }, [testimonials]);
 
@@ -126,26 +71,25 @@ export default function TestimonialsInteractive() {
     return () => window.removeEventListener("resize", updateDimensions);
   }, [testimonials]);
 
-  // Reposicionamiento silencioso al terminar la animación CSS
+  // Reposicionamiento silencioso e imperceptible al terminar la animación CSS
   const handleTransitionEnd = (e: React.TransitionEvent<HTMLDivElement>) => {
-    // Solo atender transiciones del track contenedor, ignorar eventos de tarjetas internas
     if (e.target !== trackRef.current) return;
+    isMovingRef.current = false;
+    if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
 
-    if (N <= 1) return;
+    if (!isCarousel) return;
 
-    // Si cruzamos al set 2 (clones derechos)
-    if (displayIndex >= 2 * N) {
+    // Si cruzamos al set 3 o más hacia la derecha (>= 3 * N)
+    // O si cruzamos al set 1 o menos hacia la izquierda (< 2 * N):
+    // Nos reposicionamos instantáneamente en el Set 2 usando módulo normalizado
+    if (displayIndex >= 3 * N || displayIndex < 2 * N) {
       setIsTransitioning(false);
-      setDisplayIndex((prev) => prev - N);
-    }
-    // Si cruzamos al set 0 (clones izquierdos)
-    else if (displayIndex < N) {
-      setIsTransitioning(false);
-      setDisplayIndex((prev) => prev + N);
+      const normalized = ((displayIndex % N) + N) % N;
+      setDisplayIndex(2 * N + normalized);
     }
   };
 
-  // Re-activar la transición en el frame siguiente tras el salto invisible
+  // Re-activar la transición en el siguiente frame tras el salto invisible
   useEffect(() => {
     if (!isTransitioning) {
       const r1 = requestAnimationFrame(() => {
@@ -162,7 +106,7 @@ export default function TestimonialsInteractive() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   // Formulario nuevo veredicto
-  const [formSystem, setFormSystem] = useState("Graphito");
+  const [formSystem, setFormSystem] = useState("Wiki Assistant");
   const [formName, setFormName] = useState("");
   const [formRole, setFormRole] = useState("");
   const [formBefore, setFormBefore] = useState("");
@@ -180,17 +124,20 @@ export default function TestimonialsInteractive() {
 
   // Cargar testimonios aprobados de la API
   const fetchApproved = async () => {
+    setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/v1/testimonials`);
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setTestimonials(data);
-          setDisplayIndex(data.length);
+          setDisplayIndex(data.length > 0 ? 2 * data.length : 0);
         }
       }
     } catch {
       // Fallback local asegurado
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -198,31 +145,46 @@ export default function TestimonialsInteractive() {
     fetchApproved();
   }, []);
 
-  // Intervalo de auto-avance con pausa (Slide -> Pausa de 4.5s -> Slide)
-  useEffect(() => {
-    if (isPaused || expandedId !== null || !isTransitioning || N <= 1) return;
+  // Transición controlada con seguro anti-solapamiento (lock)
+  const startSlide = (newIndex: number) => {
+    if (isMovingRef.current || !isCarousel) return;
+    isMovingRef.current = true;
+    setIsTransitioning(true);
+    setDisplayIndex(newIndex);
 
-    const timer = setInterval(() => {
-      setDisplayIndex((prev) => prev + 1);
-    }, 4500);
-
-    return () => clearInterval(timer);
-  }, [isPaused, expandedId, isTransitioning, N]);
+    if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
+    animTimeoutRef.current = setTimeout(() => {
+      isMovingRef.current = false;
+    }, 700);
+  };
 
   const nextSlide = () => {
-    if (!isTransitioning || N <= 1) return;
-    setDisplayIndex((prev) => prev + 1);
+    if (isMovingRef.current || !isCarousel) return;
+    startSlide(displayIndex + 1);
   };
 
   const prevSlide = () => {
-    if (!isTransitioning || N <= 1) return;
-    setDisplayIndex((prev) => prev - 1);
+    if (isMovingRef.current || !isCarousel) return;
+    startSlide(displayIndex - 1);
   };
 
   const goToSlide = (targetIndex: number) => {
-    if (!isTransitioning || N <= 1) return;
-    setDisplayIndex(N + targetIndex);
+    if (isMovingRef.current || !isCarousel) return;
+    startSlide(2 * N + targetIndex);
   };
+
+  // Intervalo de auto-avance con pausa (Slide -> Pausa de 5s -> Slide)
+  useEffect(() => {
+    if (isPaused || expandedId !== null || !isCarousel) return;
+
+    const timer = setInterval(() => {
+      if (!isMovingRef.current) {
+        startSlide(displayIndex + 1);
+      }
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [isPaused, expandedId, displayIndex, isCarousel]);
 
   // Soporte para gestos táctiles (Swipe) y rueda de ratón (Wheel / Scroll horizontal)
   const isDraggingTestimonials = useRef(false);
@@ -230,8 +192,9 @@ export default function TestimonialsInteractive() {
   const lastWheelTime = useRef(0);
 
   const handleTestimonialWheel = (e: React.WheelEvent) => {
+    if (!isCarousel || isMovingRef.current) return;
     const now = Date.now();
-    if (now - lastWheelTime.current < 350) return;
+    if (now - lastWheelTime.current < 550) return;
 
     if (Math.abs(e.deltaX) > 15 || (e.shiftKey && Math.abs(e.deltaY) > 15)) {
       const delta = Math.abs(e.deltaX) > 15 ? e.deltaX : e.deltaY;
@@ -255,12 +218,13 @@ export default function TestimonialsInteractive() {
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isCarousel || isMovingRef.current) return;
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
     const diffX = touchStartX.current - touchEndX;
     const diffY = touchStartY.current - touchEndY;
 
-    if (Math.abs(diffX) > 30 && Math.abs(diffX) > Math.abs(diffY)) {
+    if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
       if (diffX > 0) {
         nextSlide();
       } else {
@@ -270,7 +234,7 @@ export default function TestimonialsInteractive() {
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType === 'touch') return; // Delegar touch a touch events nativos
+    if (e.pointerType === 'touch') return;
     if ((e.target as HTMLElement).closest('button, a, textarea, input')) return;
     isDraggingTestimonials.current = true;
     dragStartX.current = e.clientX;
@@ -280,9 +244,9 @@ export default function TestimonialsInteractive() {
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDraggingTestimonials.current || e.pointerType === 'touch') return;
+    if (!isDraggingTestimonials.current || e.pointerType === 'touch' || !isCarousel || isMovingRef.current) return;
     const distance = dragStartX.current - e.clientX;
-    if (Math.abs(distance) > 35) {
+    if (Math.abs(distance) > 40) {
       if (distance > 0) {
         nextSlide();
       } else {
@@ -400,18 +364,129 @@ export default function TestimonialsInteractive() {
     }
   };
 
+  // Renderizador unificado de tarjeta de testimonio
+  const renderCard = (
+    item: Testimonial,
+    isExpanded: boolean,
+    isDimmed: boolean,
+    isFullyVisible: boolean,
+    key: string,
+    setRef?: boolean,
+    idx?: number
+  ) => {
+    return (
+      <div
+        key={key}
+        ref={setRef ? cardRef : undefined}
+        onMouseEnter={() => {
+          if (isFullyVisible) {
+            setExpandedId(item.id);
+          }
+          setIsPaused(true);
+        }}
+        onMouseLeave={() => {
+          if (isFullyVisible) {
+            setExpandedId(null);
+          }
+          setIsPaused(false);
+        }}
+        onClick={() => {
+          if (!isFullyVisible && idx !== undefined) {
+            if (idx >= displayIndex + visibleCount) {
+              nextSlide();
+            } else if (idx < displayIndex) {
+              prevSlide();
+            }
+            return;
+          }
+          setExpandedId(isExpanded ? null : item.id);
+        }}
+        className={`w-[315px] sm:w-[360px] lg:w-[375px] shrink-0 p-5 rounded-2xl backdrop-blur-md flex flex-col justify-between min-h-[220px] sm:min-h-[235px] transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center group cursor-pointer relative ${
+          isExpanded
+            ? "scale-[1.02] sm:scale-[1.04] z-30 border-[#c084fc] shadow-[0_14px_36px_rgba(0,0,0,0.55),0_0_20px_rgba(192,132,252,0.18)] bg-[rgba(38,20,46,0.98)] ring-1 ring-[#c084fc]/40 opacity-100"
+            : isDimmed
+            ? "scale-[0.98] opacity-60 border-[rgba(147,80,115,0.2)] bg-[rgba(28,16,32,0.7)] z-0"
+            : !isFullyVisible
+            ? "opacity-45 hover:opacity-80 scale-[0.97] border-[rgba(147,80,115,0.2)] bg-[rgba(26,14,30,0.6)] z-0"
+            : "scale-100 opacity-100 hover:border-[#c084fc]/60 hover:shadow-[0_8px_30px_rgba(192,132,252,0.12)] border-[rgba(147,80,115,0.35)] bg-[rgba(35,23,39,0.88)] z-10"
+        }`}
+      >
+        {/* Cabecera */}
+        <div className="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs shrink-0">
+          <span className="px-2.5 py-0.5 rounded bg-[rgba(16,185,129,0.12)] text-[#10B981] font-semibold border border-[rgba(16,185,129,0.3)]">
+            [ Sistema: {item.system} ]
+          </span>
+          <span className="text-[#c084fc] font-bold text-sm">“</span>
+        </div>
+
+        {/* Titular centrado verticalmente para altura uniforme */}
+        <div className="my-auto py-2">
+          <h4 className="text-base sm:text-lg font-semibold text-[#F8F4E9] leading-snug group-hover:text-[#ddb8ff] transition-colors line-clamp-3">
+            "{item.headline}"
+          </h4>
+        </div>
+
+        {/* Contenido expandible SOLO al hacer Hover o Toque */}
+        <div
+          className={`overflow-hidden transition-all duration-400 ease-out flex flex-col gap-2.5 ${
+            isExpanded ? "max-h-[500px] opacity-100 my-2 pt-2 border-t border-[rgba(147,80,115,0.2)]" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="p-3 rounded-lg bg-[rgba(255,95,86,0.08)] border border-[rgba(255,95,86,0.25)] text-xs text-[#F6DBC0]">
+            <span className="font-mono text-[#ff5f56] font-bold block text-[10px] mb-1">
+              [ 🔴 Cómo era el proceso antes ]
+            </span>
+            <p className="leading-relaxed italic">"{item.before}"</p>
+          </div>
+
+          <div className="p-3 rounded-lg bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.25)] text-xs text-[#F6DBC0]">
+            <span className="font-mono text-[#10B981] font-bold block text-[10px] mb-1">
+              [ 🟢 Cómo es ahora con la herramienta ]
+            </span>
+            <p className="leading-relaxed">"{item.after}"</p>
+          </div>
+
+          {item.extra_comments && (
+            <div className="p-3 rounded-lg bg-[rgba(192,132,252,0.08)] border border-[rgba(192,132,252,0.25)] text-xs text-[#F8F4E9]">
+              <span className="font-mono text-[#c084fc] font-bold block text-[10px] mb-1">
+                [ ✦ Comentarios adicionales ]
+              </span>
+              <p className="leading-relaxed">"{item.extra_comments}"</p>
+            </div>
+          )}
+        </div>
+
+        {/* Pie de tarjeta anclado siempre abajo */}
+        <div className="pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between text-xs mt-auto shrink-0">
+          <div className="flex flex-col max-w-[70%]">
+            <span className="font-semibold text-[#F8F4E9] truncate">{item.author_name}</span>
+            <span className="text-[11px] text-[rgba(246,219,192,0.65)] font-mono truncate">
+              {item.author_role}
+            </span>
+          </div>
+
+          <span className="text-[10px] font-mono text-[#c084fc] opacity-80 group-hover:opacity-100 transition-opacity">
+            {isFullyVisible ? (isExpanded ? "▲ plegar" : "▼ ver caso") : (idx !== undefined && idx >= displayIndex + visibleCount ? "→ ver" : "← ver")}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-5 w-full">
       {/* Cabecera y acciones */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-xs sm:text-sm text-[#F6DBC0] max-w-xl leading-relaxed">
-          Veredictos reales resumidos en una frase. Al acercar el cursor se detiene el carrusel y se expande el caso completo.
+          {testimonials.length > 0
+            ? "Veredictos reales resumidos en una frase. Al acercar el cursor se detiene el carrusel y se expande el caso completo."
+            : "Espacio para veredictos de usuarios reales. Prueba las demos de los proyectos y sé el primero en evaluar su desempeño."}
         </p>
 
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={() => setIsSubmitOpen(true)}
-            className="px-4 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-1.5"
+            className="px-4 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#160B1A] font-mono text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-1.5"
           >
             <span>+ Dejar mi veredicto</span>
           </button>
@@ -425,178 +500,143 @@ export default function TestimonialsInteractive() {
         </div>
       </div>
 
-      {/* Riel con Avance por Pasos y Soporte Táctil/Scroll */}
-      <div
-        className="relative w-full lg:w-[calc(100%+4rem)] overflow-hidden lg:-mx-8 py-4 sm:py-6 touch-pan-y cursor-grab active:cursor-grabbing select-none"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => {
-          setIsPaused(false);
-          handlePointerUp();
-        }}
-        onWheel={handleTestimonialWheel}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-      >
-        <div ref={containerRef} className="px-0 lg:px-8 w-full">
-          {/* Contenedor del riel con desplazamiento circular infinito */}
-          <div
-            ref={trackRef}
-            onTransitionEnd={handleTransitionEnd}
-            className="flex items-start gap-5 will-change-transform"
-            style={{
-              transform: `translateX(-${displayIndex * cardStep}px)`,
-              transition: isTransitioning
-                ? "transform 650ms cubic-bezier(0.16, 1, 0.3, 1)"
-                : "none"
-            }}
-          >
-            {displayItems.map((item, idx) => {
-              const isExpanded = expandedId === item.id;
-              const isAnyExpanded = expandedId !== null;
-              const isDimmed = isAnyExpanded && !isExpanded;
-              const isFullyVisible = idx >= displayIndex && idx < displayIndex + visibleCount;
+      {/* ESTADO VACÍO (Sin testimonios publicados aún) */}
+      {testimonials.length === 0 && !loading && (
+        <div className="w-full p-8 sm:p-12 rounded-2xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.3)] shadow-xl backdrop-blur-md flex flex-col items-center justify-center text-center gap-5 relative overflow-hidden">
+          <div className="absolute -top-20 -right-20 w-52 h-52 rounded-full bg-[#c084fc]/10 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-20 w-52 h-52 rounded-full bg-[rgba(16,185,129,0.08)] blur-3xl pointer-events-none" />
 
-              return (
-                <div
-                  key={item._virtualKey}
-                  ref={idx === 0 ? cardRef : undefined}
-                  onMouseEnter={() => {
-                    if (isFullyVisible) {
-                      setExpandedId(item.id);
-                    }
-                    setIsPaused(true);
-                  }}
-                  onMouseLeave={() => {
-                    if (isFullyVisible) {
-                      setExpandedId(null);
-                    }
-                    setIsPaused(false);
-                  }}
-                  onClick={() => {
-                    if (!isFullyVisible) {
-                      if (idx >= displayIndex + visibleCount) {
-                        nextSlide();
-                      } else if (idx < displayIndex) {
-                        prevSlide();
-                      }
-                      return;
-                    }
-                    setExpandedId(isExpanded ? null : item.id);
-                  }}
-                  className={`w-[315px] sm:w-[360px] lg:w-[375px] shrink-0 p-5 rounded-2xl backdrop-blur-md flex flex-col justify-between min-h-[220px] sm:min-h-[235px] transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center group cursor-pointer relative ${
-                    isExpanded
-                      ? "scale-[1.02] sm:scale-[1.04] z-30 border-[#c084fc] shadow-[0_14px_36px_rgba(0,0,0,0.55),0_0_20px_rgba(192,132,252,0.18)] bg-[rgba(38,20,46,0.98)] ring-1 ring-[#c084fc]/40 opacity-100"
-                      : isDimmed
-                      ? "scale-[0.98] opacity-60 border-[rgba(147,80,115,0.2)] bg-[rgba(28,16,32,0.7)] z-0"
-                      : !isFullyVisible
-                      ? "opacity-45 hover:opacity-80 scale-[0.97] border-[rgba(147,80,115,0.2)] bg-[rgba(26,14,30,0.6)] z-0"
-                      : "scale-100 opacity-100 hover:border-[#c084fc]/60 hover:shadow-[0_8px_30px_rgba(192,132,252,0.12)] border-[rgba(147,80,115,0.35)] bg-[rgba(35,23,39,0.88)] z-10"
-                  }`}
-                >
-                  {/* Cabecera */}
-                  <div className="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)] font-mono text-xs shrink-0">
-                    <span className="px-2.5 py-0.5 rounded bg-[rgba(16,185,129,0.12)] text-[#10B981] font-semibold border border-[rgba(16,185,129,0.3)]">
-                      [ Sistema: {item.system} ]
-                    </span>
-                    <span className="text-[#c084fc] font-bold text-sm">“</span>
-                  </div>
-
-                  {/* Titular centrado verticalmente para altura uniforme */}
-                  <div className="my-auto py-2">
-                    <h4 className="text-base sm:text-lg font-semibold text-[#F8F4E9] leading-snug group-hover:text-[#ddb8ff] transition-colors line-clamp-3">
-                      "{item.headline}"
-                    </h4>
-                  </div>
-
-                  {/* Contenido expandible SOLO al hacer Hover o Toque en tarjetas 100% visibles */}
-                  <div
-                    className={`overflow-hidden transition-all duration-400 ease-out flex flex-col gap-2.5 ${
-                      isExpanded ? "max-h-[500px] opacity-100 my-2 pt-2 border-t border-[rgba(147,80,115,0.2)]" : "max-h-0 opacity-0"
-                    }`}
-                  >
-                    <div className="p-3 rounded-lg bg-[rgba(255,95,86,0.08)] border border-[rgba(255,95,86,0.25)] text-xs text-[#F6DBC0]">
-                      <span className="font-mono text-[#ff5f56] font-bold block text-[10px] mb-1">
-                        [ 🔴 Cómo era el proceso antes ]
-                      </span>
-                      <p className="leading-relaxed italic">"{item.before}"</p>
-                    </div>
-
-                    <div className="p-3 rounded-lg bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.25)] text-xs text-[#F6DBC0]">
-                      <span className="font-mono text-[#10B981] font-bold block text-[10px] mb-1">
-                        [ 🟢 Cómo es ahora con la herramienta ]
-                      </span>
-                      <p className="leading-relaxed">"{item.after}"</p>
-                    </div>
-
-                    {item.extra_comments && (
-                      <div className="p-3 rounded-lg bg-[rgba(192,132,252,0.08)] border border-[rgba(192,132,252,0.25)] text-xs text-[#F8F4E9]">
-                        <span className="font-mono text-[#c084fc] font-bold block text-[10px] mb-1">
-                          [ ✦ Comentarios adicionales ]
-                        </span>
-                        <p className="leading-relaxed">"{item.extra_comments}"</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Pie de tarjeta anclado siempre abajo para alineación horizontal perfecta */}
-                  <div className="pt-3 border-t border-[rgba(147,80,115,0.2)] flex items-center justify-between text-xs mt-auto shrink-0">
-                    <div className="flex flex-col max-w-[70%]">
-                      <span className="font-semibold text-[#F8F4E9] truncate">{item.author_name}</span>
-                      <span className="text-[11px] text-[rgba(246,219,192,0.65)] font-mono truncate">
-                        {item.author_role}
-                      </span>
-                    </div>
-
-                    <span className="text-[10px] font-mono text-[#c084fc] opacity-80 group-hover:opacity-100 transition-opacity">
-                      {isFullyVisible ? (isExpanded ? "▲ plegar" : "▼ ver caso") : (idx >= displayIndex + visibleCount ? "→ ver" : "← ver")}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="w-14 h-14 rounded-2xl bg-[rgba(80,45,85,0.35)] border border-[rgba(192,132,252,0.4)] flex items-center justify-center text-[#c084fc] shadow-md">
+            <span className="text-2xl">💬</span>
           </div>
 
-          {/* Controles de navegación y estado de pausa */}
-          <div className="flex items-center justify-between pt-4 mt-2 font-mono text-xs text-[rgba(246,219,192,0.65)]">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={prevSlide}
-                className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] flex items-center justify-center cursor-pointer active:scale-95"
-                title="Anterior testimonio"
-              >
-                ←
-              </button>
-              <button
-                onClick={nextSlide}
-                className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] flex items-center justify-center cursor-pointer active:scale-95"
-                title="Siguiente testimonio"
-              >
-                →
-              </button>
-              <span className="ml-2 text-[11px]">
-                {isPaused ? "[ ⏸ En pausa ]" : `[ 0${activeIndex + 1} / 0${testimonials.length} ]`}
-              </span>
-            </div>
+          <div className="flex flex-col gap-2 max-w-lg">
+            <span className="font-mono text-xs text-[#c084fc] font-semibold tracking-wider uppercase">
+              [ Convocatoria de Veredictos ]
+            </span>
+            <h3 className="text-xl sm:text-2xl font-semibold text-[#F8F4E9]">
+              Aún no hay opiniones publicadas
+            </h3>
+            <p className="text-sm text-[#F6DBC0]/80 leading-relaxed font-sans">
+              ¿Has probado alguno de los proyectos, interactuado con las demos o conversado con Wiki? Sé el primero en dejar tu veredicto real sobre la experiencia.
+            </p>
+          </div>
 
-            {/* Dots indicadores */}
-            <div className="flex items-center gap-1.5">
-              {testimonials.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goToSlide(i)}
-                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                    activeIndex === i ? "w-6 bg-[#c084fc]" : "w-2 bg-[rgba(147,80,115,0.4)] hover:bg-[#c084fc]/50"
-                  }`}
-                />
-              ))}
-            </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => setIsSubmitOpen(true)}
+              className="px-5 py-3 rounded-xl bg-[#c084fc] hover:bg-[#D8B4FE] text-[#160B1A] font-bold text-sm shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-2"
+            >
+              <span>+ Dejar mi veredicto</span>
+            </button>
+            <button
+              onClick={() => setIsAdminOpen(true)}
+              className="px-4 py-3 rounded-xl bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[rgba(246,219,192,0.65)] hover:text-[#F8F4E9] font-mono text-xs transition-all cursor-pointer"
+              title="Panel de moderación (Erick)"
+            >
+              ⚙ Moderar
+            </button>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ESTADO CON TESTIMONIOS REALES */}
+      {testimonials.length > 0 && (
+        <div
+          className="relative w-full lg:w-[calc(100%+4rem)] overflow-hidden lg:-mx-8 py-4 sm:py-6 touch-pan-y cursor-grab active:cursor-grabbing select-none"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => {
+            setIsPaused(false);
+            handlePointerUp();
+          }}
+          onWheel={handleTestimonialWheel}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+        >
+          <div ref={containerRef} className="px-0 lg:px-8 w-full">
+            {/* Si no hay suficientes tarjetas para carrusel, mostrarlas en fila estática limpia */}
+            {!isCarousel ? (
+              <div className="flex flex-wrap items-start justify-center sm:justify-start gap-5">
+                {testimonials.map((item, i) =>
+                  renderCard(item, expandedId === item.id, false, true, `static-${item.id}`, i === 0)
+                )}
+              </div>
+            ) : (
+              /* Contenedor del riel con desplazamiento circular infinito de 5 bloques */
+              <div
+                ref={trackRef}
+                onTransitionEnd={handleTransitionEnd}
+                className="flex items-start gap-5 will-change-transform"
+                style={{
+                  transform: `translateX(-${displayIndex * cardStep}px)`,
+                  transition: isTransitioning
+                    ? "transform 650ms cubic-bezier(0.16, 1, 0.3, 1)"
+                    : "none"
+                }}
+              >
+                {displayItems.map((item, idx) => {
+                  const isExpanded = expandedId === item.id;
+                  const isAnyExpanded = expandedId !== null;
+                  const isDimmed = isAnyExpanded && !isExpanded;
+                  const isFullyVisible = idx >= displayIndex && idx < displayIndex + visibleCount;
+
+                  return renderCard(
+                    item,
+                    isExpanded,
+                    isDimmed,
+                    isFullyVisible,
+                    item._virtualKey,
+                    idx === 0,
+                    idx
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Controles de navegación y estado de pausa (solo si hay más tarjetas que el viewport) */}
+            {isCarousel && (
+              <div className="flex items-center justify-between pt-4 mt-2 font-mono text-xs text-[rgba(246,219,192,0.65)]">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={prevSlide}
+                    className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] flex items-center justify-center cursor-pointer active:scale-95"
+                    title="Anterior testimonio"
+                  >
+                    ←
+                  </button>
+                  <button
+                    onClick={nextSlide}
+                    className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.24)] hover:bg-[rgba(80,45,85,0.4)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] flex items-center justify-center cursor-pointer active:scale-95"
+                    title="Siguiente testimonio"
+                  >
+                    →
+                  </button>
+                  <span className="ml-2 text-[11px]">
+                    {isPaused ? "[ ⏸ En pausa ]" : `[ 0${activeIndex + 1} / 0${testimonials.length} ]`}
+                  </span>
+                </div>
+
+                {/* Dots indicadores */}
+                <div className="flex items-center gap-1.5">
+                  {testimonials.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => goToSlide(i)}
+                      className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                        activeIndex === i ? "w-6 bg-[#c084fc]" : "w-2 bg-[rgba(147,80,115,0.4)] hover:bg-[#c084fc]/50"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* MODAL 1: Dejar mi veredicto */}
       {isSubmitOpen && (
@@ -641,10 +681,12 @@ export default function TestimonialsInteractive() {
                     onChange={(e) => setFormSystem(e.target.value)}
                     className="p-2.5 rounded-lg bg-[rgba(35,23,39,0.9)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] font-mono text-xs focus:border-[#c084fc] outline-none"
                   >
+                    <option value="Wiki Assistant">Wiki Assistant (Asistente de Ventas & Citas)</option>
                     <option value="Graphito">Graphito (Visualizador de Grafos IA)</option>
-                    <option value="Tetring">Tetring (Conciliación y Extracción de Facturas)</option>
+                    <option value="Tetring">Tetring (Optimizador de Horarios & Turnos)</option>
                     <option value="PAIDEA">PAIDEA (Agentes IA con Base de Conocimiento)</option>
                     <option value="Paralel">Paralel (Ejecución y Cómputo Concurrente)</option>
+                    <option value="Extractor de Facturas">Extractor de Facturas & Tickets</option>
                   </select>
                 </div>
 
@@ -677,7 +719,7 @@ export default function TestimonialsInteractive() {
                     <input
                       type="text"
                       maxLength={60}
-                      placeholder="ej. Gerente de Finanzas (opcional)"
+                      placeholder="ej. Gerente de Negocio (opcional)"
                       value={formRole}
                       onChange={(e) => setFormRole(e.target.value)}
                       className="p-2.5 rounded-lg bg-[rgba(35,23,39,0.9)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] text-xs focus:border-[#c084fc] outline-none"
@@ -699,7 +741,7 @@ export default function TestimonialsInteractive() {
                     required
                     rows={2}
                     maxLength={300}
-                    placeholder="ej. Tardábamos 35 horas semanales a mano revisando facturas en Excel con alto margen de error..."
+                    placeholder="ej. Tardábamos 35 horas semanales a mano revisando notas en Excel con alto margen de error..."
                     value={formBefore}
                     onChange={(e) => setFormBefore(e.target.value)}
                     className="p-2.5 rounded-lg bg-[rgba(35,23,39,0.9)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] text-xs focus:border-[#ff5f56] outline-none resize-none"
@@ -720,7 +762,7 @@ export default function TestimonialsInteractive() {
                     required
                     rows={2}
                     maxLength={300}
-                    placeholder="ej. Se extrajeron 12.000 documentos sin fallas y la validación bajó a solo 1.2 segundos..."
+                    placeholder="ej. Se automatizó el proceso sin fallas y la respuesta bajó a solo 1.2 segundos..."
                     value={formAfter}
                     onChange={(e) => setFormAfter(e.target.value)}
                     className="p-2.5 rounded-lg bg-[rgba(35,23,39,0.9)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] text-xs focus:border-[#10B981] outline-none resize-none"
@@ -740,7 +782,7 @@ export default function TestimonialsInteractive() {
                   <textarea
                     rows={2}
                     maxLength={400}
-                    placeholder="ej. Reflexión general, facilidad de integración, detalles o retos encontrados..."
+                    placeholder="ej. Reflexión general, facilidad de uso, detalles o retos encontrados..."
                     value={formExtra}
                     onChange={(e) => setFormExtra(e.target.value)}
                     className="p-2.5 rounded-lg bg-[rgba(35,23,39,0.9)] border border-[rgba(147,80,115,0.3)] text-[#F8F4E9] text-xs focus:border-[#c084fc] outline-none resize-none"
@@ -748,27 +790,20 @@ export default function TestimonialsInteractive() {
                 </div>
 
                 {/* Botones de acción */}
-                <div className="pt-2 flex justify-end gap-3">
+                <div className="flex items-center justify-end gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setIsSubmitOpen(false)}
-                    className="px-4 py-2.5 rounded-lg border border-[rgba(147,80,115,0.3)] text-[#F6DBC0] font-mono text-xs hover:bg-[rgba(80,45,85,0.2)] cursor-pointer"
+                    className="px-4 py-2 rounded-lg bg-[rgba(80,45,85,0.2)] hover:bg-[rgba(80,45,85,0.4)] text-[rgba(246,219,192,0.7)] text-xs font-mono cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-5 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all shadow-md disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                    className="px-5 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#160B1A] font-mono text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer disabled:opacity-50"
                   >
-                    {submitting ? (
-                      <>
-                        <span className="w-3 h-3 rounded-full border-2 border-[#500989] border-t-transparent animate-spin" />
-                        <span>Sintetizando titular con IA...</span>
-                      </>
-                    ) : (
-                      <span>[ Enviar mi veredicto ↗ ]</span>
-                    )}
+                    {submitting ? "Procesando con IA..." : "Publicar veredicto"}
                   </button>
                 </div>
               </form>
@@ -777,17 +812,20 @@ export default function TestimonialsInteractive() {
         </div>
       )}
 
-      {/* MODAL 2: Moderación Admin (Erick) */}
+      {/* MODAL 2: Moderación de Erick */}
       {isAdminOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-[rgba(26,15,30,0.98)] border border-[rgba(147,80,115,0.45)] shadow-2xl p-6 sm:p-8 flex flex-col gap-5 relative">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-[rgba(26,15,30,0.98)] border border-[rgba(147,80,115,0.45)] shadow-2xl p-6 sm:p-8 flex flex-col gap-5 relative">
             <div className="flex items-center justify-between pb-3 border-b border-[rgba(147,80,115,0.25)]">
               <div>
-                <span className="font-mono text-xs text-[#10B981]">[ PANEL DE CONTROL ]</span>
+                <span className="font-mono text-xs text-[#c084fc]">[ CONTROL ADMINISTRATIVO ]</span>
                 <h3 className="text-xl font-semibold text-[#F8F4E9]">Moderar Veredictos</h3>
               </div>
               <button
-                onClick={() => setIsAdminOpen(false)}
+                onClick={() => {
+                  setIsAdminOpen(false);
+                  setAdminMsg(null);
+                }}
                 className="w-8 h-8 rounded-lg bg-[rgba(80,45,85,0.2)] hover:bg-[rgba(80,45,85,0.4)] text-[#F6DBC0] flex items-center justify-center font-mono cursor-pointer"
               >
                 ✕
@@ -795,8 +833,8 @@ export default function TestimonialsInteractive() {
             </div>
 
             {!adminToken ? (
-              <div className="flex flex-col gap-4 py-4">
-                <p className="text-xs text-[#F6DBC0] leading-relaxed">
+              <div className="flex flex-col gap-3 py-4">
+                <p className="text-xs text-[rgba(246,219,192,0.7)] font-mono">
                   Ingresa tu clave maestra de administrador para revisar, editar titulares y aprobar testimonios.
                 </p>
                 <div className="flex gap-2">
@@ -811,7 +849,7 @@ export default function TestimonialsInteractive() {
                   <button
                     onClick={() => fetchAdminTestimonials(adminTokenInput)}
                     disabled={adminLoading}
-                    className="px-4 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#500989] font-mono text-xs font-bold transition-all shadow-md cursor-pointer"
+                    className="px-4 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#D8B4FE] text-[#160B1A] font-mono text-xs font-bold transition-all shadow-md cursor-pointer"
                   >
                     {adminLoading ? "Validando..." : "Ingresar"}
                   </button>
@@ -831,77 +869,83 @@ export default function TestimonialsInteractive() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  {adminList.map((item) => (
-                    <div
-                      key={item.id}
-                      className="p-4 rounded-xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.25)] flex flex-col gap-2.5"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs text-[#10B981] font-semibold">
-                          {item.system} · {item.author_name} ({item.author_role})
-                        </span>
-                        <span
-                          className={`font-mono text-[10px] px-2 py-0.5 rounded ${
-                            item.approved
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : "bg-amber-500/20 text-amber-400"
-                          }`}
-                        >
-                          {item.approved ? "APROBADO" : "PENDIENTE"}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                        <span className="font-mono text-[11px] text-[#c084fc]">Titular LLM:</span>
-                        <input
-                          type="text"
-                          defaultValue={item.headline}
-                          id={`headline-input-${item.id}`}
-                          className="p-2 rounded bg-[rgba(21,10,25,0.8)] border border-[rgba(147,80,115,0.3)] text-xs text-[#F8F4E9]"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#F6DBC0]">
-                        <div className="p-2 rounded bg-[rgba(255,95,86,0.06)] border border-[rgba(255,95,86,0.2)]">
-                          <strong className="text-[#ff5f56] block text-[10px] font-mono">Antes:</strong>
-                          <p>{item.before}</p>
-                        </div>
-                        <div className="p-2 rounded bg-[rgba(16,185,129,0.06)] border border-[rgba(16,185,129,0.2)]">
-                          <strong className="text-[#10B981] block text-[10px] font-mono">Ahora:</strong>
-                          <p>{item.after}</p>
-                        </div>
-                      </div>
-
-                      {item.extra_comments && (
-                        <div className="p-2 rounded bg-[rgba(192,132,252,0.06)] border border-[rgba(192,132,252,0.2)] text-xs text-[#F8F4E9]">
-                          <strong className="text-[#c084fc] block text-[10px] font-mono">Espacio libre:</strong>
-                          <p>{item.extra_comments}</p>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-[rgba(147,80,115,0.2)]">
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="px-3 py-1.5 rounded bg-[rgba(255,95,86,0.15)] hover:bg-[rgba(255,95,86,0.3)] text-[#ff5f56] font-mono text-xs cursor-pointer"
-                        >
-                          ✕ Descartar
-                        </button>
-                        {!item.approved && (
-                          <button
-                            onClick={() => {
-                              const input = document.getElementById(
-                                `headline-input-${item.id}`
-                              ) as HTMLInputElement;
-                              handleApprove(item.id, input ? input.value : item.headline);
-                            }}
-                            className="px-3 py-1.5 rounded bg-[#10B981] hover:bg-[#34D399] text-[#042f2e] font-mono text-xs font-bold cursor-pointer"
-                          >
-                            ✓ Aprobar y Publicar
-                          </button>
-                        )}
-                      </div>
+                  {adminList.length === 0 ? (
+                    <div className="p-6 rounded-xl bg-[rgba(35,23,39,0.5)] border border-[rgba(147,80,115,0.2)] text-center text-xs text-[rgba(246,219,192,0.6)] font-mono">
+                      No hay testimonios pendientes de moderación en la base de datos.
                     </div>
-                  ))}
+                  ) : (
+                    adminList.map((item) => (
+                      <div
+                        key={item.id}
+                        className="p-4 rounded-xl bg-[rgba(35,23,39,0.7)] border border-[rgba(147,80,115,0.25)] flex flex-col gap-2.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-xs text-[#10B981] font-semibold">
+                            {item.system} · {item.author_name} ({item.author_role})
+                          </span>
+                          <span
+                            className={`font-mono text-[10px] px-2 py-0.5 rounded ${
+                              item.approved
+                                ? "bg-emerald-500/20 text-emerald-400"
+                                : "bg-amber-500/20 text-amber-400"
+                            }`}
+                          >
+                            {item.approved ? "APROBADO" : "PENDIENTE"}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <span className="font-mono text-[11px] text-[#c084fc]">Titular LLM:</span>
+                          <input
+                            type="text"
+                            defaultValue={item.headline}
+                            id={`headline-input-${item.id}`}
+                            className="p-2 rounded bg-[rgba(21,10,25,0.8)] border border-[rgba(147,80,115,0.3)] text-xs text-[#F8F4E9]"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#F6DBC0]">
+                          <div className="p-2 rounded bg-[rgba(255,95,86,0.06)] border border-[rgba(255,95,86,0.2)]">
+                            <strong className="text-[#ff5f56] block text-[10px] font-mono">Antes:</strong>
+                            <p>{item.before}</p>
+                          </div>
+                          <div className="p-2 rounded bg-[rgba(16,185,129,0.06)] border border-[rgba(16,185,129,0.2)]">
+                            <strong className="text-[#10B981] block text-[10px] font-mono">Ahora:</strong>
+                            <p>{item.after}</p>
+                          </div>
+                        </div>
+
+                        {item.extra_comments && (
+                          <div className="p-2 rounded bg-[rgba(192,132,252,0.06)] border border-[rgba(192,132,252,0.2)] text-xs text-[#F8F4E9]">
+                            <strong className="text-[#c084fc] block text-[10px] font-mono">Espacio libre:</strong>
+                            <p>{item.extra_comments}</p>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-[rgba(147,80,115,0.2)]">
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="px-3 py-1.5 rounded bg-[rgba(255,95,86,0.15)] hover:bg-[rgba(255,95,86,0.3)] text-[#ff5f56] font-mono text-xs cursor-pointer"
+                          >
+                            ✕ Descartar
+                          </button>
+                          {!item.approved && (
+                            <button
+                              onClick={() => {
+                                const input = document.getElementById(
+                                  `headline-input-${item.id}`
+                                ) as HTMLInputElement;
+                                handleApprove(item.id, input ? input.value : item.headline);
+                              }}
+                              className="px-3 py-1.5 rounded bg-[#10B981] hover:bg-[#34D399] text-[#042f2e] font-mono text-xs font-bold cursor-pointer"
+                            >
+                              ✓ Aprobar y Publicar
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
