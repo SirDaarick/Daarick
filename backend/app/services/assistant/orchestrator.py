@@ -68,6 +68,42 @@ def is_user_asking_pricing(text: str) -> bool:
     pricing_keywords = ["precio", "precios", "cuanto cuesta", "cuánto cuesta", "costo", "costos", "cotizacion", "cotización", "cobras", "cobran"]
     return any(k in q for k in pricing_keywords)
 
+def is_user_approving_proposal(text: str) -> bool:
+    """Verifica si el usuario expresa satisfacción, visto bueno o acuerdo con la propuesta."""
+    q = text.lower().strip()
+    # Si el usuario dice "opcion 1", "opción 2", está eligiendo opciones, no aprobando la propuesta
+    if any(o in q for o in ["opcion", "opción", "opciones"]):
+        return False
+    
+    approval_phrases = [
+        "me gusta", "me agrada", "suena bien", "suena genial", "suena excelente",
+        "excelente", "perfecto", "me parece bien", "me parece genial", "me parece perfecto",
+        "me late", "lo quiero", "vamos a darle", "avanzar", "avancemos", "de acuerdo",
+        "estoy de acuerdo", "trato hecho", "cómo empezamos", "cómo procedemos", "como procedemos",
+        "así está bien", "así me gusta", "asi esta bien", "asi me gusta", "nada más",
+        "ninguna otra cosa", "ninguna", "no, nada más", "no, así está bien", "eso sería todo",
+        "está genial", "está perfecto", "está bien", "esta bien", "esta genial", "esta perfecto",
+        "lo veo bien", "me convence", "me sirve", "eso me sirve", "sí me gusta", "si me gusta",
+        "sí me agrada", "si me agrada", "me parece estupendo", "me interesa la propuesta",
+        "me gusta la idea", "me gusta la propuesta"
+    ]
+    return any(p in q for p in approval_phrases)
+
+def has_proposal_in_history(messages: List[ChatMessage]) -> bool:
+    """Verifica si en los turnos previos el asistente ya presentó una propuesta o alternativas."""
+    for m in messages[:-1]:
+        if m.role == "assistant":
+            if getattr(m, "options", None) and len(m.options) > 0:
+                return True
+            c = m.content.lower()
+            if any(term in c for term in [
+                "propuesta", "¿qué te parece", "¿crees que te serviría", "¿te gustaría",
+                "la solución sería", "como este mismo asistente", "caso parecido",
+                "preparé 3 opciones", "podemos implementar", "alternativas"
+            ]):
+                return True
+    return False
+
 def extract_date_heuristic(text: str) -> Optional[date]:
     """Extrae heurísticamente fechas como '8 de octubre' o 'el 8' si el LLM no envió el formato ISO."""
     q = text.lower()
@@ -111,25 +147,19 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
         }
 
     # 1. Aprobación o satisfacción del cliente con la propuesta previa -> ETAPA CIERRE
-    # Si el usuario dice 'me gusta la opción 1' o 'me interesa la opción 2', está eligiendo una opción, no cerrando.
-    is_picking_option = any(o in q for o in ["opcion", "opción", "opciones"])
-    if not is_picking_option and any(k in q for k in [
-        "me gusta", "me agrada", "suena bien", "suena genial", "excelente", "perfecto",
-        "me interesa", "me parece bien", "me late", "lo quiero", "vamos a darle", "avanzar",
-        "agreguemos", "estoy de acuerdo", "de acuerdo", "trato hecho", "cómo empezamos"
-    ]):
+    if is_user_approving_proposal(latest_text):
         return {
             "reply": (
-                "¡Me alegra muchísimo que te haga sentido la solución! El siguiente paso ideal es agendar una videollamada breve de 15 minutos en el Google Calendar de Erick. "
-                "Así podremos revisar a detalle tu caso, definir el prototipo funcional navegable sin compromiso y resolver cualquier duda, o si prefieres, platicar directamente por WhatsApp."
+                "¡Me alegra muchísimo que te haga sentido la propuesta! El siguiente paso es agendar una videollamada breve de 15 minutos en el Google Calendar de Erick. "
+                "Así podremos revisar a detalle tu caso, aterrizar el prototipo funcional navegable sin compromiso y resolver cualquier duda, o si prefieres, platicar directamente por WhatsApp."
             ),
             "stage": "CIERRE",
             "options": [],
             "project_ref": "ninguno",
-            "client_need_summary": "• Negocio: Cliente interesado en avanzar\n• Dolor detectado: Solución validada y aprobada\n• Lo que le interesó: Agendar llamada breve de 15 min o contacto directo",
+            "client_need_summary": "• Negocio: Propuesta validada por el cliente\n• Dolor detectado: Solución revisada y aprobada\n• Lo que le interesó: Agendar videollamada breve de 15 min en Google Calendar",
             "wants_contact": True,
             "offer_booking": True,
-            "suggestions": ["Agendar llamada breve", "Platicar por WhatsApp", "Enviar correo"]
+            "suggestions": ["Agendar videollamada de 15 min", "Platicar por WhatsApp", "Enviar correo"]
         }
 
     # 2. Pregunta sobre precios o cotizaciones
@@ -158,7 +188,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
                     "¡Excelente elección! La solución sería exactamente como este mismo asistente con el que estás hablando ahora en tu pantalla, "
                     "adaptado a tu negocio para que tus clientes puedan consultar tus servicios, ver tus horas libres y apartar su cita directamente por WhatsApp, "
                     "evitando que tengas que interrumpir tu trabajo o atender llamadas mientras cortas el cabello. "
-                    "¿Qué te parece esta propuesta para tu peluquería? ¿Crees que te serviría en tu día a día, o hay algo más que te gustaría agregar o ajustar?"
+                    "¿Qué te parece esta propuesta para tu peluquería? ¿Te gustaría avanzar con esta solución o prefieres ajustar algún detalle?"
                 ),
                 "stage": "PROPUESTA",
                 "options": [],
@@ -166,7 +196,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
                 "client_need_summary": "• Negocio: Peluquería o salón de belleza\n• Dolor detectado: Empalmes de citas y tiempo contestando WhatsApp\n• Lo que le interesó: Asistente estilo Wiki para citas automáticas por WhatsApp",
                 "wants_contact": False,
                 "offer_booking": False,
-                "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]
+                "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Prefiero ajustar un detalle"]
             }
         # B. Si describe su dolor o problema con citas/horarios/tiempo
         if any(p in q for p in ["empalma", "empalman", "tiempo", "cancelan", "cancela", "agenda", "whatsapp", "horario", "horarios", "turno", "pierdo", "cuesta", "cruzan", "problema"]):
@@ -243,7 +273,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "reply": (
                 "Es totalmente viable crear un asistente que responda preguntas consultando tu información, stock o base de datos automáticamente. "
                 "Un caso parecido es PAIDEA, donde el agente responde dudas sobre registros e inventario sin intervención manual. "
-                "¿Qué te parece esta propuesta? ¿Crees que te serviría en tu día a día, o hay algo más que te gustaría agregar o ajustar?"
+                "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
             ),
             "stage": "PROPUESTA",
             "options": [],
@@ -251,7 +281,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "client_need_summary": "• Negocio: Consultas de inventario o base de datos\n• Dolor detectado: Tiempo buscando registros o respondiendo stock repetidamente\n• Lo que le interesó: Asistente PAIDEA para consulta de datos",
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]
+            "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Prefiero ajustar un detalle"]
         }
 
     # 6. Chatbots para ventas, atención a clientes o agendado de citas (WIKI)
@@ -260,7 +290,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "reply": (
                 "¡Exactamente para eso sirve la automatización conversacional! La solución sería como este mismo asistente con el que estás hablando ahora en tu pantalla: "
                 "atiende a tus clientes al instante, responde sus dudas frecuentes, filtra prospectos y agenda citas automáticamente por WhatsApp o tu web 24/7. "
-                "¿Qué te parece esta propuesta? ¿Crees que se adapta a lo que necesitas en tu negocio o hay algo más que te gustaría agregar o ajustar?"
+                "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
             ),
             "stage": "PROPUESTA",
             "options": [],
@@ -268,7 +298,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "client_need_summary": "• Negocio: Ventas y atención a clientes\n• Dolor detectado: Pérdida de prospectos y tiempo en atención repetitiva\n• Lo que le interesó: Asistente conversacional en vivo estilo Wiki",
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]
+            "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Prefiero ajustar un detalle"]
         }
 
     # 7. Horarios o turnos
@@ -278,7 +308,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             return {
                 "reply": (
                     "¡Excelente! Con un motor inteligente como el que diseñamos en Tetring, se coordinan turnos y horarios sin choques automáticamente. "
-                    "¿Qué te parece esta propuesta? ¿Crees que resolvería la organización de tus horarios o hay algo más que te gustaría agregar o ajustar?"
+                    "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
                 ),
                 "stage": "PROPUESTA",
                 "options": [],
@@ -286,7 +316,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
                 "client_need_summary": "• Negocio: Coordinación de turnos/horarios\n• Dolor detectado: Choques de horarios y cálculo manual\n• Lo que le interesó: Generador de turnos automático",
                 "wants_contact": False,
                 "offer_booking": False,
-                "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]
+                "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Prefiero ajustar un detalle"]
             }
         # B. Si describe su dolor o problema de horarios/turnos
         return {
@@ -345,21 +375,21 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             project_key = "tetring"
             reply_text = (
                 "¡Excelente elección! Con un motor inteligente como el que diseñamos en Tetring, se coordinan turnos y horarios sin choques automáticamente. "
-                "¿Qué te parece esta propuesta? ¿Crees que resolvería la organización de tus horarios o hay algo más que te gustaría agregar o ajustar?"
+                "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
             )
             summary = "• Negocio: Coordinación de turnos y personal\n• Dolor detectado: Empalmes de horarios y cuadrantes\n• Lo que le interesó: Motor Tetring de turnos"
         elif any(k in q for k in ["inventario", "stock", "datos", "registro", "expediente", "alumno", "alumnos"]):
             project_key = "paidea"
             reply_text = (
                 "¡Excelente elección! Con una solución como PAIDEA, tus usuarios y tú pueden consultar stock, datos y registros en segundos sin trabajo manual. "
-                "¿Qué te parece esta propuesta? ¿Crees que resolvería lo que necesitas en tu día a día, o hay algo más que te gustaría agregar o ajustar?"
+                "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
             )
             summary = "• Negocio: Consulta de datos e inventarios\n• Dolor detectado: Búsqueda manual de registros y stock\n• Lo que le interesó: Asistente PAIDEA de consulta de datos"
         elif any(k in q for k in ["factura", "facturas", "ticket", "tickets", "ocr", "gasto", "gastos"]):
             project_key = "invoicing"
             reply_text = (
                 "¡Excelente elección! Con nuestra demo de extracción de facturas y tickets a Excel, eliminas horas de captura manual y verificas las cuentas al instante. "
-                "¿Qué te parece esta propuesta? ¿Crees que te ahorraría tiempo administrativo o hay algo más que te gustaría agregar o ajustar?"
+                "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
             )
             summary = "• Negocio: Control de gastos y facturas\n• Dolor detectado: Captura manual de tickets y comprobantes\n• Lo que le interesó: Extractor automático a Excel"
         else:
@@ -367,7 +397,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             reply_text = (
                 "¡Excelente elección! La solución sería exactamente como este mismo asistente con el que estás hablando ahora en tu pantalla, "
                 "adaptado a tu negocio para atender clientes, resolver dudas frecuentes y agendar citas o pedidos automáticamente por WhatsApp o tu web. "
-                "¿Qué te parece esta propuesta? ¿Crees que resolvería lo que necesitas en tu día a día, o hay algo más que te gustaría agregar o ajustar?"
+                "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
             )
             summary = "• Negocio: Ventas y atención automatizada\n• Dolor detectado: Tiempo atendiendo mensajes y coordinando clientes\n• Lo que le interesó: Asistente en vivo estilo Wiki"
 
@@ -379,7 +409,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "client_need_summary": summary,
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]
+            "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Prefiero ajustar un detalle"]
         }
 
     # 10. Respuesta general amigable (Paso 1 del embudo)
@@ -463,18 +493,53 @@ async def orchestrate_wiki_turn(
     
     user_explicitly_asking_booking = is_user_asking_booking(latest_user_text)
     user_explicitly_asking_contact = is_user_asking_contact(latest_user_text)
+    user_approving = is_user_approving_proposal(latest_user_text)
+    prior_proposal = has_proposal_in_history(messages) or any(k in latest_user_text.lower() for k in ["propuesta", "idea", "solución", "solucion", "avanzar"])
 
-    # Si hay opciones en pantalla o la etapa es DESCUBRIR u OPCIONES,
-    # el servidor IMPONE DETERMINISTAMENTE que NO haya agendado ni proyecto anticipado:
-    if options or stage in ["DESCUBRIR", "OPCIONES"]:
+    # REGLA DE ORO DE CIERRE INMEDIATO Y CONTROL DE COSTOS:
+    # Si el usuario aprueba la propuesta y ya hubo una propuesta previa en el historial (o menciona expresamente propuesta/idea/avanzar):
+    # El servidor IMPONE DETERMINISTAMENTE pasar a CIERRE y ofrecer calendario/contacto sin divagar ni hacer preguntas abiertas.
+    if user_approving and prior_proposal:
+        stage = "CIERRE"
+        offer_booking = True
+        wants_contact = True
+        project_ref = "ninguno"
+        options = []
+
+    # Si hay opciones en pantalla o la etapa es DESCUBRIR u OPCIONES (y no estamos aprobando una propuesta):
+    elif options or stage in ["DESCUBRIR", "OPCIONES"]:
         stage = "OPCIONES" if options else "DESCUBRIR"
         offer_booking = False
         wants_contact = False
         project_ref = "ninguno"
 
+    # Si estamos en etapa CIERRE, asegurar que no queden preguntas abiertas ni divagaciones que prolonguen la charla:
+    if stage == "CIERRE":
+        offer_booking = True
+        wants_contact = True
+        project_ref = "ninguno"
+        options = []
+        
+        stalling_patterns = [
+            r"qué\s+más\s+(te\s+gustaría|quisieras|necesitas|quieres|deseas|podemos\s+agregar)",
+            r"hay\s+algo\s+más\s+que",
+            r"te\s+gustaría\s+agregar\s+o\s+ajustar",
+            r"te\s+gustaría\s+ajustar\s+o\s+agregar",
+            r"qué\s+otra\s+cosa",
+            r"cuéntame\s+más",
+            r"alguna\s+otra\s+duda",
+            r"o\s+hay\s+algo\s+más",
+            r"o\s+prefieres\s+agregar"
+        ]
+        if any(re.search(pat, reply_text, re.IGNORECASE) for pat in stalling_patterns):
+            reply_text = (
+                "¡Me alegra muchísimo que te haga sentido la propuesta! El siguiente paso es agendar una videollamada breve de 15 minutos en el Google Calendar de Erick. "
+                "Así podremos revisar a detalle tu caso, aterrizar el prototipo funcional navegable sin compromiso y resolver cualquier duda, o si prefieres, platicar directamente por WhatsApp."
+            )
+
     # Si la etapa es PROPUESTA o PRUEBA, el agendado y contacto quedan estrictamente bloqueados salvo
     # que el usuario solicite explícitamente agendar videollamada con Erick o pida datos de contacto:
-    if stage in ["PROPUESTA", "PRUEBA"]:
+    elif stage in ["PROPUESTA", "PRUEBA"]:
         if not user_explicitly_asking_booking:
             offer_booking = False
         if not user_explicitly_asking_contact:
@@ -493,7 +558,7 @@ async def orchestrate_wiki_turn(
     booking_action = None
 
     should_offer_calendar = False
-    if stage == "CIERRE" and (offer_booking or user_explicitly_asking_booking or is_user_asking_pricing(latest_user_text)):
+    if stage == "CIERRE" and (offer_booking or user_explicitly_asking_booking or is_user_asking_pricing(latest_user_text) or user_approving):
         should_offer_calendar = True
     elif stage in ["PROPUESTA", "PRUEBA"] and user_explicitly_asking_booking:
         # Si el usuario ya está viendo la propuesta y pide explícitamente agendar con Erick
@@ -531,20 +596,20 @@ async def orchestrate_wiki_turn(
 
     # Limpiar sugerencias y contextualizarlas según la etapa
     clean_suggestions = sanitize_suggestions(raw_sug)
-    if stage in ["DESCUBRIR", "OPCIONES", "PROPUESTA"]:
+    if stage == "CIERRE":
+        clean_suggestions = ["Agendar videollamada de 15 min", "Platicar por WhatsApp", "Enviar correo"]
+    elif stage in ["DESCUBRIR", "OPCIONES", "PROPUESTA"]:
         clean_suggestions = [
             s for s in clean_suggestions 
             if not any(k in s.lower() for k in ["agendar", "videollamada", "calendario", "cita"])
         ]
-    if not clean_suggestions:
-        if stage == "CIERRE":
-            clean_suggestions = ["Agendar llamada breve", "Platicar por WhatsApp", "¿Cuánto cuesta?"]
-        elif stage == "PROPUESTA":
-            clean_suggestions = ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]
-        elif stage == "OPCIONES":
-            clean_suggestions = ["Me gusta la opción 1", "Me interesan las 3", "Tengo otra idea en mente"]
-        else:
-            clean_suggestions = ["Tengo un negocio propio", "Doy servicios o citas", "Trabajo por mi cuenta"]
+        if not clean_suggestions:
+            if stage == "PROPUESTA":
+                clean_suggestions = ["Me gusta la propuesta", "¿Cuánto cuesta?", "Prefiero ajustar un detalle"]
+            elif stage == "OPCIONES":
+                clean_suggestions = ["Me gusta la opción 1", "Me interesan las 3", "Tengo otra idea en mente"]
+            else:
+                clean_suggestions = ["Tengo un negocio propio", "Doy servicios o citas", "Trabajo por mi cuenta"]
 
     # Generar firma HMAC para el nuevo mensaje
     sig = generate_message_signature(reply_text)
