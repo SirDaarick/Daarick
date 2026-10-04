@@ -69,5 +69,13 @@ PROJECT_ACTIONS_CATALOG: Dict[str, ProjectAction] = {
         demo_url="https://stampy.vercel.app/",
         github_url="https://github.com/SirDaarick/Stampy",
         action_label="Probar Demo de Stampy"
+    ),
+    "wiki": ProjectAction(
+        id="wiki",
+        title="Wiki Assistant (Ventas & Citas)",
+        tagline="Asistente guiado con streaming en tiempo real, reglas de empatía sin tecnicismos y agendado en Google Calendar",
+        demo_url="#wiki",
+        github_url="https://github.com/SirDaarick/Daarick",
+        action_label="✨ Es este mismo chat en vivo"
     )
 }

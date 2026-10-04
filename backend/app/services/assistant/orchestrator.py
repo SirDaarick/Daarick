@@ -155,15 +155,15 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
         if any(o in q for o in ["opcion 1", "opción 1", "opcion 2", "opción 2", "opcion 3", "opción 3", "agendador", "recordatorio", "me interesa esta opción"]):
             return {
                 "reply": (
-                    "¡Excelente elección! Con un agendador automatizado por WhatsApp, tus clientes pueden ver tus horas libres y apartar su cita directamente, "
+                    "¡Excelente elección! La solución sería exactamente como este mismo asistente con el que estás hablando ahora en tu pantalla, "
+                    "adaptado a tu negocio para que tus clientes puedan consultar tus servicios, ver tus horas libres y apartar su cita directamente por WhatsApp, "
                     "evitando que tengas que interrumpir tu trabajo o atender llamadas mientras cortas el cabello. "
-                    "Tetring es un proyecto comprobado donde resolvemos esta coordinación inteligente de horarios. "
                     "¿Qué te parece esta propuesta para tu peluquería? ¿Crees que te serviría en tu día a día, o hay algo más que te gustaría agregar o ajustar?"
                 ),
                 "stage": "PROPUESTA",
                 "options": [],
-                "project_ref": "tetring",
-                "client_need_summary": "• Negocio: Peluquería o salón de belleza\n• Dolor detectado: Empalmes de citas y tiempo contestando WhatsApp\n• Lo que le interesó: Agendador automático y recordatorios por WhatsApp",
+                "project_ref": "wiki",
+                "client_need_summary": "• Negocio: Peluquería o salón de belleza\n• Dolor detectado: Empalmes de citas y tiempo contestando WhatsApp\n• Lo que le interesó: Asistente estilo Wiki para citas automáticas por WhatsApp",
                 "wants_contact": False,
                 "offer_booking": False,
                 "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]
@@ -237,24 +237,41 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "suggestions": ["Contestar dudas en WhatsApp", "Avisar entregas y cobros", "Notas y pedidos en papel"]
         }
 
-    # 5. Base de datos / Chatbot / Consultas
-    if any(k in q for k in ["chatbot", "datos", "alumno", "profesor", "inventario", "consultar", "paidea"]):
+    # 5. Consultas de base de datos, inventarios y expedientes (PAIDEA)
+    if any(k in q for k in ["inventario", "inventarios", "stock", "datos", "alumno", "alumnos", "profesor", "profesores", "calificaciones", "expediente", "expedientes", "paidea"]):
         return {
             "reply": (
-                "Es totalmente viable crear un asistente que responda preguntas consultando tu información automáticamente. "
-                "Un caso parecido es PAIDEA, donde el agente responde dudas sin intervención manual. "
-                "¿Qué te parece esta idea? ¿Crees que te serviría en tu día a día, o tenías en mente algo diferente?"
+                "Es totalmente viable crear un asistente que responda preguntas consultando tu información, stock o base de datos automáticamente. "
+                "Un caso parecido es PAIDEA, donde el agente responde dudas sobre registros e inventario sin intervención manual. "
+                "¿Qué te parece esta propuesta? ¿Crees que te serviría en tu día a día, o hay algo más que te gustaría agregar o ajustar?"
             ),
             "stage": "PROPUESTA",
             "options": [],
             "project_ref": "paidea",
-            "client_need_summary": "• Negocio: Consultas de clientes o base de datos\n• Dolor detectado: Tiempo respondiendo lo mismo repetidamente\n• Lo que le interesó: Asistente automatizado inteligente",
+            "client_need_summary": "• Negocio: Consultas de inventario o base de datos\n• Dolor detectado: Tiempo buscando registros o respondiendo stock repetidamente\n• Lo que le interesó: Asistente PAIDEA para consulta de datos",
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["Me gusta la idea", "Pensaba en algo más simple", "¿Cómo funciona?"]
+            "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]
         }
 
-    # 6. Horarios o turnos
+    # 6. Chatbots para ventas, atención a clientes o agendado de citas (WIKI)
+    if any(k in q for k in ["chatbot", "bot", "asistente", "ventas", "venta", "atencion", "atención", "atender clientes", "prospectos", "cotizar", "prospecto", "citas", "cita", "whatsapp"]):
+        return {
+            "reply": (
+                "¡Exactamente para eso sirve la automatización conversacional! La solución sería como este mismo asistente con el que estás hablando ahora en tu pantalla: "
+                "atiende a tus clientes al instante, responde sus dudas frecuentes, filtra prospectos y agenda citas automáticamente por WhatsApp o tu web 24/7. "
+                "¿Qué te parece esta propuesta? ¿Crees que se adapta a lo que necesitas en tu negocio o hay algo más que te gustaría agregar o ajustar?"
+            ),
+            "stage": "PROPUESTA",
+            "options": [],
+            "project_ref": "wiki",
+            "client_need_summary": "• Negocio: Ventas y atención a clientes\n• Dolor detectado: Pérdida de prospectos y tiempo en atención repetitiva\n• Lo que le interesó: Asistente conversacional en vivo estilo Wiki",
+            "wants_contact": False,
+            "offer_booking": False,
+            "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]
+        }
+
+    # 7. Horarios o turnos
     if any(k in q for k in ["horario", "horarios", "turno", "turnos", "empalme", "cuadrante"]):
         # A. Si ya eligió una opción o habla de motor/algoritmo/tetring
         if any(o in q for o in ["opcion 1", "opción 1", "opcion 2", "opción 2", "opcion 3", "opción 3", "tetring", "motor", "agendador", "me interesa esta opción"]):
@@ -290,7 +307,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "suggestions": ["Me gusta la opción 1", "Me interesan las 3", "Tengo otra idea en mente"]
         }
 
-    # 7. Facturas o tickets
+    # 8. Facturas o tickets
     if any(k in q for k in ["factura", "facturas", "ticket", "tickets", "recibo", "ocr", "excel"]):
         return {
             "reply": (
@@ -306,8 +323,8 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "suggestions": ["Me gusta la idea", "Probar demo", "¿Cuánto tiempo toma implementarlo?"]
         }
 
-    # 8. ERPs, Inventario y Sistemas a Medida
-    if any(k in q for k in ["erp", "sistema", "gestión", "gestion", "inventario", "stock", "sucursal", "sucursales"]):
+    # 9. ERPs y Sistemas a Medida
+    if any(k in q for k in ["erp", "sistema", "gestión", "gestion", "sucursal", "sucursales"]):
         return {
             "reply": (
                 "¡Totalmente factible! Desarrollamos sistemas y ERPs a medida para centralizar inventarios, ventas, pedidos y clientes en un solo panel. "
@@ -322,19 +339,44 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "suggestions": ["Inventario y stock", "Ventas y clientes", "Facturación y pedidos"]
         }
 
-    # 9. Selección de opción general (cuando el usuario responde 'opción 1', 'me interesa la 2', etc.)
+    # 10. Selección de opción general (cuando el usuario responde 'opción 1', 'me interesa la 2', etc.)
     if is_picking_option:
-        project_key = "tetring" if any(k in q for k in ["agendador", "cita", "citas", "horario", "turno"]) else "paidea"
-        return {
-            "reply": (
-                "¡Excelente elección! Esta alternativa nos permite resolver de raíz ese dolor operativo "
-                "con una solución práctica y probada que puedas usar desde el primer día. "
+        if any(k in q for k in ["horario", "horarios", "turno", "turnos", "cuadrante", "personal"]):
+            project_key = "tetring"
+            reply_text = (
+                "¡Excelente elección! Con un motor inteligente como el que diseñamos en Tetring, se coordinan turnos y horarios sin choques automáticamente. "
+                "¿Qué te parece esta propuesta? ¿Crees que resolvería la organización de tus horarios o hay algo más que te gustaría agregar o ajustar?"
+            )
+            summary = "• Negocio: Coordinación de turnos y personal\n• Dolor detectado: Empalmes de horarios y cuadrantes\n• Lo que le interesó: Motor Tetring de turnos"
+        elif any(k in q for k in ["inventario", "stock", "datos", "registro", "expediente", "alumno", "alumnos"]):
+            project_key = "paidea"
+            reply_text = (
+                "¡Excelente elección! Con una solución como PAIDEA, tus usuarios y tú pueden consultar stock, datos y registros en segundos sin trabajo manual. "
                 "¿Qué te parece esta propuesta? ¿Crees que resolvería lo que necesitas en tu día a día, o hay algo más que te gustaría agregar o ajustar?"
-            ),
+            )
+            summary = "• Negocio: Consulta de datos e inventarios\n• Dolor detectado: Búsqueda manual de registros y stock\n• Lo que le interesó: Asistente PAIDEA de consulta de datos"
+        elif any(k in q for k in ["factura", "facturas", "ticket", "tickets", "ocr", "gasto", "gastos"]):
+            project_key = "invoicing"
+            reply_text = (
+                "¡Excelente elección! Con nuestra demo de extracción de facturas y tickets a Excel, eliminas horas de captura manual y verificas las cuentas al instante. "
+                "¿Qué te parece esta propuesta? ¿Crees que te ahorraría tiempo administrativo o hay algo más que te gustaría agregar o ajustar?"
+            )
+            summary = "• Negocio: Control de gastos y facturas\n• Dolor detectado: Captura manual de tickets y comprobantes\n• Lo que le interesó: Extractor automático a Excel"
+        else:
+            project_key = "wiki"
+            reply_text = (
+                "¡Excelente elección! La solución sería exactamente como este mismo asistente con el que estás hablando ahora en tu pantalla, "
+                "adaptado a tu negocio para atender clientes, resolver dudas frecuentes y agendar citas o pedidos automáticamente por WhatsApp o tu web. "
+                "¿Qué te parece esta propuesta? ¿Crees que resolvería lo que necesitas en tu día a día, o hay algo más que te gustaría agregar o ajustar?"
+            )
+            summary = "• Negocio: Ventas y atención automatizada\n• Dolor detectado: Tiempo atendiendo mensajes y coordinando clientes\n• Lo que le interesó: Asistente en vivo estilo Wiki"
+
+        return {
+            "reply": reply_text,
             "stage": "PROPUESTA",
             "options": [],
             "project_ref": project_key,
-            "client_need_summary": "• Negocio: Por profundizar en llamada\n• Dolor detectado: Tareas repetitivas y gestión diaria\n• Lo que le interesó: Opción seleccionada por el cliente",
+            "client_need_summary": summary,
             "wants_contact": False,
             "offer_booking": False,
             "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Me gustaría agregar otra cosa"]

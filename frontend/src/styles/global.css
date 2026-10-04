@@ -397,6 +397,13 @@ html:not(.dark) .wiki-project-btn-secondary:hover {
   background-color: #EDE2D7 !important;
   color: #160B1A !important;
 }
+html.light .wiki-project-btn-live,
+html:not(.dark) .wiki-project-btn-live {
+  background-color: rgba(126, 34, 206, 0.12) !important;
+  border-color: rgba(126, 34, 206, 0.35) !important;
+  color: #6B21A8 !important;
+}
+
 
 /* ==========================================================================
    Tarjeta de Agendado (Booking Calendar) en Modo Claro

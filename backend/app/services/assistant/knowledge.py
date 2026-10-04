@@ -65,14 +65,14 @@ METHODOLOGY = [
 
 AUTOMATION_CATALOG = {
     "case-whatsapp": {
-        "titulo": "Atención & Ventas 24/7 en WhatsApp",
-        "dolor": "No perder clientes por tardar en responder en WhatsApp o saturar al equipo con preguntas repetitivas.",
+        "titulo": "Atención, Ventas y Agendado de Citas en WhatsApp / Web",
+        "dolor": "No perder clientes por tardar en responder en WhatsApp o saturar al equipo con preguntas repetitivas y citas a mano.",
         "soluciones": [
-            "Asistente para tomar pedidos, registrar citas y resolver dudas de productos sin intervención manual.",
-            "Canalización automática: detecta si es una urgencia o un cliente listo para comprar y avisa a la persona indicada."
+            "Asistente para tomar pedidos, registrar citas sin empalmes y resolver dudas de productos sin intervención manual.",
+            "Canalización automática y filtros de empatía: detecta la necesidad real sin tecnicismos y avisa a la persona indicada."
         ],
-        "proyecto_analogo": "paidea",
-        "como_aplica": "Conectamos un agente inteligente que responde al momento consultando tu catálogo o disponibilidad de horarios."
+        "proyecto_analogo": "wiki",
+        "como_aplica": "Sería como este mismo asistente que estás usando ahora mismo en tu pantalla: un agente conversacional en WhatsApp o web que atiende dudas con calidez, ofrece alternativas a la medida y agenda citas automáticamente sin que tengas que pausar tu trabajo."
     },
     "case-ocr": {
         "titulo": "Lectura Automática de Facturas, Tickets y Gastos",
@@ -96,13 +96,13 @@ AUTOMATION_CATALOG = {
         "como_aplica": "Un motor de cálculo que evalúa miles de combinaciones para encontrar el cuadrante perfecto sin empalmes."
     },
     "case-bi": {
-        "titulo": "Pregúntale a tu Negocio y Reportes Automáticos",
-        "dolor": "No tener tiempo de revisar reportes y enterarse de pérdidas o caídas de ventas semanas después.",
+        "titulo": "Gestión de Inventarios, Datos y Consultas de Clientes",
+        "dolor": "Tener datos regados en hojas de cálculo o sistemas complejos, perdiendo tiempo al consultar existencias o responder preguntas de clientes sobre sus datos.",
         "soluciones": [
-            "Resumen semanal por WhatsApp los lunes con lo más vendido y alertas de gastos.",
-            "Chat inteligente para preguntarle a tu negocio en español: '¿Qué producto se vendió menos este mes?' y recibir la cifra exacta."
+            "Consultas en lenguaje cotidiano sobre inventarios, existencias de productos y almacén sin buscar en tablas eternas.",
+            "Chat inteligente para que clientes o alumnos consulten sus datos, notas, trámites o pedidos en tiempo real."
         ],
         "proyecto_analogo": "paidea",
-        "como_aplica": "Un chatbot conectado de forma segura a tus hojas de cálculo o base de datos que te da respuestas y números en segundos."
+        "como_aplica": "Un asistente como PAIDEA conectado de forma segura a tus inventarios, hojas de cálculo o base de datos que responde preguntas y datos exactos al instante."
     }
 }

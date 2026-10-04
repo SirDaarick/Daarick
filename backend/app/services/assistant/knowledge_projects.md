@@ -2,13 +2,13 @@
 # Formato: Markdown estructurado fácil de leer y editar.
 # Puedes añadir nuevos proyectos, detalles técnicos, casos de éxito o reglas en este archivo.
 
-## 1. PAIDEA (Plataforma y Asistente Educativo Inteligente)
+## 1. PAIDEA (Plataforma y Asistente de Consulta de Datos e Inventarios)
 - **¿Qué problema resolvió?**: Los profesores y directivos universitarios en ESCOM-IPN pasaban incontables horas atendiendo dudas repetitivas sobre trámites, materias, criterios de rúbricas y consultando la situación de alumnos a mano.
 - **¿Qué automatización se aplicó?**: 
   - Un agente conversacional inteligente ("TecnoBurro") que responde preguntas en lenguaje natural consultando una base de datos de alumnos, profesores, materias, trámites y calificaciones.
   - El usuario puede preguntar cosas como: "¿Qué alumnos deben entregar la práctica 2?", "¿Cuáles son los requisitos de titulación?" o consultar calificaciones directamente sin tener que buscar en hojas de cálculo ni sistemas lentos.
   - Utiliza recuperación de información (RAG) sobre reglamentos oficiales y herramientas multi-agente que consultan datos en tiempo real de forma segura.
-- **¿Cómo se aplica a otros negocios?**: Si un cliente tiene una base de datos (inventario, catálogo de productos, pedidos, políticas, clientes o alumnos) y quiere que un chatbot en WhatsApp o en su web conteste al instante consultando esa información con precisión, PAIDEA es el ejemplo perfecto de cómo se hace.
+- **¿Cómo se aplica a otros negocios?**: Si un cliente busca **gestión de inventarios**, consultar bases de datos de existencias, catálogos extensos de productos, o permitir que sus clientes o alumnos resuelvan dudas sobre sus datos personales, historial o trámites, PAIDEA es el caso de éxito ideal. (NO lo uses para ventas generales o agendado de citas de negocios cotidianos; para eso se utiliza el asistente Wiki).
 
 ---
 
@@ -51,4 +51,15 @@
   - Permite alternar instantáneamente entre **Modo Negocio (`BUSINESS`)** y **Modo Personal (`PERSONAL`)**, aislando las cuentas fiscales y sellando cada transacción en un ledger con interfaz industrial táctil.
   - Cuenta con demo interactiva en vivo desplegada en https://stampy.vercel.app/ con base de datos autónoma en cliente y repositorio público en https://github.com/SirDaarick/Stampy.
 - **¿Cómo se aplica a otros negocios?**: Ideal para cualquier empresa, consultor o comercio que busque automatizar el control de caja chica, viáticos de empleados o gestión tributaria sin obligar al equipo a aprender sistemas contables complejos.
+
+---
+
+## 7. Wiki Assistant (Motor de Consultoría, Ventas y Agendado de Citas en Vivo)
+- **¿Qué problema resuelve?**: Los dueños de negocios (peluquerías, salones, talleres, consultorios, tiendas y despachos) pierden ventas y horas respondiendo los mismos mensajes en WhatsApp y coordinando citas a mano. Los chatbots tradicionales son rígidos, torpes y frustran a los clientes sin cerrar ventas.
+- **¿Qué automatización se aplica?**: 
+  - Es el asistente que el usuario está viendo e interactuando en este preciso momento en el portafolio de Erick.
+  - Diseñado para guiar con empatía y sencillez a clientes que no tienen conocimientos técnicos.
+  - Conversa en lenguaje cotidiano, diagnostica la necesidad real sin tecnicismos, presenta 3 alternativas a la medida y agenda videollamadas en Google Calendar.
+  - Opera con reglas de servidor 100% deterministas en 4 pasos (*Descubrir → Opciones → Propuesta → Cierre*) para garantizar la mejor experiencia al cliente, sin citas apresuradas ni respuestas robóticas.
+- **¿Cómo se aplica a otros negocios?**: Si un cliente busca **atención a clientes, ventas por chat/WhatsApp o gestión de citas**, la respuesta debe ser: *"Sería como este mismo asistente con el que estás hablando ahora en tu pantalla, adaptado a los horarios, servicios y catálogo de tu negocio"*. Usa siempre `project_ref: "wiki"`.
 

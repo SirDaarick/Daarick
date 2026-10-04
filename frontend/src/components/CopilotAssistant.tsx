@@ -786,16 +786,23 @@ export const CopilotAssistant: React.FC = () => {
                               </p>
 
                               <div className="flex flex-wrap items-center gap-2 pt-1">
-                                {msg.project_action.demo_url && (
-                                  <a
-                                    href={msg.project_action.demo_url}
-                                    target={msg.project_action.demo_url.startsWith('http') ? '_blank' : '_self'}
-                                    rel="noopener noreferrer"
-                                    className="wiki-project-btn-primary inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-bold text-sm transition-all shadow-md active:scale-95 cursor-pointer"
-                                  >
-                                    <span>{msg.project_action.action_label || 'Ver Cómo Funciona'}</span>
-                                    <ExternalLink className="w-4 h-4" />
-                                  </a>
+                                {msg.project_action.id === 'wiki' || msg.project_action.demo_url === '#wiki' ? (
+                                  <span className="wiki-project-btn-live inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[rgba(192,132,252,0.18)] border border-[#c084fc]/50 text-[#f3e8ff] font-bold text-sm shadow-sm select-none">
+                                    <Sparkles className="w-4 h-4 text-[#c084fc] animate-pulse" />
+                                    <span>{msg.project_action.action_label || '✨ Es este mismo chat en vivo'}</span>
+                                  </span>
+                                ) : (
+                                  msg.project_action.demo_url && (
+                                    <a
+                                      href={msg.project_action.demo_url}
+                                      target={msg.project_action.demo_url.startsWith('http') ? '_blank' : '_self'}
+                                      rel="noopener noreferrer"
+                                      className="wiki-project-btn-primary inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-bold text-sm transition-all shadow-md active:scale-95 cursor-pointer"
+                                    >
+                                      <span>{msg.project_action.action_label || 'Ver Cómo Funciona'}</span>
+                                      <ExternalLink className="w-4 h-4" />
+                                    </a>
+                                  )
                                 )}
                                 {msg.project_action.github_url && (
                                   <a
