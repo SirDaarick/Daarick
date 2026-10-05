@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { AsciiCanvas } from '../components/AsciiCanvas';
 import { SandboxModal } from '../components/SandboxModal';
+import { RoiCalculatorModal } from '../components/RoiCalculatorModal';
 import { CopilotAssistant } from '../components/CopilotAssistant';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
@@ -85,6 +86,9 @@ const {
 
     {/* Interactive Modal Island (Loaded Immediately to catch custom events) */}
     <SandboxModal client:load />
+
+    {/* Interactive ROI & Pricing Calculator Modal */}
+    <RoiCalculatorModal client:load />
 
     {/* Floating AI Copilot Assistant (Loaded Immediately on Load) */}
     <CopilotAssistant client:load />

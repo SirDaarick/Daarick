@@ -11,9 +11,24 @@ import {
   RefreshCw,
   ExternalLink,
   Mail,
-  Check
+  Check,
+  TrendingUp,
+  Calculator
 } from 'lucide-react';
 import { BookingSlotsCard, type CalendarSlot } from './BookingSlotsCard';
+
+export interface QuotationAction {
+  selected_automation_ids: string[];
+  setup_price_estimated: number;
+  monthly_retainer_estimated: number;
+  annual_benefit_estimated: number;
+  payback_months: number;
+  roi_percentage: number;
+  currency?: string;
+  summary_text: string;
+  suggested_hours_lost?: number | null;
+  suggested_ticket?: number | null;
+}
 
 export interface ContactAction {
   type: 'whatsapp' | 'linkedin' | 'email' | string;
@@ -47,6 +62,7 @@ interface ChatMessage {
   contact_actions?: ContactAction[];
   project_action?: ProjectAction | null;
   booking_action?: BookingAction | null;
+  quotation_action?: QuotationAction | null;
   client_need_summary?: string;
 }
 
@@ -499,6 +515,7 @@ export const CopilotAssistant: React.FC = () => {
                         contact_actions: data.contact_actions || [],
                         project_action: data.project_action || null,
                         booking_action: data.booking_action || null,
+                        quotation_action: data.quotation_action || null,
                         client_need_summary: data.client_need_summary || null,
                         suggestions:
                           data.suggestions && data.suggestions.length > 0
@@ -971,6 +988,71 @@ export const CopilotAssistant: React.FC = () => {
                                     <span>Código</span>
                                   </a>
                                 )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* TARJETA INTERACTIVA DE COTIZACIÓN Y RETORNO DE INVERSIÓN (ROI) */}
+                          {msg.quotation_action && (
+                            <div className="wiki-quotation-card mt-3.5 p-4 rounded-xl bg-[rgba(24,10,28,0.95)] border border-[#c084fc] shadow-xl flex flex-col gap-3">
+                              <div className="flex items-center justify-between gap-2 border-b border-[rgba(147,80,115,0.3)] pb-2.5">
+                                <div className="flex items-center gap-2">
+                                  <span className="p-1.5 rounded-lg bg-[#c084fc]/20 text-[#c084fc]">
+                                    <TrendingUp className="w-4 h-4" />
+                                  </span>
+                                  <span className="wiki-quotation-title font-sans text-[15px] sm:text-base font-bold text-white tracking-tight">
+                                    Presupuesto & Retorno de Inversión (ROI)
+                                  </span>
+                                </div>
+                                <span className="font-mono text-xs sm:text-[13px] px-2.5 py-0.5 rounded bg-[#10B981]/20 text-[#10B981] font-bold border border-[#10B981]/30">
+                                  +{msg.quotation_action.roi_percentage}% ROI
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div className="p-2.5 rounded-lg bg-[rgba(42,18,50,0.8)] border border-[rgba(147,80,115,0.3)]">
+                                  <span className="text-[#F6DBC0]/70 font-mono block">Implementación Inicial:</span>
+                                  <span className="text-white font-mono font-bold text-sm">
+                                    ${msg.quotation_action.setup_price_estimated.toLocaleString()} {msg.quotation_action.currency || 'MXN'}
+                                  </span>
+                                </div>
+                                <div className="p-2.5 rounded-lg bg-[rgba(42,18,50,0.8)] border border-[rgba(147,80,115,0.3)]">
+                                  <span className="text-[#F6DBC0]/70 font-mono block">Mantenimiento:</span>
+                                  <span className="text-white font-mono font-bold text-sm">
+                                    ${msg.quotation_action.monthly_retainer_estimated.toLocaleString()} {msg.quotation_action.currency || 'MXN'}/mes
+                                  </span>
+                                </div>
+                              </div>
+
+                              <p className="text-xs sm:text-[13px] text-[#F6DBC0] leading-relaxed">
+                                💡 Con base en tu flujo de trabajo, esta solución recupera la inversión en aproximadamente{' '}
+                                <strong className="text-white font-bold">{msg.quotation_action.payback_months} meses</strong>{' '}
+                                gracias a las horas ahorradas y la retención de clientes.
+                              </p>
+
+                              <div className="flex flex-wrap items-center gap-2 pt-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    window.dispatchEvent(
+                                      new CustomEvent('open-roi-calculator', {
+                                        detail: {
+                                          selectedIds: msg.quotation_action?.selected_automation_ids,
+                                          bleedInputs: {
+                                            lostHoursPerWeek: msg.quotation_action?.suggested_hours_lost || 12,
+                                            averageTicketValue: msg.quotation_action?.suggested_ticket || (msg.quotation_action?.currency === 'MXN' ? 3500 : 250)
+                                          },
+                                          currency: (msg.quotation_action?.currency as 'USD' | 'MXN') || 'MXN'
+                                        }
+                                      })
+                                    );
+                                  }}
+                                  className="w-full py-2.5 px-3 rounded-lg bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
+                                >
+                                  <Calculator className="w-4 h-4" />
+                                  <span>Abrir Desglose Completo en Calculadora</span>
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </button>
                               </div>
                             </div>
                           )}

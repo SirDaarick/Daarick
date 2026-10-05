@@ -26,6 +26,18 @@ class BookingAction(BaseModel):
     slots: List[CalendarSlot] = Field(default_factory=list, description="Horarios disponibles sugeridos")
     default_summary: Optional[str] = Field(None, description="Resumen breve de la necesidad del cliente")
 
+class QuotationAction(BaseModel):
+    selected_automation_ids: List[str] = Field(default_factory=list, description="Automatizaciones cotizadas")
+    setup_price_estimated: float = Field(..., description="Precio de implementación estimado ($)")
+    monthly_retainer_estimated: float = Field(..., description="Mantenimiento mensual estimado ($)")
+    annual_benefit_estimated: float = Field(..., description="Beneficio anual proyectado ($)")
+    payback_months: float = Field(..., description="Meses estimados para recuperar la inversión")
+    roi_percentage: int = Field(..., description="Retorno de inversión porcentual")
+    currency: str = Field(default="USD", description="Moneda: USD o MXN")
+    summary_text: str = Field(..., description="Resumen de valor de la cotización")
+    suggested_hours_lost: Optional[float] = Field(None, description="Horas manuales detectadas")
+    suggested_ticket: Optional[float] = Field(None, description="Ticket promedio detectado")
+
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"] = Field(..., description="Rol del emisor")
     content: str = Field(..., max_length=4000, description="Contenido del mensaje")
@@ -46,6 +58,7 @@ class ChatResponse(BaseModel):
     contact_actions: Optional[List[ContactAction]] = Field(default_factory=list, description="Botones de contacto directo")
     project_action: Optional[ProjectAction] = Field(None, description="Tarjeta de caso análogo comprobado")
     booking_action: Optional[BookingAction] = Field(None, description="Acción de agendado directo con Google Calendar")
+    quotation_action: Optional[QuotationAction] = Field(None, description="Tarjeta interactiva de cotización y retorno de inversión")
     client_need_summary: Optional[str] = Field(None, description="Resumen estructurado de la necesidad del cliente")
     message_sig: Optional[str] = Field(None, description="Firma HMAC del mensaje generado")
 

@@ -11,6 +11,7 @@ from app.api.v1.endpoints.demos import router as demos_router
 from app.api.v1.endpoints.projects import router as projects_router
 from app.api.v1.endpoints.testimonials import router as testimonials_router
 from app.api.v1.endpoints.assistant import router as assistant_router
+from app.api.v1.endpoints.calculator import router as calculator_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,6 +43,7 @@ app.include_router(projects_router, prefix="/api/v1/projects", tags=["projects"]
 app.include_router(demos_router, prefix="/api/v1/demos", tags=["demos"])
 app.include_router(testimonials_router, prefix="/api/v1/testimonials", tags=["testimonials"])
 app.include_router(assistant_router, prefix="/api/v1/assistant", tags=["assistant"])
+app.include_router(calculator_router, prefix="/api/v1/calculator", tags=["calculator"])
 
 @app.get("/")
 @app.get("/api")

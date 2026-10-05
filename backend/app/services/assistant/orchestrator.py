@@ -8,7 +8,9 @@ import asyncio
 from datetime import datetime, date
 import httpx
 from typing import Dict, Any, List, Optional
-from app.schemas.assistant import ChatMessage, ChatResponse, BookingAction, CalendarSlot
+from app.schemas.assistant import ChatMessage, ChatResponse, BookingAction, CalendarSlot, QuotationAction
+from app.schemas.calculator import ClientBleedInputsSchema
+from app.services.calculator_service import calculate_quote
 from app.services.assistant.actions import CONTACT_BUTTONS, PROJECT_ACTIONS_CATALOG
 from app.services.assistant.guardrails import (
     check_security_guardrails, 
@@ -67,9 +69,14 @@ def is_user_asking_booking(text: str) -> bool:
     return any(re.search(pat, q) for pat in explicit_booking_patterns)
 
 def is_user_asking_pricing(text: str) -> bool:
-    """Verifica si el usuario pregunta sobre precios o cotizaciones."""
+    """Verifica si el usuario pregunta sobre precios, presupuestos o cotizaciones."""
     q = text.lower()
-    pricing_keywords = ["precio", "precios", "cuanto cuesta", "cuánto cuesta", "costo", "costos", "cotizacion", "cotización", "cobras", "cobran"]
+    pricing_keywords = [
+        "precio", "precios", "cuanto cuesta", "cuánto cuesta", "costo", "costos",
+        "cotizacion", "cotización", "cotizar", "cotízame", "cotizame",
+        "cobras", "cobran", "presupuesto", "calcular presupuesto", "calculadora",
+        "cuanto sale", "cuánto sale", "retorno", "roi"
+    ]
     return any(k in q for k in pricing_keywords)
 
 def is_user_approving_proposal(text: str) -> bool:
@@ -150,20 +157,21 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "suggestions": ["Platicar por WhatsApp", "Enviar correo"]
         }
 
-    # 1. Aprobación o satisfacción del cliente con la propuesta previa -> ETAPA CIERRE
+    # 1. Aprobación o satisfacción del cliente con la propuesta previa -> Paso transicional sin imposición
     if is_user_approving_proposal(latest_text):
         return {
             "reply": (
-                "¡Me alegra muchísimo que te haga sentido la propuesta! El siguiente paso es agendar una videollamada breve de 15 minutos en el Google Calendar de Erick. "
-                "Así podremos revisar a detalle tu caso, aterrizar el prototipo funcional navegable sin compromiso y resolver cualquier duda, o si prefieres, platicar directamente por WhatsApp."
+                "¡Me alegra muchísimo que te haga sentido la propuesta! Antes de dar el siguiente paso: "
+                "¿te gustaría ver un presupuesto estimado con retorno de inversión en este momento, "
+                "o prefieres agendar directamente una videollamada breve de 15 minutos en el calendario de Erick / platicar por WhatsApp?"
             ),
-            "stage": "CIERRE",
+            "stage": "PROPUESTA",
             "options": [],
             "project_ref": "ninguno",
-            "client_need_summary": "• Negocio: Propuesta validada por el cliente\n• Dolor detectado: Solución revisada y aprobada\n• Lo que le interesó: Agendar videollamada breve de 15 min en Google Calendar",
-            "wants_contact": True,
-            "offer_booking": True,
-            "suggestions": ["Agendar videollamada de 15 min", "Platicar por WhatsApp", "Enviar correo"]
+            "client_need_summary": "• Negocio: Propuesta validada por el cliente\n• Dolor detectado: Solución revisada y aprobada\n• Lo que le interesó: Evaluar presupuesto vs agendar videollamada de 15 min",
+            "wants_contact": False,
+            "offer_booking": False,
+            "suggestions": ["Calcular presupuesto estimado", "Agendar videollamada de 15 min", "Platicar por WhatsApp"]
         }
 
     # 2. Pregunta sobre precios o cotizaciones
@@ -171,16 +179,16 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
         return {
             "reply": (
                 "Para el desarrollo no se cobra nada por adelantado; el pago inicial se realiza "
-                "una vez que apruebas el prototipo navegable. Después se maneja una cuota mensual por soporte y mejoras. "
-                "¿Te gustaría agendar una llamada breve de 15 minutos para aterrizar tu proyecto?"
+                "una vez que apruebas el prototipo navegable. Después se maneja una cuota mensual por soporte y mejoras continuas. "
+                "Aquí abajo te comparto un estimado inicial y retorno de inversión proyectado para tu caso. ¿Te gustaría agendar una llamada breve de 15 minutos para aterrizar tu proyecto o platicar por WhatsApp?"
             ),
-            "stage": "CIERRE",
+            "stage": "PROPUESTA",
             "options": [],
             "project_ref": "ninguno",
-            "client_need_summary": "• Negocio: Consulta de alcance\n• Dolor detectado: Precios y viabilidad\n• Lo que le interesó: Conocer esquema de trabajo y prototipo sin anticipo",
+            "client_need_summary": "• Negocio: Consulta de presupuesto y alcance\n• Dolor detectado: Precios y viabilidad\n• Lo que le interesó: Conocer esquema de cotización y retorno de inversión",
             "wants_contact": False,
-            "offer_booking": True,
-            "suggestions": ["Agendar llamada breve", "¿Cómo funciona el prototipo?", "Platicar por WhatsApp"]
+            "offer_booking": False,
+            "suggestions": ["Agendar videollamada de 15 min", "Platicar por WhatsApp", "Ajustar la propuesta"]
         }
 
     # 3. Salones, peluquerías, barberías y estética
@@ -192,7 +200,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
                     "¡Excelente elección! La solución sería exactamente como este mismo asistente con el que estás hablando ahora en tu pantalla, "
                     "adaptado a tu negocio para que tus clientes puedan consultar tus servicios, ver tus horas libres y apartar su cita directamente por WhatsApp, "
                     "evitando que tengas que interrumpir tu trabajo o atender llamadas mientras cortas el cabello. "
-                    "¿Qué te parece esta propuesta para tu peluquería? ¿Te gustaría avanzar con esta solución o prefieres ajustar algún detalle?"
+                    "¿Qué te parece esta propuesta? Si te late, podemos estimar un presupuesto y retorno de inversión en este momento, agendar una breve videollamada de 15 minutos con Erick, o platicar por WhatsApp. ¿Cómo prefieres avanzar?"
                 ),
                 "stage": "PROPUESTA",
                 "options": [],
@@ -200,7 +208,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
                 "client_need_summary": "• Negocio: Peluquería o salón de belleza\n• Dolor detectado: Empalmes de citas y tiempo contestando WhatsApp\n• Lo que le interesó: Asistente estilo Wiki para citas automáticas por WhatsApp",
                 "wants_contact": False,
                 "offer_booking": False,
-                "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Prefiero ajustar un detalle"]
+                "suggestions": ["Calcular presupuesto estimado", "Agendar videollamada de 15 min", "Platicar por WhatsApp"]
             }
         # B. Si describe su dolor o problema con citas/horarios/tiempo
         if any(p in q for p in ["empalma", "empalman", "tiempo", "cancelan", "cancela", "agenda", "whatsapp", "horario", "horarios", "turno", "pierdo", "cuesta", "cruzan", "problema"]):
@@ -277,7 +285,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "reply": (
                 "Es totalmente viable crear un asistente que responda preguntas consultando tu información, stock o base de datos automáticamente. "
                 "Un caso parecido es PAIDEA, donde el agente responde dudas sobre registros e inventario sin intervención manual. "
-                "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
+                "¿Qué te parece esta propuesta? Si te late, podemos estimar un presupuesto y retorno de inversión en este momento, agendar una breve videollamada de 15 minutos con Erick, o platicar por WhatsApp. ¿Cómo prefieres avanzar?"
             ),
             "stage": "PROPUESTA",
             "options": [],
@@ -285,7 +293,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "client_need_summary": "• Negocio: Consultas de inventario o base de datos\n• Dolor detectado: Tiempo buscando registros o respondiendo stock repetidamente\n• Lo que le interesó: Asistente PAIDEA para consulta de datos",
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Prefiero ajustar un detalle"]
+            "suggestions": ["Calcular presupuesto estimado", "Agendar videollamada de 15 min", "Platicar por WhatsApp"]
         }
 
     # 6. Chatbots para ventas, atención a clientes o agendado de citas (WIKI)
@@ -294,7 +302,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "reply": (
                 "¡Exactamente para eso sirve la automatización conversacional! La solución sería como este mismo asistente con el que estás hablando ahora en tu pantalla: "
                 "atiende a tus clientes al instante, responde sus dudas frecuentes, filtra prospectos y agenda citas automáticamente por WhatsApp o tu web 24/7. "
-                "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
+                "¿Qué te parece esta propuesta? Si te late, podemos estimar un presupuesto y retorno de inversión en este momento, agendar una breve videollamada de 15 minutos con Erick, o platicar por WhatsApp. ¿Cómo prefieres avanzar?"
             ),
             "stage": "PROPUESTA",
             "options": [],
@@ -302,7 +310,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "client_need_summary": "• Negocio: Ventas y atención a clientes\n• Dolor detectado: Pérdida de prospectos y tiempo en atención repetitiva\n• Lo que le interesó: Asistente conversacional en vivo estilo Wiki",
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Prefiero ajustar un detalle"]
+            "suggestions": ["Calcular presupuesto estimado", "Agendar videollamada de 15 min", "Platicar por WhatsApp"]
         }
 
     # 7. Horarios o turnos
@@ -312,7 +320,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             return {
                 "reply": (
                     "¡Excelente! Con un motor inteligente como el que diseñamos en Tetring, se coordinan turnos y horarios sin choques automáticamente. "
-                    "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
+                    "¿Qué te parece esta propuesta? Si te late, podemos estimar un presupuesto y retorno de inversión en este momento, agendar una breve videollamada de 15 minutos con Erick, o platicar por WhatsApp. ¿Cómo prefieres avanzar?"
                 ),
                 "stage": "PROPUESTA",
                 "options": [],
@@ -320,7 +328,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
                 "client_need_summary": "• Negocio: Coordinación de turnos/horarios\n• Dolor detectado: Choques de horarios y cálculo manual\n• Lo que le interesó: Generador de turnos automático",
                 "wants_contact": False,
                 "offer_booking": False,
-                "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Prefiero ajustar un detalle"]
+                "suggestions": ["Calcular presupuesto estimado", "Agendar videollamada de 15 min", "Platicar por WhatsApp"]
             }
         # B. Si describe su dolor o problema de horarios/turnos
         return {
@@ -346,7 +354,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
         return {
             "reply": (
                 "Extraer datos de facturas y tickets a Excel de forma automática evita horas de captura manual, como en nuestra demo de extracción. "
-                "¿Crees que una herramienta así te ahorraría tiempo, o qué proceso te interesa más mejorar?"
+                "¿Crees que una herramienta así te ahorraría tiempo? Si te late, podemos estimar un presupuesto y retorno de inversión, agendar una llamada de 15 min con Erick, o platicar por WhatsApp. ¿Cómo prefieres avanzar?"
             ),
             "stage": "PROPUESTA",
             "options": [],
@@ -354,7 +362,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "client_need_summary": "• Negocio: Control administrativo y gastos\n• Dolor detectado: Captura manual de tickets y facturas\n• Lo que le interesó: Extractor automático a Excel",
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["Me gusta la idea", "Probar demo", "¿Cuánto tiempo toma implementarlo?"]
+            "suggestions": ["Calcular presupuesto estimado", "Agendar videollamada de 15 min", "Platicar por WhatsApp"]
         }
 
     # 9. ERPs y Sistemas a Medida
@@ -364,7 +372,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
                 "¡Totalmente factible! Desarrollamos sistemas y ERPs a medida para centralizar inventarios, ventas, pedidos y clientes en un solo panel. "
                 "Para poder proponerte la mejor arquitectura: ¿qué procesos son los que hoy más te urge conectar o sincronizar?"
             ),
-            "stage": "PROPUESTA",
+            "stage": "DESCUBRIR",
             "options": [],
             "project_ref": "ninguno",
             "client_need_summary": "• Negocio: Gestión comercial o pyme\n• Dolor detectado: Falta de integración entre áreas\n• Lo que le interesó: ERP o plataforma a medida",
@@ -374,26 +382,27 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
         }
 
     # 10. Selección de opción general (cuando el usuario responde 'opción 1', 'me interesa la 2', etc.)
+    is_picking_option = any(o in q for o in ["opcion 1", "opción 1", "opcion 2", "opción 2", "opcion 3", "opción 3", "me interesa esta opción", "me gusta la opción", "me gusta la opcion", "primera opción", "segunda opción", "tercera opción"])
     if is_picking_option:
         if any(k in q for k in ["horario", "horarios", "turno", "turnos", "cuadrante", "personal"]):
             project_key = "tetring"
             reply_text = (
                 "¡Excelente elección! Con un motor inteligente como el que diseñamos en Tetring, se coordinan turnos y horarios sin choques automáticamente. "
-                "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
+                "¿Qué te parece esta propuesta? Si te late, podemos estimar un presupuesto y retorno de inversión en este momento, agendar una breve videollamada de 15 minutos con Erick, o platicar por WhatsApp. ¿Cómo prefieres avanzar?"
             )
             summary = "• Negocio: Coordinación de turnos y personal\n• Dolor detectado: Empalmes de horarios y cuadrantes\n• Lo que le interesó: Motor Tetring de turnos"
         elif any(k in q for k in ["inventario", "stock", "datos", "registro", "expediente", "alumno", "alumnos"]):
             project_key = "paidea"
             reply_text = (
                 "¡Excelente elección! Con una solución como PAIDEA, tus usuarios y tú pueden consultar stock, datos y registros en segundos sin trabajo manual. "
-                "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
+                "¿Qué te parece esta propuesta? Si te late, podemos estimar un presupuesto y retorno de inversión en este momento, agendar una breve videollamada de 15 minutos con Erick, o platicar por WhatsApp. ¿Cómo prefieres avanzar?"
             )
             summary = "• Negocio: Consulta de datos e inventarios\n• Dolor detectado: Búsqueda manual de registros y stock\n• Lo que le interesó: Asistente PAIDEA de consulta de datos"
         elif any(k in q for k in ["factura", "facturas", "ticket", "tickets", "ocr", "gasto", "gastos"]):
             project_key = "invoicing"
             reply_text = (
                 "¡Excelente elección! Con nuestra demo de extracción de facturas y tickets a Excel, eliminas horas de captura manual y verificas las cuentas al instante. "
-                "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
+                "¿Qué te parece esta propuesta? Si te late, podemos estimar un presupuesto y retorno de inversión en este momento, agendar una breve videollamada de 15 minutos con Erick, o platicar por WhatsApp. ¿Cómo prefieres avanzar?"
             )
             summary = "• Negocio: Control de gastos y facturas\n• Dolor detectado: Captura manual de tickets y comprobantes\n• Lo que le interesó: Extractor automático a Excel"
         else:
@@ -401,7 +410,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             reply_text = (
                 "¡Excelente elección! La solución sería exactamente como este mismo asistente con el que estás hablando ahora en tu pantalla, "
                 "adaptado a tu negocio para atender clientes, resolver dudas frecuentes y agendar citas o pedidos automáticamente por WhatsApp o tu web. "
-                "¿Qué te parece esta propuesta? ¿Te gustaría avanzar con ella o prefieres ajustar algún detalle?"
+                "¿Qué te parece esta propuesta? Si te late, podemos estimar un presupuesto y retorno de inversión en este momento, agendar una breve videollamada de 15 minutos con Erick, o platicar por WhatsApp. ¿Cómo prefieres avanzar?"
             )
             summary = "• Negocio: Ventas y atención automatizada\n• Dolor detectado: Tiempo atendiendo mensajes y coordinando clientes\n• Lo que le interesó: Asistente en vivo estilo Wiki"
 
@@ -413,7 +422,7 @@ def get_intelligent_fallback(latest_text: str) -> Dict[str, Any]:
             "client_need_summary": summary,
             "wants_contact": False,
             "offer_booking": False,
-            "suggestions": ["Me gusta la propuesta", "¿Cuánto cuesta?", "Prefiero ajustar un detalle"]
+            "suggestions": ["Calcular presupuesto estimado", "Agendar videollamada de 15 min", "Platicar por WhatsApp"]
         }
 
     # 10. Respuesta general amigable (Paso 1 del embudo)
@@ -498,6 +507,12 @@ async def orchestrate_wiki_turn(
     user_explicitly_asking_booking = is_user_asking_booking(latest_user_text)
     user_explicitly_asking_contact = is_user_asking_contact(latest_user_text)
     user_approving = is_user_approving_proposal(latest_user_text)
+    user_asking_quote = is_user_asking_pricing(latest_user_text) or any(
+        k in latest_user_text.lower() for k in [
+            "cotiz", "presupuesto", "cuanto sale", "cuánto sale", "calculadora",
+            "cuanto cobrar", "roi", "retorno", "perdida", "pérdida", "calcular presupuesto"
+        ]
+    )
     prior_proposal = has_proposal_in_history(messages) or any(k in latest_user_text.lower() for k in ["propuesta", "idea", "solución", "solucion", "avanzar"])
 
     # REGLA DE ORO DE CIERRE INMEDIATO Y PRIORIDAD DE INTENCIÓN:
@@ -516,16 +531,42 @@ async def orchestrate_wiki_turn(
                 "una videollamada breve de 15 minutos con Erick sin ningún compromiso, o si prefieres, platicar directamente por WhatsApp."
             )
 
-    # 2. Si el usuario aprueba la propuesta y ya hubo una propuesta previa en el historial (o menciona expresamente propuesta/idea/avanzar):
-    # El servidor IMPONE DETERMINISTAMENTE pasar a CIERRE y ofrecer calendario/contacto sin divagar ni hacer preguntas abiertas.
-    elif user_approving and prior_proposal:
+    # 2. Si el usuario pide contacto directo (WhatsApp, correo):
+    elif user_explicitly_asking_contact:
         stage = "CIERRE"
-        offer_booking = True
+        offer_booking = False
         wants_contact = True
         project_ref = "ninguno"
         options = []
 
-    # 3. Si hay opciones en pantalla o la etapa es DESCUBRIR u OPCIONES (y no estamos aprobando una propuesta ni pidiendo agendar):
+    # 3. Si el usuario solicita presupuesto, cotización o calcular:
+    elif user_asking_quote:
+        stage = "PROPUESTA"
+        offer_booking = False
+        wants_contact = False
+        options = []
+        quote_keywords = ["presupuesto", "cotiz", "inversión", "inversion", "estimad", "calculadora"]
+        if not any(qk in reply_text.lower() for qk in quote_keywords):
+            reply_text = (
+                "Te comparto una estimación inicial de implementación y mantenimiento con el retorno de inversión proyectado para tu caso. "
+                "Aquí abajo puedes ver el desglose o abrir la calculadora interactiva para simular tus números con total privacidad (modo confidencial). "
+                "Cuando gustes, podemos agendar una videollamada breve de 15 minutos en el calendario de Erick o platicar por WhatsApp para afinar los detalles."
+            )
+
+    # 4. Si el usuario aprueba la propuesta y ya hubo una propuesta previa en el historial:
+    # En lugar de saltar a CIERRE de golpe, le ofrece el paso transicional voluntario:
+    elif user_approving and prior_proposal:
+        stage = "PROPUESTA"
+        offer_booking = False
+        wants_contact = False
+        options = []
+        reply_text = (
+            "¡Me alegra muchísimo que te haga sentido la propuesta! Para dar el siguiente paso: "
+            "¿te gustaría ver un presupuesto estimado con retorno de inversión en este momento, "
+            "o prefieres agendar directamente una videollamada breve de 15 minutos en el calendario de Erick / platicar por WhatsApp?"
+        )
+
+    # 5. Si hay opciones en pantalla o la etapa es DESCUBRIR u OPCIONES (y no estamos aprobando una propuesta ni pidiendo agendar):
     elif options or stage in ["DESCUBRIR", "OPCIONES"]:
         stage = "OPCIONES" if options else "DESCUBRIR"
         offer_booking = False
@@ -615,6 +656,72 @@ async def orchestrate_wiki_turn(
                 default_summary=client_need_summary or "• Negocio: Por detallar en llamada\n• Dolor detectado: Optimización de procesos\n• Lo que le interesó: Asesoría técnica con Erick"
             )
 
+    # Construcción determinista de Tarjeta Interactiva de Cotización & ROI
+    quotation_action = None
+    is_asking_quote = is_user_asking_pricing(latest_user_text) or any(
+        k in latest_user_text.lower() for k in [
+            "cotiz", "presupuesto", "cuanto sale", "cuánto sale", "calculadora",
+            "cuanto cobrar", "roi", "retorno", "perdida", "pérdida", "calcular presupuesto"
+        ]
+    )
+    if is_asking_quote:
+        relevant_ids = ["ai-sales-bot"]
+        full_text = " ".join([m.content for m in messages if m.role == "user"]).lower()
+        if any(w in full_text for w in ["agenda", "cita", "calendario", "horario", "inasistencia", "peluqueria", "estetica", "clinica"]):
+            relevant_ids.append("calendar-sync")
+        if any(w in full_text for w in ["factura", "ticket", "recibo", "ocr", "excel", "gasto"]):
+            relevant_ids.append("doc-extractor-ocr")
+        if any(w in full_text for w in ["cobranza", "moroso", "pago", "deuda"]):
+            relevant_ids.append("debtor-recovery")
+        if any(w in full_text for w in ["hoja", "sheets", "crm", "erp", "inventario", "webhook"]):
+            relevant_ids.append("crm-sheets-sync")
+
+        curr = "MXN"
+        if any(w in full_text for w in ["usd", "dolar", "dólar", "dolares", "dólares"]):
+            curr = "USD"
+
+        detected_hours = 12.0
+        h_match = re.search(r"(\d+)\s*(horas?|hrs?)", full_text)
+        if h_match:
+            detected_hours = float(h_match.group(1))
+
+        default_ticket = 3500.0 if curr == "MXN" else 250.0
+        detected_ticket = default_ticket
+        t_match = re.search(r"(\$|ticket\s+de\s+|promedio\s+de\s+)(\d+)", full_text)
+        if t_match:
+            detected_ticket = float(t_match.group(2))
+
+        detected_clients = 40
+        c_match = re.search(r"(\d+)\s*(clientes?|prospectos?|pacientes?|alumnos?)", full_text)
+        if c_match:
+            detected_clients = int(c_match.group(1))
+
+        hourly_cost = 200.0 if curr == "MXN" else 18.0
+        errors_cost = 3000.0 if curr == "MXN" else 200.0
+
+        bleed = ClientBleedInputsSchema(
+            lost_hours_per_week=detected_hours,
+            hourly_labor_cost=hourly_cost,
+            average_ticket_value=detected_ticket,
+            monthly_leads_or_clients=detected_clients,
+            human_errors_monthly_cost=errors_cost
+        )
+        quote_calc = calculate_quote(relevant_ids, bleed=bleed, currency=curr)
+
+        curr_symbol = "MXN" if curr == "MXN" else "USD"
+        quotation_action = QuotationAction(
+            selected_automation_ids=relevant_ids,
+            setup_price_estimated=quote_calc.recommended_setup_price,
+            monthly_retainer_estimated=quote_calc.recommended_monthly_retainer,
+            annual_benefit_estimated=quote_calc.annual_recovered_benefit,
+            payback_months=quote_calc.payback_months,
+            roi_percentage=quote_calc.roi_percentage,
+            currency=curr,
+            summary_text=f"Setup estimado: ${quote_calc.recommended_setup_price:,.0f} {curr_symbol} · Mantenimiento: ${quote_calc.recommended_monthly_retainer:,.0f} {curr_symbol}/mes · Retorno: +{quote_calc.roi_percentage}% ROI (se paga solo en ~{quote_calc.payback_months} meses)",
+            suggested_hours_lost=detected_hours,
+            suggested_ticket=detected_ticket
+        )
+
     # Limpiar sugerencias y contextualizarlas según la etapa
     clean_suggestions = sanitize_suggestions(raw_sug)
     if stage == "CIERRE":
@@ -622,15 +729,26 @@ async def orchestrate_wiki_turn(
         # No se muestran chips de texto inferiores para no diluir el Call to Action (CTA) ni reabrir
         # negociaciones de alcance que generen dudas o fricción.
         clean_suggestions = []
-    elif stage in ["DESCUBRIR", "OPCIONES", "PROPUESTA"]:
+    elif stage == "PROPUESTA":
+        if quotation_action:
+            clean_suggestions = [
+                "Agendar videollamada de 15 min",
+                "Platicar por WhatsApp",
+                "Ajustar la propuesta"
+            ]
+        else:
+            clean_suggestions = [
+                "Calcular presupuesto estimado",
+                "Agendar videollamada de 15 min",
+                "Platicar por WhatsApp"
+            ]
+    elif stage in ["DESCUBRIR", "OPCIONES"]:
         clean_suggestions = [
             s for s in clean_suggestions 
             if not any(k in s.lower() for k in ["agendar", "videollamada", "calendario", "cita", "whatsapp", "correo"])
         ]
         if not clean_suggestions:
-            if stage == "PROPUESTA":
-                clean_suggestions = ["Me gusta la propuesta", "¿Cuánto cuesta?", "Prefiero ajustar un detalle"]
-            elif stage == "OPCIONES":
+            if stage == "OPCIONES":
                 clean_suggestions = ["Me gusta la opción 1", "Me interesan las 3", "Tengo otra idea en mente"]
             else:
                 clean_suggestions = ["Tengo un negocio propio", "Doy servicios o citas", "Trabajo por mi cuenta"]
@@ -647,6 +765,7 @@ async def orchestrate_wiki_turn(
         contact_actions=contact_actions,
         project_action=project_action,
         booking_action=booking_action,
+        quotation_action=quotation_action,
         client_need_summary=client_need_summary,
         message_sig=sig
     )
@@ -688,6 +807,7 @@ async def stream_wiki_sse(
             "contact_actions": [c.model_dump() for c in response.contact_actions] if response.contact_actions else [],
             "project_action": response.project_action.model_dump() if response.project_action else None,
             "booking_action": response.booking_action.model_dump() if response.booking_action else None,
+            "quotation_action": response.quotation_action.model_dump() if response.quotation_action else None,
             "client_need_summary": response.client_need_summary,
             "message_sig": response.message_sig
         }
