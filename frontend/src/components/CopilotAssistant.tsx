@@ -116,6 +116,8 @@ export const CopilotAssistant: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
   const baseTextRef = useRef('');
+  const isAtBottomRef = useRef(true);
+  const rafScrollRef = useRef<number | null>(null);
 
   // Selección de opciones múltiples interactiva (estilo Claude)
   const [selectedOptionsMap, setSelectedOptionsMap] = useState<Record<string, string[]>>({});
@@ -279,7 +281,7 @@ export const CopilotAssistant: React.FC = () => {
     }
   }, [messages]);
 
-  // Scroll robusto hacia el final del flujo de mensajes (tanto de contenedor como de marcador final)
+  // Scroll fluido hacia el final del contenedor de mensajes
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     if (conversationStreamRef.current) {
       conversationStreamRef.current.scrollTo({
@@ -287,8 +289,35 @@ export const CopilotAssistant: React.FC = () => {
         behavior
       });
     }
-    streamEndRef.current?.scrollIntoView({ behavior, block: 'end' });
   };
+
+  // Anclaje instantáneo y sincronizado al frame de renderizado durante streaming (60/120 fps)
+  const pinToBottom = () => {
+    if (rafScrollRef.current) return;
+    rafScrollRef.current = requestAnimationFrame(() => {
+      rafScrollRef.current = null;
+      if (conversationStreamRef.current && isAtBottomRef.current) {
+        conversationStreamRef.current.scrollTop = conversationStreamRef.current.scrollHeight;
+      }
+    });
+  };
+
+  // Detección de intención del usuario: si hace scroll hacia arriba, pausamos el auto-scroll
+  const handleStreamScroll = () => {
+    if (!conversationStreamRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = conversationStreamRef.current;
+    // Si la distancia al fondo es menor a 80px, consideramos que desea seguir el flujo activo
+    isAtBottomRef.current = scrollHeight - scrollTop - clientHeight < 80;
+  };
+
+  // Limpieza de rAF al desmontar componente
+  useEffect(() => {
+    return () => {
+      if (rafScrollRef.current) {
+        cancelAnimationFrame(rafScrollRef.current);
+      }
+    };
+  }, []);
 
   const toggleOption = (msgId: string, option: string) => {
     setSelectedOptionsMap((prev) => {
@@ -316,16 +345,17 @@ export const CopilotAssistant: React.FC = () => {
     handleSendMessage(formattedText);
   };
 
-  // Auto-scroll al final ante mensajes nuevos, estado de carga o cambio de canal activo (ej. abrir calendario)
+  // Auto-scroll al final ante eventos discretos (mensajes nuevos por longitud, cambio de carga, o canal activo)
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && isAtBottomRef.current) {
       scrollToBottom('smooth');
     }
-  }, [messages, isLoading, selectedChannelMap]);
+  }, [messages.length, isLoading, selectedChannelMap, isOpen]);
 
   // Auto-scroll al abrir el chat (inmediato y tras cálculo de dimensiones)
   useEffect(() => {
     if (isOpen) {
+      isAtBottomRef.current = true;
       scrollToBottom('auto');
       const t1 = setTimeout(() => scrollToBottom('smooth'), 80);
       const t2 = setTimeout(() => scrollToBottom('smooth'), 250);
@@ -365,6 +395,7 @@ export const CopilotAssistant: React.FC = () => {
 
     setHasInteracted(true);
     setInputValue('');
+    isAtBottomRef.current = true;
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
@@ -440,10 +471,15 @@ export const CopilotAssistant: React.FC = () => {
                   m.id === botMsgId ? { ...m, content: accumulated } : m
                 )
               );
+              pinToBottom();
             }
 
             if (data.done) {
               streamFinished = true;
+              if (rafScrollRef.current) {
+                cancelAnimationFrame(rafScrollRef.current);
+                rafScrollRef.current = null;
+              }
               const textLower = text.toLowerCase();
               if (textLower.includes('agendar') || textLower.includes('cita') || textLower.includes('videollamada') || textLower.includes('calendario')) {
                 setSelectedChannelMap((prev) => ({ ...prev, [botMsgId]: 'calendar' }));
@@ -472,6 +508,13 @@ export const CopilotAssistant: React.FC = () => {
                     : m
                 )
               );
+
+              // Aterrizaje final suave tras completar la generación de la respuesta
+              setTimeout(() => {
+                if (isAtBottomRef.current) {
+                  scrollToBottom('smooth');
+                }
+              }, 40);
             }
           } catch (e) {
             // Ignorar errores parciales de JSON en chunks
@@ -749,6 +792,7 @@ export const CopilotAssistant: React.FC = () => {
         <div
           id="conversation-stream"
           ref={conversationStreamRef}
+          onScroll={handleStreamScroll}
           className="flex-1 min-h-0 p-4 sm:p-5 space-y-4 overflow-y-auto font-sans text-sm text-[#F8F4E9] scrollbar-thin scrollbar-thumb-[rgba(147,80,115,0.3)]"
         >
           {messages.map((msg, index) => {
