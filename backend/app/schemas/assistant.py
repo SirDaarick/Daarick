@@ -46,6 +46,7 @@ class ChatResponse(BaseModel):
     contact_actions: Optional[List[ContactAction]] = Field(default_factory=list, description="Botones de contacto directo")
     project_action: Optional[ProjectAction] = Field(None, description="Tarjeta de caso análogo comprobado")
     booking_action: Optional[BookingAction] = Field(None, description="Acción de agendado directo con Google Calendar")
+    client_need_summary: Optional[str] = Field(None, description="Resumen estructurado de la necesidad del cliente")
     message_sig: Optional[str] = Field(None, description="Firma HMAC del mensaje generado")
 
 class BookSlotRequest(BaseModel):

@@ -99,11 +99,14 @@ class CalendarService:
         self, 
         client: httpx.AsyncClient, 
         target_date: Optional[date] = None,
-        max_slots: int = 3
+        max_slots: int = 20,
+        max_days: int = 5,
+        max_slots_per_day: int = 4
     ) -> List[CalendarSlot]:
         """
         Calcula los huecos libres respetando las reglas de trabajo.
         Si target_date se proporciona, busca prioritariamente en esa fecha específica.
+        Distribuye los huecos a lo largo de varios días hábiles para permitir selección por día.
         """
         tz = ZoneInfo(settings.BOOKING_TIMEZONE)
         now_local = datetime.now(tz)
@@ -141,7 +144,7 @@ class CalendarService:
 
             while slot_time + timedelta(minutes=settings.BOOKING_DURATION_MIN) <= day_limit:
                 slot_end = slot_time + timedelta(minutes=settings.BOOKING_DURATION_MIN)
-                if slot_time > min_start:
+                if slot_time >= min_start:
                     is_busy = False
                     for b in busy_intervals:
                         if not (slot_end <= b["start"] or slot_time >= b["end"]):
@@ -168,15 +171,17 @@ class CalendarService:
                 if target_slots:
                     return target_slots[:max_slots]
 
-        # De lo contrario o como respaldo, buscar desde la fecha mínima disponible
+        # De lo contrario o como respaldo, buscar distribuyendo a lo largo de varios días hábiles
         slots: List[CalendarSlot] = []
         current_day = min_start.date()
-        while current_day <= max_end.date() and len(slots) < max_slots:
+        days_found = 0
+
+        while current_day <= max_end.date() and days_found < max_days and len(slots) < max_slots:
             day_slots = generate_slots_for_day(current_day)
-            for s in day_slots:
-                slots.append(s)
-                if len(slots) >= max_slots:
-                    break
+            if day_slots:
+                selected_for_day = day_slots[:max_slots_per_day]
+                slots.extend(selected_for_day)
+                days_found += 1
             current_day += timedelta(days=1)
 
         return slots
@@ -224,9 +229,11 @@ class CalendarService:
             f"👤 DATOS DEL CLIENTE:\n"
             f"• Nombre: {client_name}\n"
             f"• Correo: {client_email}\n\n"
-            f"📋 RESUMEN DE LO QUE LE INTERESÓ AL CLIENTE (WIKI):\n"
+            f"📋 BRIEFING DE LA CONVERSACIÓN PREVIA (WIKI):\n"
             f"{clean_summary}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"💡 ¡NO EMPEZARÁN DE CERO!\n"
+            f"Erick ya cuenta con este resumen en sus notas para llegar con un enfoque claro y aterrizar directamente la propuesta y prototipo sin repetir preguntas.\n\n"
             f"🤖 Agendado automáticamente por Wiki (Asesor Daarick)\n"
             f"🔗 Enlace de Google Meet adjunto en esta invitación."
         )

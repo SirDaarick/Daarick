@@ -3,10 +3,15 @@ Configuraciones centralizadas del backend de Daarick Systems.
 Lectura determinista y sin duplicación de lecturas de disco por petición.
 """
 import os
+from pathlib import Path
 from typing import List
 from dotenv import load_dotenv
 
-# Cargar entorno una sola vez
+# Cargar entorno de forma determinista buscando primero en la carpeta backend/.env y luego en CWD
+_backend_dir = Path(__file__).resolve().parent.parent.parent
+_env_path = _backend_dir / ".env"
+if _env_path.exists():
+    load_dotenv(dotenv_path=_env_path, override=False)
 load_dotenv(override=False)
 
 class Settings:

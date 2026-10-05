@@ -38,12 +38,12 @@ def is_user_asking_booking(text: str) -> bool:
     Verifica si el usuario pide explícitamente agendar una cita o videollamada con Erick.
     No debe activarse si el usuario menciona 'citas' u 'horarios' como parte del problema de su propio negocio (ej: peluquería, clínica).
     """
-    q = text.lower()
+    q = text.lower().strip()
 
     # Si habla del negocio, sus clientes/pacientes o su sistema, NO es agendar con Erick
     business_context_patterns = [
         r"(para|de|mis)\s+(clientes?|clientas?|pacientes?|alumnos?|usuarios?)",
-        r"(en|para)\s+mi\s+(peluqueria|peluquería|salon|salón|estetica|estética|barberia|barbería|consultorio|negocio|taller|tienda)",
+        r"(en|para)\s+mi\s+(peluqueria|peluquería|salon|salón|estetica|estética|barberia|barbería|consultorio|negocio|taller|tienda|clinica|clínica)",
         r"(sistema|bot|asistente|automatizacion|automatización|app|aplicacion|aplicación|web)\s+(para\s+)?(agendar|citas?|horarios?)",
         r"agendador\s+(de\s+)?(citas?|turnos?)",
         r"agendar\s+(citas?|turnos?)\s+por\s+whatsapp"
@@ -53,11 +53,15 @@ def is_user_asking_booking(text: str) -> bool:
             return False
 
     explicit_booking_patterns = [
-        r"(agendar|reservar|tener|hacer)\s+(una\s+)?(videollamada|llamada|reunion|reunión|sesion|sesión)(\s+(breve|de\s+15\s+min|de\s+15\s+minutos))?",
-        r"(agendar|reservar|apartar)\s+(una\s+)?cita\s+(con\s+erick|contigo|para\s+revisar|para\s+el\s+proyecto)",
-        r"(quiero|quisiera|gustaria|gustaría|podemos)\s+(agendar|reunirnos|llamarnos|platicar\s+con\s+erick|hablar\s+con\s+erick)",
-        r"(ver|revisar|mostrar)\s+(el\s+)?(calendario|horarios\s+disponibles?)\s+(de\s+erick|para\s+agendar)?",
-        r"(agendame|agéndame|resérvame)\s+(una\s+)?(llamada|videollamada|espacio|cita)",
+        r"^(agenda|agendar|agendemos|calendario)$",
+        r"(agendar|reservar|apartar|sacar|hacer|programar|pedir)\s+(una\s+)?(cita|llamada|videollamada|reunion|reunión|sesion|sesión|espacio)",
+        r"(agendar|reservar|apartar|programar)(\s+(con\s+erick|contigo|una\s+fecha|un\s+horario|un\s+espacio))?",
+        r"(quiero|quisiera|gustaria|gustaría|podemos|deseo|necesito)\s+(agendar|reservar|reunirnos|llamarnos|platicar\s+con\s+erick|hablar\s+con\s+erick|una\s+cita|una\s+llamada|una\s+videollamada)",
+        r"(ver|revisar|mostrar|abrir|consultar)\s+(el\s+)?(calendario|agenda|horarios|disponibilidad)(\s+(de\s+erick|para\s+agendar|disponibles?))?",
+        r"(horarios|espacios|fechas)\s+disponibles?",
+        r"(tienes|hay)\s+(horarios|espacios|fechas|tiempo|disponibilidad)(\s+disponibles?)?",
+        r"c[oó]mo\s+(puedo\s+)?(agend[ao]|agendar|agendamos|reservar|reservo|pedir\s+cita)",
+        r"(agendame|agéndame|resérvame|reservame)\s+(una\s+)?(llamada|videollamada|espacio|cita)",
         r"llamada\s+de\s+15\s+min(utos)?"
     ]
     return any(re.search(pat, q) for pat in explicit_booking_patterns)
@@ -496,17 +500,32 @@ async def orchestrate_wiki_turn(
     user_approving = is_user_approving_proposal(latest_user_text)
     prior_proposal = has_proposal_in_history(messages) or any(k in latest_user_text.lower() for k in ["propuesta", "idea", "solución", "solucion", "avanzar"])
 
-    # REGLA DE ORO DE CIERRE INMEDIATO Y CONTROL DE COSTOS:
-    # Si el usuario aprueba la propuesta y ya hubo una propuesta previa en el historial (o menciona expresamente propuesta/idea/avanzar):
+    # REGLA DE ORO DE CIERRE INMEDIATO Y PRIORIDAD DE INTENCIÓN:
+    # 1. Si el usuario pide explícitamente agendar o ver la agenda:
+    # La intención directa del usuario tiene prioridad absoluta sobre cualquier embudo diagnóstico.
+    if user_explicitly_asking_booking:
+        stage = "CIERRE"
+        offer_booking = True
+        wants_contact = True
+        project_ref = "ninguno"
+        options = []
+        booking_keywords = ["calendario", "agenda", "horario", "llamada", "videollamada", "cita", "15 minutos", "reunión", "reunion"]
+        if not any(bk in reply_text.lower() for bk in booking_keywords):
+            reply_text = (
+                "¡Con gusto! Puedes seleccionar el día y la hora que mejor te acomode en el calendario de abajo para "
+                "una videollamada breve de 15 minutos con Erick sin ningún compromiso, o si prefieres, platicar directamente por WhatsApp."
+            )
+
+    # 2. Si el usuario aprueba la propuesta y ya hubo una propuesta previa en el historial (o menciona expresamente propuesta/idea/avanzar):
     # El servidor IMPONE DETERMINISTAMENTE pasar a CIERRE y ofrecer calendario/contacto sin divagar ni hacer preguntas abiertas.
-    if user_approving and prior_proposal:
+    elif user_approving and prior_proposal:
         stage = "CIERRE"
         offer_booking = True
         wants_contact = True
         project_ref = "ninguno"
         options = []
 
-    # Si hay opciones en pantalla o la etapa es DESCUBRIR u OPCIONES (y no estamos aprobando una propuesta):
+    # 3. Si hay opciones en pantalla o la etapa es DESCUBRIR u OPCIONES (y no estamos aprobando una propuesta ni pidiendo agendar):
     elif options or stage in ["DESCUBRIR", "OPCIONES"]:
         stage = "OPCIONES" if options else "DESCUBRIR"
         offer_booking = False
@@ -533,8 +552,8 @@ async def orchestrate_wiki_turn(
         ]
         if any(re.search(pat, reply_text, re.IGNORECASE) for pat in stalling_patterns):
             reply_text = (
-                "¡Me alegra muchísimo que te haga sentido la propuesta! El siguiente paso es agendar una videollamada breve de 15 minutos en el Google Calendar de Erick. "
-                "Así podremos revisar a detalle tu caso, aterrizar el prototipo funcional navegable sin compromiso y resolver cualquier duda, o si prefieres, platicar directamente por WhatsApp."
+                "¡Me alegra muchísimo que visualices este cambio en tu negocio! Para aterrizar la propuesta a tu medida y armar tu prototipo navegable sin compromiso, "
+                "¿cómo prefieres platicar los detalles con Erick? Puedes agendar una videollamada breve de 15 minutos en el calendario o escribirle directamente por WhatsApp."
             )
 
     # Si la etapa es PROPUESTA o PRUEBA, el agendado y contacto quedan estrictamente bloqueados salvo
@@ -586,7 +605,9 @@ async def orchestrate_wiki_turn(
         slots = await calendar_service.get_available_slots(
             client=client,
             target_date=parsed_target_date,
-            max_slots=3
+            max_slots=16,
+            max_days=5,
+            max_slots_per_day=4
         )
         if slots:
             booking_action = BookingAction(
@@ -597,11 +618,14 @@ async def orchestrate_wiki_turn(
     # Limpiar sugerencias y contextualizarlas según la etapa
     clean_suggestions = sanitize_suggestions(raw_sug)
     if stage == "CIERRE":
-        clean_suggestions = ["Agendar videollamada de 15 min", "Platicar por WhatsApp", "Enviar correo"]
+        # En etapa CIERRE, la propuesta ya fue aprobada y el único objetivo es conversión (elegir canal).
+        # No se muestran chips de texto inferiores para no diluir el Call to Action (CTA) ni reabrir
+        # negociaciones de alcance que generen dudas o fricción.
+        clean_suggestions = []
     elif stage in ["DESCUBRIR", "OPCIONES", "PROPUESTA"]:
         clean_suggestions = [
             s for s in clean_suggestions 
-            if not any(k in s.lower() for k in ["agendar", "videollamada", "calendario", "cita"])
+            if not any(k in s.lower() for k in ["agendar", "videollamada", "calendario", "cita", "whatsapp", "correo"])
         ]
         if not clean_suggestions:
             if stage == "PROPUESTA":
@@ -623,6 +647,7 @@ async def orchestrate_wiki_turn(
         contact_actions=contact_actions,
         project_action=project_action,
         booking_action=booking_action,
+        client_need_summary=client_need_summary,
         message_sig=sig
     )
 
@@ -663,6 +688,7 @@ async def stream_wiki_sse(
             "contact_actions": [c.model_dump() for c in response.contact_actions] if response.contact_actions else [],
             "project_action": response.project_action.model_dump() if response.project_action else None,
             "booking_action": response.booking_action.model_dump() if response.booking_action else None,
+            "client_need_summary": response.client_need_summary,
             "message_sig": response.message_sig
         }
         yield f"data: {json.dumps(final_payload, ensure_ascii=False)}\n\n"

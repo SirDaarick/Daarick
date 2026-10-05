@@ -47,7 +47,15 @@ interface ChatMessage {
   contact_actions?: ContactAction[];
   project_action?: ProjectAction | null;
   booking_action?: BookingAction | null;
+  client_need_summary?: string;
 }
+
+const PREDEFINED_FAREWELLS = [
+  "¡Ha sido un verdadero gusto ayudarte! Todo quedó perfectamente registrado y Erick ya cuenta con los detalles. ¡Nos vemos muy pronto y mucho éxito con tu proyecto! 👋",
+  "¡Con muchísimo gusto! La información ya está lista para que no empiecen desde cero. Que tengas un excelente día y nos vemos en la reunión. 🚀",
+  "¡Para eso estamos! Todo el resumen de lo que platicamos quedó guardado. Erick estará al pendiente para darle seguimiento a tu propuesta. ¡Un gran saludo! ✨",
+  "¡Excelente! Ha sido un placer orientarte hoy. Ya dimos el paso clave para optimizar los procesos de tu negocio. ¡Hasta pronto! 👋"
+];
 
 const WhatsAppIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
   <svg className={`fill-current ${className}`} viewBox="0 0 24 24">
@@ -111,6 +119,12 @@ export const CopilotAssistant: React.FC = () => {
 
   // Selección de opciones múltiples interactiva (estilo Claude)
   const [selectedOptionsMap, setSelectedOptionsMap] = useState<Record<string, string[]>>({});
+
+  // Canal de contacto preferido por mensaje en etapa de cierre ('calendar' | 'whatsapp' | 'email')
+  const [selectedChannelMap, setSelectedChannelMap] = useState<Record<string, 'calendar' | 'whatsapp' | 'email'>>({});
+
+  // Registro de canal completado/activado para disparar cierre de ciclo y chips de despedida
+  const [completedChannelMap, setCompletedChannelMap] = useState<Record<string, { type: 'calendar' | 'whatsapp' | 'email'; label?: string }>>({});
 
   // Adaptación al teclado virtual en móvil
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
@@ -302,12 +316,12 @@ export const CopilotAssistant: React.FC = () => {
     handleSendMessage(formattedText);
   };
 
-  // Auto-scroll al final ante mensajes nuevos o estado de carga
+  // Auto-scroll al final ante mensajes nuevos, estado de carga o cambio de canal activo (ej. abrir calendario)
   useEffect(() => {
     if (isOpen) {
       scrollToBottom('smooth');
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, selectedChannelMap]);
 
   // Auto-scroll al abrir el chat (inmediato y tras cálculo de dimensiones)
   useEffect(() => {
@@ -430,6 +444,13 @@ export const CopilotAssistant: React.FC = () => {
 
             if (data.done) {
               streamFinished = true;
+              const textLower = text.toLowerCase();
+              if (textLower.includes('agendar') || textLower.includes('cita') || textLower.includes('videollamada') || textLower.includes('calendario')) {
+                setSelectedChannelMap((prev) => ({ ...prev, [botMsgId]: 'calendar' }));
+              } else if (textLower.includes('whatsapp')) {
+                setSelectedChannelMap((prev) => ({ ...prev, [botMsgId]: 'whatsapp' }));
+              }
+
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === botMsgId
@@ -442,6 +463,7 @@ export const CopilotAssistant: React.FC = () => {
                         contact_actions: data.contact_actions || [],
                         project_action: data.project_action || null,
                         booking_action: data.booking_action || null,
+                        client_need_summary: data.client_need_summary || null,
                         suggestions:
                           data.suggestions && data.suggestions.length > 0
                             ? data.suggestions
@@ -480,6 +502,96 @@ export const CopilotAssistant: React.FC = () => {
   };
 
   handleSendMessageRef.current = handleSendMessage;
+
+  // Generador de resumen estructurado para WhatsApp y correo
+  const buildSummaryText = (targetMsg: ChatMessage, allMessages: ChatMessage[]) => {
+    if (targetMsg.booking_action?.default_summary) {
+      return targetMsg.booking_action.default_summary;
+    }
+    if (targetMsg.client_need_summary) {
+      return targetMsg.client_need_summary;
+    }
+    for (let i = allMessages.length - 1; i >= 0; i--) {
+      const m = allMessages[i];
+      if (m.booking_action?.default_summary) return m.booking_action.default_summary;
+      if (m.client_need_summary) return m.client_need_summary;
+    }
+    return "• Negocio: Consulta desde portafolio\n• Dolor detectado: Automatización de atención y optimización de tiempo\n• Lo que le interesó: Propuesta de asistente y prototipo navegable";
+  };
+
+  // Manejador local de chips de despedida (0 tokens, 0 llamadas al LLM)
+  const handleFarewellClick = (chipText: string) => {
+    if (chipText.toLowerCase().includes('cerrar')) {
+      setIsOpen(false);
+      return;
+    }
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const userMsg: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: chipText,
+      timestamp: timeStr
+    };
+
+    const randomFarewell = PREDEFINED_FAREWELLS[Math.floor(Math.random() * PREDEFINED_FAREWELLS.length)];
+    const botMsg: ChatMessage = {
+      id: `bot-${Date.now() + 1}`,
+      role: 'assistant',
+      content: randomFarewell,
+      timestamp: timeStr,
+      stage: 'FINALIZADO'
+    };
+
+    setMessages((prev) => [...prev, userMsg, botMsg]);
+    setTimeout(() => scrollToBottom('smooth'), 60);
+  };
+
+  // Manejador interactivo de clics en sugerencias:
+  // Si el usuario hace clic en una acción de contacto o agendado, se activa directamente
+  // el canal correspondiente en la tarjeta interactiva (Direct Manipulation) en lugar de
+  // enviar un mensaje de texto al LLM que vuelva a preguntar lo mismo y cause bucles infinitos.
+  const handleSuggestionClick = (sug: string, msg: ChatMessage) => {
+    const sLower = sug.toLowerCase();
+    const isBooking = ['agendar', 'videollamada', 'calendario', 'cita'].some((k) => sLower.includes(k));
+    const isWhatsApp = sLower.includes('whatsapp') || sLower.includes('whats');
+    const isEmail = ['correo', 'mail', 'email'].some((k) => sLower.includes(k));
+
+    const hasCalendar = !!(msg.booking_action && msg.booking_action.slots && msg.booking_action.slots.length > 0);
+    const summaryText = buildSummaryText(msg, messages);
+
+    if (isBooking && hasCalendar) {
+      setSelectedChannelMap((prev) => ({ ...prev, [msg.id]: 'calendar' }));
+      setTimeout(() => scrollToBottom('smooth'), 60);
+      return;
+    }
+
+    if (isWhatsApp) {
+      setSelectedChannelMap((prev) => ({ ...prev, [msg.id]: 'whatsapp' }));
+      setCompletedChannelMap((prev) => ({ ...prev, [msg.id]: { type: 'whatsapp' } }));
+      const whatsappMsg = `Hola Erick 👋 Estuve platicando con tu asistente Wiki en tu web sobre mi negocio.\n\n📋 *Resumen de lo que platicamos:*\n${summaryText}\n\nMe gustaría platicar los detalles contigo para aterrizar el prototipo navegable.`;
+      const customWhatsAppUrl = `https://wa.me/525578666313?text=${encodeURIComponent(whatsappMsg)}`;
+      window.open(customWhatsAppUrl, '_blank');
+      setTimeout(() => scrollToBottom('smooth'), 60);
+      return;
+    }
+
+    if (isEmail) {
+      setSelectedChannelMap((prev) => ({ ...prev, [msg.id]: 'email' }));
+      setCompletedChannelMap((prev) => ({ ...prev, [msg.id]: { type: 'email' } }));
+      const emailSubject = `Consulta de Proyecto desde Portafolio - Propuesta Asistente`;
+      const emailBody = `Hola Erick,\n\nEstuve revisando soluciones con tu asistente Wiki sobre mi negocio.\n\nResumen de la conversación:\n${summaryText}\n\nMe gustaría platicar contigo sobre los siguientes pasos y el prototipo.\n\nSaludos!`;
+      const customEmailUrl = `mailto:e.danielgrz10@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+      window.location.href = customEmailUrl;
+      setTimeout(() => scrollToBottom('smooth'), 60);
+      return;
+    }
+
+    // Consulta conversacional normal (preguntas de prototipo, dudas técnicas, ajustes)
+    handleSendMessage(sug);
+  };
 
   const handleReset = () => {
     sessionStorage.removeItem('daarick_copilot_history');
@@ -819,46 +931,202 @@ export const CopilotAssistant: React.FC = () => {
                             </div>
                           )}
 
-                          {/* ACCIÓN DE AGENDADO DIRECTO EN GOOGLE CALENDAR */}
-                          {msg.booking_action && msg.booking_action.slots && msg.booking_action.slots.length > 0 && (
-                            <BookingSlotsCard
-                              slots={msg.booking_action.slots}
-                              defaultSummary={msg.booking_action.default_summary}
-                              apiBase={API_BASE}
-                            />
-                          )}
+                          {/* SELECCIÓN Y GESTIÓN DE CANAL DE CONTACTO EN CIERRE (PROGRESIVO Y NO AGRESIVO) */}
+                          {(() => {
+                            const hasCalendar = !!(msg.booking_action && msg.booking_action.slots && msg.booking_action.slots.length > 0);
+                            const hasContact = !!(msg.contact_actions && msg.contact_actions.length > 0);
+                            if (!hasCalendar && !hasContact) return null;
 
-                          {/* BOTONES DE CONTACTO DIRECTO */}
-                          {msg.contact_actions && msg.contact_actions.length > 0 && (
-                            <div className="mt-3.5 pt-3 border-t border-[rgba(147,80,115,0.35)] flex flex-col gap-2">
-                              <span className="font-sans text-[13px] text-[#F6DBC0] uppercase tracking-wider font-bold">
-                                Canales directos con Erick:
-                              </span>
-                              <div className="flex flex-wrap items-center gap-2">
-                                {msg.contact_actions.map((act, aIdx) => (
+                            const activeChannel = selectedChannelMap[msg.id];
+                            const summaryText = buildSummaryText(msg, messages);
+                            const whatsappMsg = `Hola Erick 👋 Estuve platicando con tu asistente Wiki en tu web sobre mi negocio.\n\n📋 *Resumen de lo que platicamos:*\n${summaryText}\n\nMe gustaría platicar los detalles contigo para aterrizar el prototipo navegable.`;
+                            const customWhatsAppUrl = `https://wa.me/525578666313?text=${encodeURIComponent(whatsappMsg)}`;
+
+                            const emailSubject = `Consulta de Proyecto desde Portafolio - Propuesta Asistente`;
+                            const emailBody = `Hola Erick,\n\nEstuve revisando soluciones con tu asistente Wiki sobre mi negocio.\n\nResumen de la conversación:\n${summaryText}\n\nMe gustaría platicar contigo sobre los siguientes pasos y el prototipo.\n\nSaludos!`;
+                            const customEmailUrl = `mailto:e.danielgrz10@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+
+                            // 1. Si eligió Calendario: Solo mostrar la tarjeta de calendario con opción de cambiar
+                            if (activeChannel === 'calendar' && hasCalendar) {
+                              return (
+                                <div className="mt-3.5 flex flex-col gap-2 animate-fadeIn">
+                                  <div className="flex items-center justify-between text-xs text-[#d8b4fe] px-1">
+                                    <span className="font-semibold text-[#FFFFFF] flex items-center gap-1.5">
+                                      <span>Canal:</span>
+                                      <span className="text-[#c084fc] font-bold">📅 Videollamada en Google Calendar</span>
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedChannelMap((prev) => ({ ...prev, [msg.id]: undefined as any }))}
+                                      className="text-[#F6DBC0]/70 hover:text-white underline cursor-pointer"
+                                    >
+                                      Cambiar canal
+                                    </button>
+                                  </div>
+                                  <BookingSlotsCard
+                                    slots={msg.booking_action!.slots}
+                                    defaultSummary={summaryText}
+                                    apiBase={API_BASE}
+                                    onSuccess={(slotLabel) => setCompletedChannelMap((prev) => ({ ...prev, [msg.id]: { type: 'calendar', label: slotLabel } }))}
+                                  />
+                                </div>
+                              );
+                            }
+
+                            // 2. Si eligió WhatsApp: Solo mostrar tarjeta enfocada de WhatsApp
+                            if (activeChannel === 'whatsapp') {
+                              const isCompleted = completedChannelMap[msg.id]?.type === 'whatsapp';
+                              return (
+                                <div className="mt-3.5 p-3.5 rounded-xl bg-[rgba(16,185,129,0.15)] border border-[#10B981]/50 text-[#FFFFFF] flex flex-col gap-2.5 animate-fadeIn">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-[#34d399] font-bold text-sm">
+                                      <WhatsAppIcon className="w-4 h-4 text-[#10B981]" />
+                                      <span>WhatsApp Directo con Erick</span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedChannelMap((prev) => ({ ...prev, [msg.id]: undefined as any }));
+                                        setCompletedChannelMap((prev) => ({ ...prev, [msg.id]: undefined as any }));
+                                      }}
+                                      className="text-xs text-[#F6DBC0]/70 hover:text-white underline cursor-pointer"
+                                    >
+                                      Cambiar canal
+                                    </button>
+                                  </div>
+                                  <p className="text-xs text-[#F8F4E9]/90 leading-relaxed font-sans">
+                                    {isCompleted
+                                      ? '✓ El chat de WhatsApp ya fue preparado con el resumen estructurado de tu consulta para que Erick te responda a la brevedad.'
+                                      : 'Tu mensaje en WhatsApp llevará el resumen de lo que platicamos aquí para que Erick esté al tanto de inmediato y no empiecen desde cero.'}
+                                  </p>
                                   <a
-                                    key={aIdx}
-                                    href={act.url}
+                                    href={customWhatsAppUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 cursor-pointer ${
-                                      act.type === 'whatsapp'
-                                        ? 'bg-[rgba(16,185,129,0.2)] hover:bg-[rgba(16,185,129,0.3)] border border-[#10B981]/50 text-[#34d399]'
-                                        : act.type === 'linkedin'
-                                        ? 'bg-[rgba(192,132,252,0.2)] hover:bg-[rgba(192,132,252,0.3)] border border-[#c084fc]/50 text-[#d8b4fe]'
-                                        : 'bg-[rgba(255,175,213,0.2)] hover:bg-[rgba(255,175,213,0.3)] border border-[#ffafd5]/50 text-[#ffafd5]'
-                                    }`}
+                                    onClick={() => setCompletedChannelMap((prev) => ({ ...prev, [msg.id]: { type: 'whatsapp' } }))}
+                                    className="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#10B981] hover:bg-[#34d399] text-[#160B1A] font-bold text-sm transition-all shadow-md active:scale-95 cursor-pointer"
                                   >
-                                    {act.type === 'whatsapp' && <WhatsAppIcon className="w-4 h-4 text-[#10B981]" />}
-                                    {act.type === 'linkedin' && <LinkedInIcon className="w-4 h-4 text-[#c084fc]" />}
-                                    {act.type === 'email' && <Mail className="w-4 h-4 text-[#ffafd5]" />}
-                                    <span>{act.label}</span>
-                                    <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+                                    <WhatsAppIcon className="w-4 h-4 text-[#160B1A]" />
+                                    <span>{isCompleted ? 'Volver a abrir WhatsApp' : 'Abrir chat de WhatsApp'}</span>
+                                    <ExternalLink className="w-4 h-4" />
                                   </a>
-                                ))}
+                                  {isCompleted && (
+                                    <div className="pt-1.5 border-t border-[#10B981]/30 flex items-center gap-1.5 text-xs text-[#6ee7b7] font-semibold">
+                                      <span>🏁</span>
+                                      <span>Mensaje transferido • No te falta hacer nada más aquí</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+
+                            // 3. Si eligió Email: Solo mostrar tarjeta enfocada de Email
+                            if (activeChannel === 'email') {
+                              const isCompleted = completedChannelMap[msg.id]?.type === 'email';
+                              return (
+                                <div className="mt-3.5 p-3.5 rounded-xl bg-[rgba(255,175,213,0.15)] border border-[#ffafd5]/40 text-[#FFFFFF] flex flex-col gap-2.5 animate-fadeIn">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-[#ffafd5] font-bold text-sm">
+                                      <Mail className="w-4 h-4 text-[#ffafd5]" />
+                                      <span>Enviar Correo a Erick</span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedChannelMap((prev) => ({ ...prev, [msg.id]: undefined as any }));
+                                        setCompletedChannelMap((prev) => ({ ...prev, [msg.id]: undefined as any }));
+                                      }}
+                                      className="text-xs text-[#F6DBC0]/70 hover:text-white underline cursor-pointer"
+                                    >
+                                      Cambiar canal
+                                    </button>
+                                  </div>
+                                  <p className="text-xs text-[#F8F4E9]/90 leading-relaxed font-sans">
+                                    {isCompleted
+                                      ? '✓ El correo fue preparado con tus notas para enviarlo directamente a Erick.'
+                                      : 'Se redactará un correo con el contexto de tu consulta para que Erick te responda a la brevedad.'}
+                                  </p>
+                                  <a
+                                    href={customEmailUrl}
+                                    onClick={() => setCompletedChannelMap((prev) => ({ ...prev, [msg.id]: { type: 'email' } }))}
+                                    className="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#ffafd5] hover:bg-[#ffd1e7] text-[#160B1A] font-bold text-sm transition-all shadow-md active:scale-95 cursor-pointer"
+                                  >
+                                    <Mail className="w-4 h-4" />
+                                    <span>{isCompleted ? 'Volver a abrir correo' : 'Abrir correo electrónico'}</span>
+                                    <ExternalLink className="w-4 h-4" />
+                                  </a>
+                                  {isCompleted && (
+                                    <div className="pt-1.5 border-t border-[#ffafd5]/30 flex items-center gap-1.5 text-xs text-[#ffafd5] font-semibold">
+                                      <span>🏁</span>
+                                      <span>Correo listo • No te falta hacer nada más aquí</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+
+                            // 4. Si aún no ha elegido: Mostrar selector limpio de opciones (SIN saturar con el calendario completo de golpe)
+                            return (
+                              <div className="wiki-channels-container mt-3.5 pt-3 border-t border-[rgba(147,80,115,0.35)] flex flex-col gap-2 animate-fadeIn">
+                                <span className="font-sans text-[13px] text-[#F6DBC0] uppercase tracking-wider font-bold">
+                                  Elige cómo prefieres platicar con Erick:
+                                </span>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {hasCalendar && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedChannelMap((prev) => ({ ...prev, [msg.id]: 'calendar' }))}
+                                      className="p-3 rounded-xl bg-[rgba(55,26,62,0.7)] hover:bg-[rgba(80,45,85,0.85)] border border-[rgba(192,132,252,0.4)] text-[#FFFFFF] font-sans text-sm font-semibold flex items-center justify-between transition-all cursor-pointer shadow-sm active:scale-95 text-left"
+                                    >
+                                      <div className="flex items-center gap-2.5">
+                                        <div className="p-1 rounded bg-[#c084fc]/20 text-[#c084fc]">
+                                          <Calendar className="w-4 h-4" />
+                                        </div>
+                                        <span>📅 Agendar Videollamada</span>
+                                      </div>
+                                      <span className="text-xs text-[#d8b4fe] opacity-80 font-mono">15 min</span>
+                                    </button>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedChannelMap((prev) => ({ ...prev, [msg.id]: 'whatsapp' }));
+                                      setCompletedChannelMap((prev) => ({ ...prev, [msg.id]: { type: 'whatsapp' } }));
+                                      window.open(customWhatsAppUrl, '_blank');
+                                    }}
+                                    className="p-3 rounded-xl bg-[rgba(16,185,129,0.18)] hover:bg-[rgba(16,185,129,0.28)] border border-[#10B981]/50 text-[#34d399] font-sans text-sm font-semibold flex items-center justify-between transition-all cursor-pointer shadow-sm active:scale-95 text-left"
+                                  >
+                                    <div className="flex items-center gap-2.5">
+                                      <div className="p-1 rounded bg-[#10B981]/20 text-[#10B981]">
+                                        <WhatsAppIcon className="w-4 h-4" />
+                                      </div>
+                                      <span>💬 Platicar por WhatsApp</span>
+                                    </div>
+                                    <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedChannelMap((prev) => ({ ...prev, [msg.id]: 'email' }));
+                                      setCompletedChannelMap((prev) => ({ ...prev, [msg.id]: { type: 'email' } }));
+                                      window.location.href = customEmailUrl;
+                                    }}
+                                    className="p-3 rounded-xl bg-[rgba(255,175,213,0.15)] hover:bg-[rgba(255,175,213,0.25)] border border-[#ffafd5]/40 text-[#ffafd5] font-sans text-sm font-semibold flex items-center justify-between transition-all cursor-pointer shadow-sm active:scale-95 text-left sm:col-span-2"
+                                  >
+                                    <div className="flex items-center gap-2.5">
+                                      <div className="p-1 rounded bg-[#ffafd5]/20 text-[#ffafd5]">
+                                        <Mail className="w-4 h-4" />
+                                      </div>
+                                      <span>✉️ Enviar Correo con tus notas</span>
+                                    </div>
+                                    <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            );
+                          })()}
                         </div>
                       ) : (
                         <span className="leading-relaxed whitespace-pre-wrap text-[#FFFFFF]">{msg.content}</span>
@@ -876,20 +1144,85 @@ export const CopilotAssistant: React.FC = () => {
                 </div>
 
                 {/* SUGERENCIAS: Solo se muestran en el último mensaje si no hay opciones interactivas */}
-                {isBot && isLastMessage && msg.suggestions && msg.suggestions.length > 0 && !isLoading && (!msg.options || msg.options.length === 0) && (
-                  <div className="wiki-suggestions-container pt-2.5 pl-10 flex flex-wrap gap-2 max-w-full">
-                    {msg.suggestions.map((sug, sIdx) => (
-                      <button
-                        key={sIdx}
-                        type="button"
-                        onClick={() => handleSendMessage(sug)}
-                        className="wiki-suggestion-chip px-4 py-2.5 rounded-xl bg-[rgba(58,25,69,0.95)] hover:bg-[#c084fc] hover:text-[#160B1A] border border-[rgba(192,132,252,0.45)] hover:border-[#c084fc] text-[#FFFFFF] text-sm sm:text-[15px] font-semibold transition-all shadow-md flex items-center gap-2 active:scale-95 text-left cursor-pointer"
-                      >
-                        {sug}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {(() => {
+                  if (
+                    !isBot ||
+                    !isLastMessage ||
+                    isLoading ||
+                    (msg.options && msg.options.length > 0)
+                  ) {
+                    return null;
+                  }
+
+                  const hasCalendar = !!(msg.booking_action && msg.booking_action.slots && msg.booking_action.slots.length > 0);
+                  const hasContact = !!(msg.contact_actions && msg.contact_actions.length > 0);
+                  const hasChannels = hasCalendar || hasContact;
+                  const isActionCompleted = !!completedChannelMap[msg.id];
+
+                  // Si el usuario ya agendó en Calendar o ya abrió WhatsApp/Correo:
+                  // Mostramos los chips de despedida de cierre de ciclo (sin llamadas al LLM)
+                  if (isActionCompleted) {
+                    const FAREWELL_CHIPS = [
+                      "¡Muchas gracias por todo! 👋",
+                      "Excelente, todo claro 👍",
+                      "Cerrar chat"
+                    ];
+
+                    return (
+                      <div className="wiki-suggestions-container pt-2.5 pl-10 flex flex-wrap gap-2 max-w-full animate-fadeIn">
+                        {FAREWELL_CHIPS.map((sug, sIdx) => (
+                          <button
+                            key={sIdx}
+                            type="button"
+                            onClick={() => handleFarewellClick(sug)}
+                            className="wiki-suggestion-chip px-4 py-2.5 rounded-xl bg-[rgba(16,185,129,0.2)] hover:bg-[#10B981] hover:text-[#160B1A] border border-[#10B981]/60 text-[#34d399] text-sm sm:text-[15px] font-semibold transition-all shadow-md flex items-center gap-2 active:scale-95 text-left cursor-pointer"
+                          >
+                            {sug}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  }
+
+                  // Si la conversación ya fue finalizada con un mensaje de despedida:
+                  if (msg.stage === 'FINALIZADO') {
+                    return (
+                      <div className="wiki-suggestions-container pt-2.5 pl-10 flex flex-wrap gap-2 max-w-full animate-fadeIn">
+                        <button
+                          type="button"
+                          onClick={() => setIsOpen(false)}
+                          className="wiki-suggestion-chip px-4 py-2.5 rounded-xl bg-[rgba(58,25,69,0.95)] hover:bg-[#c084fc] hover:text-[#160B1A] border border-[rgba(192,132,252,0.45)] hover:border-[#c084fc] text-[#FFFFFF] text-sm sm:text-[15px] font-semibold transition-all shadow-md flex items-center gap-2 active:scale-95 text-left cursor-pointer"
+                        >
+                          Cerrar chat 👋
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  // En etapa CIERRE previa a la acción, o cuando hay canales activos sin completar,
+                  // NO mostramos chips para enfocar al 100% la atención en la conversión (agendar/contactar)
+                  if (hasChannels || msg.stage === 'CIERRE') {
+                    return null;
+                  }
+
+                  const visibleSuggestions = msg.suggestions || [];
+                  if (visibleSuggestions.length === 0) return null;
+
+                  return (
+                    <div className="wiki-suggestions-container pt-2.5 pl-10 flex flex-wrap gap-2 max-w-full">
+                      {visibleSuggestions.map((sug, sIdx) => (
+                        <button
+                          key={sIdx}
+                          type="button"
+                          onClick={() => handleSuggestionClick(sug, msg)}
+                          className="wiki-suggestion-chip px-4 py-2.5 rounded-xl bg-[rgba(58,25,69,0.95)] hover:bg-[#c084fc] hover:text-[#160B1A] border border-[rgba(192,132,252,0.45)] hover:border-[#c084fc] text-[#FFFFFF] text-sm sm:text-[15px] font-semibold transition-all shadow-md flex items-center gap-2 active:scale-95 text-left cursor-pointer"
+                        >
+                          {sug}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}

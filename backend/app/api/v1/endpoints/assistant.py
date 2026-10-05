@@ -44,7 +44,7 @@ async def get_booking_availability(req: Request):
     """Retorna los próximos huecos de agenda disponibles en Google Calendar."""
     try:
         http_client = req.app.state.http_client
-        slots = await calendar_service.get_available_slots(http_client, max_slots=6)
+        slots = await calendar_service.get_available_slots(http_client, max_slots=16, max_days=5, max_slots_per_day=4)
         return {"slots": slots}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error al consultar disponibilidad.")

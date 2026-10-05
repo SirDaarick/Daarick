@@ -345,8 +345,11 @@ export default function TestimonialsInteractive() {
         const data = await res.json();
         setAdminList(data);
         setAdminToken(token);
-      } else {
+      } else if (res.status === 401) {
         setAdminMsg("Clave de administrador incorrecta.");
+      } else {
+        const errData = await res.json().catch(() => null);
+        setAdminMsg(errData?.detail || `Error en el servidor (${res.status}).`);
       }
     } catch {
       setAdminMsg("Error al conectar con el servidor.");
