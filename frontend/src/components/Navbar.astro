@@ -62,10 +62,10 @@
           <span class="hidden sm:inline">Email</span>
         </a>
 
-        {/* Botón Cotizador & ROI */}
-        <button
+        {/* Enlace Cotizador & ROI */}
+        <a
           id="nav-calc-btn"
-          type="button"
+          href="/calculadora"
           class="px-2.5 py-1.5 rounded-lg bg-[rgba(192,132,252,0.18)] hover:bg-[rgba(192,132,252,0.32)] border border-[#c084fc]/50 text-[#d8b4fe] hover:text-white transition-all flex items-center gap-1.5 font-mono text-xs active:scale-95 cursor-pointer shadow-sm"
           title="Calculadora de Cotización y Retorno de Inversión"
         >
@@ -84,7 +84,7 @@
           </svg>
           <span class="font-bold hidden sm:inline">Cotizador & ROI</span>
           <span class="font-bold sm:hidden">ROI</span>
-        </button>
+        </a>
 
         {/* Botón de alternancia de tema (Modo Claro / Oscuro según sistema o preferencia manual) */}
         <button
@@ -149,10 +149,5 @@
       localStorage.setItem('theme', 'dark');
     }
     updateThemeIcons();
-  });
-
-  // Disparador de la Calculadora de Cotización & ROI
-  document.getElementById('nav-calc-btn')?.addEventListener('click', () => {
-    window.dispatchEvent(new CustomEvent('open-roi-calculator'));
   });
 </script>

@@ -72,96 +72,96 @@ export interface CalculationResult {
 export const AUTOMATION_CATALOG: AutomationItem[] = [
   {
     id: 'ai-sales-bot',
-    name: 'Asistente de Ventas & Calificación 24/7 (WhatsApp/Web)',
-    tagline: 'Responde dudas, filtra prospectos y agenda reuniones sin intervención humana',
+    name: 'Asistente de WhatsApp que Atiende y Vende 24/7',
+    tagline: 'Responde precios, catálogo y dudas al instante para no perder clientes por tardar en contestar',
     category: 'atencion',
     baseHoursFirstTime: 24,
     reusableDiscountHours: 6,
-    description: 'Atención conversacional empática con memoria de contexto, calificación automática de interés y enlace a WhatsApp.',
+    description: 'Atención automática amable por WhatsApp o tu web. Resuelve dudas frecuentes, filtra prospectos y toma pedidos sin que tengas que estar pegado al teléfono.',
     iconName: 'Bot',
     popular: true
   },
   {
-    id: 'doc-extractor-ocr',
-    name: 'Extractor Inteligente de Facturas, Recibos & Tickets',
-    tagline: 'Lectura visual de documentos con IA a Excel o base de datos con verificación matemática',
-    category: 'extraccion',
-    baseHoursFirstTime: 28,
-    reusableDiscountHours: 8,
-    description: 'Elimina por completo la captura manual de tickets y facturas PDF/JPG validando totales, impuestos y proveedores.',
-    iconName: 'FileSpreadsheet',
-    popular: true
-  },
-  {
     id: 'calendar-sync',
-    name: 'Agendador Determinista & Recordatorios Anti-Inasistencias',
-    tagline: 'Sincronización en tiempo real con Google Calendar y avisos preventivos automáticos',
+    name: 'Agendador Automático de Citas sin Cruces de Horario',
+    tagline: 'Tus clientes eligen su hora libre y reciben recordatorio automático 2 horas antes para evitar inasistencias',
     category: 'gestion',
     baseHoursFirstTime: 16,
     reusableDiscountHours: 4,
-    description: 'Evita choques de horarios, cancelaciones de último minuto y confirma asistencia por WhatsApp 2 horas antes.',
-    iconName: 'Calendar'
+    description: 'Conecta con tu calendario en vivo. Evita empalmes, elimina cancelaciones de última hora y confirma la asistencia de tus clientes automáticamente.',
+    iconName: 'Calendar',
+    popular: true
+  },
+  {
+    id: 'doc-extractor-ocr',
+    name: 'Lector Automático de Facturas, Recibos y Tickets a Excel',
+    tagline: 'Pasa las fotos de tus comprobantes o facturas en PDF directo a tu Excel sin escribir nada a mano',
+    category: 'extraccion',
+    baseHoursFirstTime: 28,
+    reusableDiscountHours: 8,
+    description: 'Toma foto de cualquier ticket de compra o factura y el sistema extrae fechas, montos e impuestos directo a tu control de gastos sin errores humanos.',
+    iconName: 'FileSpreadsheet'
   },
   {
     id: 'debtor-recovery',
-    name: 'Auditoría de Cobranza & Avisos Preventivos a Clientes',
-    tagline: 'Seguimiento automatizado de pagos pendientes con tono amable y profesional',
+    name: 'Recordatorio Amable de Cobranza y Cuentas Pendientes',
+    tagline: 'Manda avisos educados por WhatsApp a clientes con pagos atrasados para recuperar tu dinero sin desgaste',
     category: 'operacion',
     baseHoursFirstTime: 18,
     reusableDiscountHours: 5,
-    description: 'Acelera el flujo de caja enviando estados de cuenta y recordatorios de pago sin desgaste emocional para el equipo.',
+    description: 'Acelera tus cobros pendientes con mensajes profesionales y automáticos, reduciendo la morosidad sin generar fricción con tus clientes.',
     iconName: 'BadgeAlert'
   },
   {
     id: 'crm-sheets-sync',
-    name: 'Integración Webhooks & Sincronización ERP / Google Sheets',
-    tagline: 'Conexión bidireccional entre formularios, pagos y hojas de cálculo sin fallos',
+    name: 'Sincronizador de Pedidos y Ventas a tu Excel',
+    tagline: 'Cada venta o pedido nuevo se anota solo en tu inventario o Excel sin errores de captura',
     category: 'operacion',
     baseHoursFirstTime: 14,
     reusableDiscountHours: 4,
-    description: 'Cada venta o registro se refleja de inmediato en tu inventario o CRM, eliminando errores de transcripción humana.',
+    description: 'Conecta tu tienda, formularios o mensajes para que cada pedido se registre al instante en tu inventario o lista de control en tiempo real.',
     iconName: 'Workflow'
   },
   {
     id: 'support-ticket-bot',
-    name: 'Agente Autónomo de Soporte Nivel 1 & Preguntas Frecuentes',
-    tagline: 'Resuelve el 80% de las consultas rutinarias de clientes al instante',
+    name: 'Asistente de Preguntas Frecuentes y Ayuda a Clientes',
+    tagline: 'Resuelve las 10 preguntas que siempre te hacen sobre horarios, ubicación y envíos al momento',
     category: 'atencion',
     baseHoursFirstTime: 22,
     reusableDiscountHours: 6,
-    description: 'Guía al cliente paso a paso ante dudas técnicas o comerciales comunes y solo escala a humanos casos críticos.',
+    description: 'Ahorra horas respondiendo las mismas dudas diarias y permite que tú o tu equipo solo intervengan cuando el cliente realmente requiera atención personalizada.',
     iconName: 'Headphones'
   },
   {
     id: 'churn-alert-system',
-    name: 'Radar de Retención & Reactivación de Clientes Inactivos',
-    tagline: 'Detecta cuentas que están dejando de comprar y lanza ofertas de reactivación',
+    name: 'Reactivador de Clientes que Dejaron de Comprar',
+    tagline: 'Avisa a clientes que tienen semanas sin visitarte con una promoción especial para que vuelvan',
     category: 'gestion',
     baseHoursFirstTime: 20,
     reusableDiscountHours: 5,
-    description: 'Analiza la frecuencia de compra de tu clientela y detona mensajes preventivos antes de que se vayan con la competencia.',
+    description: 'Detecta en tu historial a clientes inactivos y les envía promociones personalizadas para incentivar nuevas compras y fidelizarlos.',
     iconName: 'UserCheck'
   }
 ];
 
-// Valores por defecto calibrados para el mercado mexicano (MXN)
+// Valores por defecto calibrados para negocios locales y pymes mexicanas (MXN)
 export const DEFAULT_CLIENT_INPUTS_MXN: ClientBleedInputs = {
-  lostHoursPerWeek: 12,
-  hourlyLaborCost: 200, // $200 MXN/hr (salario operativo promedio)
-  averageTicketValue: 3500, // $3,500 MXN ticket o suscripción
-  monthlyLeadsOrClients: 40,
-  lostClientsPercentage: 20,
-  humanErrorsMonthlyCost: 3000 // $3,000 MXN en retrabajos o fugas
+  lostHoursPerWeek: 10, // 10 horas a la semana contestando mensajes o en notas manuales
+  hourlyLaborCost: 180, // $180 MXN/hr (salario de personal operativo común)
+  averageTicketValue: 450, // $450 MXN ticket promedio realista de pyme local
+  monthlyLeadsOrClients: 200, // 200 clientes o consultas al mes (≈ 7 a 10 diarios)
+  lostClientsPercentage: 15, // 15% de clientes perdidos por tardar en responder
+  humanErrorsMonthlyCost: 2000 // $2,000 MXN en retrabajos, cancelaciones o mermas
 };
 
 // Valores por defecto en USD
 export const DEFAULT_CLIENT_INPUTS_USD: ClientBleedInputs = {
-  lostHoursPerWeek: 12,
+  lostHoursPerWeek: 10,
   hourlyLaborCost: 18,
-  averageTicketValue: 250,
-  monthlyLeadsOrClients: 40,
-  lostClientsPercentage: 20,
-  humanErrorsMonthlyCost: 200
+  averageTicketValue: 35,
+  monthlyLeadsOrClients: 200,
+  lostClientsPercentage: 15,
+  humanErrorsMonthlyCost: 150
 };
 
 export const DEFAULT_DEVELOPER_CONFIG: DeveloperConfig = {

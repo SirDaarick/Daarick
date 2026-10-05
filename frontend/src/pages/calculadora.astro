@@ -1,74 +1,33 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { RoiCalculatorModal } from '../components/RoiCalculatorModal';
 ---
 
 <Layout
   title="Calculadora de Cotización & Retorno de Inversión (ROI) // Daarick"
   description="Calcula cuánto cuesta automatizar los procesos de tu negocio y el retorno de inversión proyectado a 12 meses."
 >
-  <div class="max-w-5xl mx-auto px-4 lg:px-8 py-12 flex flex-col items-center justify-center text-center gap-6 min-h-[70vh]">
-    <div class="w-14 h-14 rounded-2xl bg-[rgba(192,132,252,0.15)] border border-[#c084fc]/50 flex items-center justify-center text-[#c084fc] shadow-lg">
-      <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect width="16" height="20" x="4" y="2" rx="2"></rect>
-        <line x1="8" x2="16" y1="6" y2="6"></line>
-        <line x1="16" x2="16" y1="14"></line>
-        <line x1="16" x2="16" y1="18"></line>
-        <path d="M8 10h.01"></path>
-        <path d="M12 10h.01"></path>
-        <path d="M16 10h.01"></path>
-        <path d="M8 14h.01"></path>
-        <path d="M12 14h.01"></path>
-        <path d="M8 18h.01"></path>
-        <path d="M12 18h.01"></path>
-      </svg>
+  <div class="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[rgba(147,80,115,0.25)] pb-4 print:hidden">
+      <div>
+        <a href="/" class="inline-flex items-center gap-1.5 text-xs font-mono text-[#c084fc] hover:underline mb-2 transition-colors">
+          ← Volver al portafolio
+        </a>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          Cotizador & Retorno de Inversión (ROI) para Negocios
+        </h1>
+        <p class="text-xs sm:text-sm text-[#F6DBC0]/80 mt-1 max-w-2xl leading-relaxed">
+          Diseñado para dueños de negocio y pymes. Sin tecnicismos: cotiza módulos de IA a tu medida y calcula cuánto dinero recupera tu negocio mes a mes.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs font-mono text-[#10B981] bg-[rgba(16,185,129,0.1)] px-3 py-1.5 rounded-full border border-[rgba(16,185,129,0.25)] shrink-0 self-start sm:self-auto">
+        <span class="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+        <span>Cálculo local y privado en tu navegador</span>
+      </div>
     </div>
 
-    <div class="max-w-2xl flex flex-col gap-2">
-      <span class="font-mono text-xs text-[#c084fc] uppercase tracking-wider">
-        // VALUE-BASED PRICING & RETORNO DE INVERSIÓN
-      </span>
-      <h1 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">
-        Calculadora de Cotización & Retorno de Inversión
-      </h1>
-      <p class="text-sm sm:text-base text-[#F6DBC0] leading-relaxed">
-        Descubre el costo de implementar sistemas de IA y automatización para tu negocio, y cómo la inversión se amortiza sola con el ahorro de tiempo y reducción de pérdidas.
-      </p>
-    </div>
-
-    <button
-      id="open-calc-btn"
-      type="button"
-      class="px-8 py-4 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-extrabold text-base flex items-center gap-3 shadow-xl transition-transform active:scale-95 cursor-pointer"
-    >
-      <span>Abrir Calculadora Interactiva</span>
-      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M5 12h14"></path>
-        <path d="m12 5 7 7-7 7"></path>
-      </svg>
-    </button>
-
-    <div class="flex items-center gap-4 text-xs font-mono text-[#d8b4fe]/80 pt-4">
-      <span>✓ 3 Módulos de Cálculo</span>
-      <span>•</span>
-      <span>✓ Gráfica de Punto de Equilibrio</span>
-      <span>•</span>
-      <span>✓ Cotización en Tiempo Real</span>
-    </div>
+    {/* Calculadora en modo página completa */}
+    <RoiCalculatorModal client:load mode="page" />
   </div>
 </Layout>
-
-<script is:inline>
-  // Abrir automáticamente la calculadora al cargar esta página
-  window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('open-roi-calculator'));
-    }, 150);
-  });
-
-  const btn = document.getElementById('open-calc-btn');
-  if (btn) {
-    btn.addEventListener('click', () => {
-      window.dispatchEvent(new CustomEvent('open-roi-calculator'));
-    });
-  }
-</script>

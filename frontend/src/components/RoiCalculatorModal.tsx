@@ -23,7 +23,11 @@ import {
   Zap,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  FileDown,
+  Mail,
+  MessageSquare,
+  Video
 } from 'lucide-react';
 import {
   AUTOMATION_CATALOG,
@@ -46,8 +50,14 @@ interface OpenRoiEventDetail {
   currency?: 'USD' | 'MXN';
 }
 
-export const RoiCalculatorModal: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+export interface RoiCalculatorProps {
+  mode?: 'modal' | 'page';
+}
+
+export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal' }) => {
+  const isPage = mode === 'page';
+  const [isOpen, setIsOpen] = useState(isPage);
+  const [isCalculadoraRoute, setIsCalculadoraRoute] = useState(false);
   const [activeTab, setActiveTab] = useState<'catalog' | 'bleed' | 'roi'>('catalog');
   const [currency, setCurrency] = useState<'USD' | 'MXN'>('MXN'); // Default en Pesos Mexicanos (MXN)
   const [isConfidential, setIsConfidential] = useState(false);
@@ -63,16 +73,21 @@ export const RoiCalculatorModal: React.FC = () => {
   const [bleedInputs, setBleedInputs] = useState<ClientBleedInputs>(DEFAULT_CLIENT_INPUTS_MXN);
   const [devConfig, setDevConfig] = useState<DeveloperConfig>(DEFAULT_DEVELOPER_CONFIG);
 
-  // Auto-apertura si se visita la ruta /calculadora directamente
+  // Detección de ruta /calculadora
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.pathname.includes('/calculadora')) {
-      setIsOpen(true);
+      setIsCalculadoraRoute(true);
     }
   }, []);
 
   // Escuchar evento global para abrir modal (desde Navbar, Hero o Chatbot)
   useEffect(() => {
     const handleOpen = (e: Event) => {
+      // Si estamos en modo modal y ya estamos en la página /calculadora, omitir para no duplicar
+      if (mode === 'modal' && typeof window !== 'undefined' && window.location.pathname.includes('/calculadora')) {
+        return;
+      }
+
       const customEvent = e as CustomEvent<OpenRoiEventDetail>;
       if (customEvent.detail) {
         if (customEvent.detail.selectedIds) {
@@ -85,20 +100,26 @@ export const RoiCalculatorModal: React.FC = () => {
           setCurrency(customEvent.detail.currency);
         }
       }
-      setIsOpen(true);
-      document.body.style.overflow = 'hidden';
+
+      if (mode === 'modal') {
+        setIsOpen(true);
+        document.body.style.overflow = 'hidden';
+      }
     };
 
     window.addEventListener('open-roi-calculator', handleOpen);
     return () => window.removeEventListener('open-roi-calculator', handleOpen);
-  }, []);
+  }, [mode]);
 
   const closeModal = () => {
-    setIsOpen(false);
-    document.body.style.overflow = '';
+    if (mode === 'modal') {
+      setIsOpen(false);
+      document.body.style.overflow = '';
+    }
   };
 
   useEffect(() => {
+    if (mode !== 'modal') return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
         closeModal();
@@ -106,7 +127,7 @@ export const RoiCalculatorModal: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, mode]);
 
   const handleCurrencySwitch = (newCurrency: 'USD' | 'MXN') => {
     if (newCurrency === currency) return;
@@ -125,7 +146,7 @@ export const RoiCalculatorModal: React.FC = () => {
     );
   };
 
-  // Resultado reactivo
+  // Resultado reactivo determinista
   const result: CalculationResult = calculateRoi(
     selectedIds,
     bleedInputs,
@@ -168,7 +189,7 @@ export const RoiCalculatorModal: React.FC = () => {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleBookWithQuote = () => {
+  const handleWhatsAppClick = () => {
     const whatsappMsg = buildWhatsAppMessage(
       selectedIds,
       result,
@@ -179,7 +200,51 @@ export const RoiCalculatorModal: React.FC = () => {
     window.open(whatsappUrl, '_blank');
   };
 
-  if (!isOpen) return null;
+  const handleEmailClick = () => {
+    const subject = encodeURIComponent(
+      `Cotización de Automatización // ${selectedIds.length} soluciones seleccionadas (${currency})`
+    );
+    const body = encodeURIComponent(
+      buildProposalMarkdown(
+        selectedIds,
+        bleedInputs,
+        result,
+        currency,
+        isConfidential
+      )
+    );
+    window.location.href = `mailto:e.danielgrz10@gmail.com?subject=${subject}&body=${body}`;
+  };
+
+  const handleBookingClick = () => {
+    // Si Copilot Assistant está en la página, abrirlo directamente con el agendador de Google Calendar
+    window.dispatchEvent(
+      new CustomEvent('open-copilot-chat', {
+        detail: {
+          prompt: `Hola Erick 👋 Quiero agendar una videollamada para revisar la cotización que calculé:\n\n${buildProposalMarkdown(
+            selectedIds,
+            bleedInputs,
+            result,
+            currency,
+            isConfidential
+          )}`
+        }
+      })
+    );
+    if (mode === 'modal') {
+      closeModal();
+    }
+  };
+
+  // Si estamos en modo modal y es la ruta /calculadora, el componente modal no debe renderizarse
+  // porque /calculadora ya renderiza la versión mode="page" directamente.
+  if (mode === 'modal' && isCalculadoraRoute) {
+    return null;
+  }
+
+  if (mode === 'modal' && !isOpen) {
+    return null;
+  }
 
   // Parámetros y límites de sliders según divisa
   const isMxn = currency === 'MXN';
@@ -187,9 +252,9 @@ export const RoiCalculatorModal: React.FC = () => {
   const laborMax = isMxn ? 1500 : 150;
   const laborStep = isMxn ? 25 : 1;
 
-  const ticketMin = isMxn ? 200 : 20;
-  const ticketMax = isMxn ? 40000 : 2500;
-  const ticketStep = isMxn ? 250 : 10;
+  const ticketMin = isMxn ? 100 : 10;
+  const ticketMax = isMxn ? 15000 : 1000;
+  const ticketStep = isMxn ? 50 : 5;
 
   // Dimensiones del gráfico SVG
   const chartWidth = 600;
@@ -225,17 +290,14 @@ export const RoiCalculatorModal: React.FC = () => {
       (d) => d.cumulativeBenefitWithAutomation >= d.cumulativeInvestmentWithAutomation
     ) || result.monthlyBreakdown[result.monthlyBreakdown.length - 1];
 
-  return (
-    <div
-      className="fixed inset-0 z-[100000] flex items-center justify-center p-2.5 sm:p-6 bg-[rgba(10,5,15,0.88)] backdrop-blur-md animate-fadeIn"
-      role="dialog"
-      aria-label="Calculadora de Cotización y Retorno de Inversión"
-    >
-      <div className="relative w-full max-w-5xl h-[94vh] max-h-[890px] bg-[#160B1A] border border-[rgba(147,80,115,0.45)] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+  const content = (
+    <div className={`relative w-full ${isPage ? 'max-w-5xl mx-auto' : 'max-w-5xl h-[94vh] max-h-[890px]'} bg-[#160B1A] border border-[rgba(147,80,115,0.45)] rounded-2xl shadow-2xl flex flex-col overflow-hidden roi-calculator-container`}>
+      {/* 1. VISTA INTERACTIVA (PANTALLA) */}
+      <div className="flex flex-col flex-1 overflow-hidden roi-interactive-view print:hidden">
         {/* ENCABEZADO */}
         <div className="px-4 sm:px-6 py-3.5 bg-[rgba(30,15,35,0.98)] border-b border-[rgba(147,80,115,0.35)] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[rgba(192,132,252,0.15)] border border-[#c084fc]/40 flex items-center justify-center text-[#c084fc] shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-[rgba(192,132,252,0.15)] border border-[#c084fc]/40 flex items-center justify-center text-[#c084fc] shadow-sm shrink-0">
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
             <div>
@@ -243,12 +305,12 @@ export const RoiCalculatorModal: React.FC = () => {
                 <h2 className="text-base sm:text-lg font-bold text-[#FFFFFF] font-sans">
                   Calculadora de Cotización & Retorno de Inversión (ROI)
                 </h2>
-                <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#c084fc]/20 text-[#d8b4fe] border border-[#c084fc]/30">
+                <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#c084fc]/20 text-[#d8b4fe] border border-[#c084fc]/30 hidden sm:inline">
                   Value-Based Pricing
                 </span>
               </div>
               <p className="text-xs sm:text-[13px] text-[#F6DBC0]/80">
-                Calcula la inversión de implementar sistemas de IA y el dinero que recupera tu negocio.
+                Calcula la inversión de implementar sistemas de IA y el dinero que recupera tu negocio al mes.
               </p>
             </div>
           </div>
@@ -294,14 +356,17 @@ export const RoiCalculatorModal: React.FC = () => {
               <Settings className="w-4 h-4" />
             </button>
 
-            {/* Botón Cerrar */}
-            <button
-              type="button"
-              onClick={closeModal}
-              className="p-2 rounded-lg bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.6)] text-[#F8F4E9] transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {/* Botón Cerrar (Solo en modo modal) */}
+            {!isPage && (
+              <button
+                type="button"
+                onClick={closeModal}
+                className="p-2 rounded-lg bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.6)] text-[#F8F4E9] transition-colors cursor-pointer"
+                title="Cerrar modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -320,7 +385,7 @@ export const RoiCalculatorModal: React.FC = () => {
               <span className="w-5 h-5 rounded-full bg-[#c084fc]/20 flex items-center justify-center text-[11px] font-mono text-[#d8b4fe]">
                 1
               </span>
-              <span>Servicios & Módulos ({selectedIds.length})</span>
+              <span>Servicios & Soluciones ({selectedIds.length})</span>
             </button>
 
             <button
@@ -362,7 +427,7 @@ export const RoiCalculatorModal: React.FC = () => {
         </div>
 
         {/* CUERPO PRINCIPAL CON SCROLL */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scrollbar-thin scrollbar-thumb-[rgba(147,80,115,0.4)]">
+        <div className={`flex-1 ${isPage ? 'p-4 sm:p-6 space-y-6' : 'overflow-y-auto p-4 sm:p-6 space-y-6 scrollbar-thin scrollbar-thumb-[rgba(147,80,115,0.4)]'}`}>
           {/* MODO ADMINISTRADOR DESPLEGABLE */}
           {showAdminMode && (
             <div className="p-4 rounded-xl bg-[rgba(38,16,46,0.95)] border border-[#c084fc] shadow-xl animate-fadeIn space-y-3">
@@ -470,13 +535,13 @@ export const RoiCalculatorModal: React.FC = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[rgba(147,80,115,0.25)] pb-3">
                 <div>
                   <h3 className="text-base sm:text-lg font-bold text-white">
-                    Catálogo de Módulos & Automatizaciones
+                    Catálogo de Soluciones para tu Negocio
                   </h3>
                   <p className="text-xs sm:text-sm text-[#F6DBC0]/80">
-                    Selecciona las soluciones que requiere tu negocio para calcular el costo base y los beneficios.
+                    Selecciona los procesos que te quitan tiempo o donde pierdes clientes para calcular el costo y los beneficios.
                   </p>
                 </div>
-                <div className="text-xs font-mono px-3 py-1.5 rounded-lg bg-[rgba(80,45,85,0.3)] border border-[rgba(147,80,115,0.3)] text-[#d8b4fe]">
+                <div className="text-xs font-mono px-3 py-1.5 rounded-lg bg-[rgba(80,45,85,0.3)] border border-[rgba(147,80,115,0.3)] text-[#d8b4fe] shrink-0">
                   Horas Técnicas Estimadas: <strong className="text-white">{result.totalProjectHours} hrs</strong>
                 </div>
               </div>
@@ -513,11 +578,11 @@ export const RoiCalculatorModal: React.FC = () => {
                             </span>
                             {item.popular && (
                               <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30 shrink-0">
-                                Popular
+                                Más pedido
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-[#F6DBC0] mt-1 leading-relaxed">
+                          <p className="text-xs text-[#F6DBC0] mt-1.5 leading-relaxed">
                             {item.tagline}
                           </p>
                         </div>
@@ -529,7 +594,7 @@ export const RoiCalculatorModal: React.FC = () => {
                           {item.baseHoursFirstTime} hrs de desarrollo base
                         </span>
                         <span className="text-[#F6DBC0]/60 capitalize">
-                          Categoría: {item.category}
+                          Área: {item.category}
                         </span>
                       </div>
                     </div>
@@ -553,18 +618,18 @@ export const RoiCalculatorModal: React.FC = () => {
           {/* TAB 2: DIAGNÓSTICO DE FUGA FINANCIERA */}
           {activeTab === 'bleed' && (
             <div className="space-y-5 animate-fadeIn">
-              {/* Banner de Confidencialidad y Privacidad In-Browser */}
+              {/* Banner de Privacidad In-Browser */}
               <div className="p-3.5 rounded-xl bg-[rgba(16,185,129,0.12)] border border-[rgba(16,185,129,0.35)] flex items-center gap-3">
                 <Lock className="w-5 h-5 text-[#10B981] shrink-0" />
                 <div className="text-xs text-[#F8F4E9]">
                   <strong className="text-[#10B981] block">Privacidad Garantizada (Zero-Data Stored):</strong>
-                  Esta herramienta calcula todo en tu propio navegador. Ningún dato de facturación, clientes o pérdidas se transmite a servidores ni queda almacenado.
+                  Esta herramienta calcula todo en tu propio navegador. Ningún dato de ventas, nómina o clientes se envía a servidores externos.
                 </div>
               </div>
 
               <div className="border-b border-[rgba(147,80,115,0.25)] pb-3">
                 <h3 className="text-base sm:text-lg font-bold text-white">
-                  Diagnóstico de Ineficiencias & Fuga Financiera
+                  Diagnóstico de Ineficiencias & Fuga de Dinero
                 </h3>
                 <p className="text-xs sm:text-sm text-[#F6DBC0]/80">
                   Indica con sinceridad tus métricas actuales en {currency}. Esto medirá cuánto dinero deja de entrar al mes por falta de automatización.
@@ -586,7 +651,7 @@ export const RoiCalculatorModal: React.FC = () => {
                   <input
                     type="range"
                     min="1"
-                    max="60"
+                    max="50"
                     step="1"
                     value={bleedInputs.lostHoursPerWeek}
                     onChange={(e) =>
@@ -596,8 +661,8 @@ export const RoiCalculatorModal: React.FC = () => {
                   />
                   <div className="flex justify-between text-[11px] text-[#F6DBC0]/60">
                     <span>1 hr/sem</span>
-                    <span>30 hrs/sem</span>
-                    <span>60 hrs/sem</span>
+                    <span>25 hrs/sem</span>
+                    <span>50 hrs/sem</span>
                   </div>
                 </div>
 
@@ -633,7 +698,7 @@ export const RoiCalculatorModal: React.FC = () => {
                 <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-2">
                   <div className="flex justify-between items-center text-sm font-semibold">
                     <span className="text-white flex items-center gap-1.5">
-                      <TrendingUp className="w-4 h-4 text-[#c084fc]" /> Ticket promedio o suscripción mensual:
+                      <TrendingUp className="w-4 h-4 text-[#c084fc]" /> Ticket promedio por venta o cliente:
                     </span>
                     <span className="font-mono text-[#d8b4fe] text-base font-bold">
                       {formatCurrency(bleedInputs.averageTicketValue, currency)}
@@ -661,7 +726,7 @@ export const RoiCalculatorModal: React.FC = () => {
                 <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-2">
                   <div className="flex justify-between items-center text-sm font-semibold">
                     <span className="text-white flex items-center gap-1.5">
-                      <UserCheck className="w-4 h-4 text-[#c084fc]" /> Clientes o prospectos / mes:
+                      <UserCheck className="w-4 h-4 text-[#c084fc]" /> Clientes o consultas al mes:
                     </span>
                     <span className="font-mono text-[#d8b4fe] text-base font-bold">
                       {bleedInputs.monthlyLeadsOrClients} clientes
@@ -669,9 +734,9 @@ export const RoiCalculatorModal: React.FC = () => {
                   </div>
                   <input
                     type="range"
-                    min="5"
-                    max="300"
-                    step="5"
+                    min="10"
+                    max="600"
+                    step="10"
                     value={bleedInputs.monthlyLeadsOrClients}
                     onChange={(e) =>
                       setBleedInputs({ ...bleedInputs, monthlyLeadsOrClients: Number(e.target.value) })
@@ -679,9 +744,9 @@ export const RoiCalculatorModal: React.FC = () => {
                     className="w-full accent-[#c084fc] cursor-pointer"
                   />
                   <div className="flex justify-between text-[11px] text-[#F6DBC0]/60">
-                    <span>5</span>
-                    <span>150</span>
-                    <span>300</span>
+                    <span>10/mes</span>
+                    <span>300/mes</span>
+                    <span>600/mes</span>
                   </div>
                 </div>
 
@@ -689,7 +754,7 @@ export const RoiCalculatorModal: React.FC = () => {
                 <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-2 md:col-span-2">
                   <div className="flex justify-between items-center text-sm font-semibold">
                     <span className="text-white flex items-center gap-1.5">
-                      <BadgeAlert className="w-4 h-4 text-[#c084fc]" /> Clientes perdidos por no responder a tiempo o falta de seguimiento:
+                      <BadgeAlert className="w-4 h-4 text-[#c084fc]" /> Clientes perdidos por tardar en contestar o no dar seguimiento:
                     </span>
                     <span className="font-mono text-[#ff8080] text-base font-bold">
                       {bleedInputs.lostClientsPercentage}% de fuga
@@ -698,7 +763,7 @@ export const RoiCalculatorModal: React.FC = () => {
                   <input
                     type="range"
                     min="0"
-                    max="60"
+                    max="50"
                     step="1"
                     value={bleedInputs.lostClientsPercentage}
                     onChange={(e) =>
@@ -708,8 +773,8 @@ export const RoiCalculatorModal: React.FC = () => {
                   />
                   <div className="flex justify-between text-[11px] text-[#F6DBC0]/60">
                     <span>0% (Ninguno)</span>
-                    <span>20% (Promedio en WhatsApp)</span>
-                    <span>60% (Alta saturación)</span>
+                    <span>15% (Promedio de fuga en WhatsApp)</span>
+                    <span>50% (Alta saturación)</span>
                   </div>
                 </div>
               </div>
@@ -718,13 +783,13 @@ export const RoiCalculatorModal: React.FC = () => {
               <div className="p-4 rounded-xl bg-[rgba(255,80,80,0.12)] border border-[rgba(255,100,100,0.35)] flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="space-y-1 text-center sm:text-left">
                   <span className="text-xs uppercase font-mono font-bold tracking-wider text-[#ff8080]">
-                    Pérdida Financiera Acumulada Anual
+                    Pérdida Financiera Acumulada Anual Sin Automatizar
                   </span>
                   <div className="text-2xl sm:text-3xl font-extrabold text-white font-mono">
                     {formatCurrency(result.totalAnnualBleed, currency)} <span className="text-sm font-normal text-[#F6DBC0]">/ año</span>
                   </div>
                   <p className="text-xs text-[#F6DBC0]">
-                    Fuga mensual: {formatCurrency(result.totalMonthlyBleed, currency)}/mes ({formatCurrency(result.monthlyTimeLossCost, currency)} en tiempo + {formatCurrency(result.monthlySalesLossCost, currency)} en ventas perdidas).
+                    Fuga mensual: {formatCurrency(result.totalMonthlyBleed, currency)}/mes ({formatCurrency(result.monthlyTimeLossCost, currency)} en tiempo perdido + {formatCurrency(result.monthlySalesLossCost, currency)} en ventas que se escapan).
                   </p>
                 </div>
 
@@ -754,7 +819,7 @@ export const RoiCalculatorModal: React.FC = () => {
                     {formatCurrency(result.recommendedSetupPrice, currency)}
                   </div>
                   <span className="text-[11px] text-[#F6DBC0]/70">
-                    Pago único al validar prototipo
+                    Pago único al validar prototipo funcional
                   </span>
                 </div>
 
@@ -767,7 +832,7 @@ export const RoiCalculatorModal: React.FC = () => {
                     {formatCurrency(result.recommendedMonthlyRetainer, currency)}
                   </div>
                   <span className="text-[11px] text-[#F6DBC0]/70">
-                    Soporte, optimización continua y SLA
+                    Soporte, actualizaciones y servidores
                   </span>
                 </div>
 
@@ -798,7 +863,78 @@ export const RoiCalculatorModal: React.FC = () => {
                 </div>
               </div>
 
-              {/* GRÁFICA DE RETORNO Y PUNTO DE EQUILIBRIO (SVG NATIVO) */}
+              {/* HITOS CLAVE DE RETORNO (COMPRENSIÓN INMEDIATA PARA NEGOCIO) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {/* Hito 1: Mes 1 */}
+                <div className="p-3.5 rounded-xl bg-[rgba(30,15,35,0.7)] border border-[rgba(147,80,115,0.35)] flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-[#c084fc] font-bold">1. Puesta en Marcha</span>
+                    <span className="text-[#F6DBC0]/70">Mes 1</span>
+                  </div>
+                  <div className="my-2">
+                    <div className="text-base font-bold text-white font-mono">
+                      {formatCurrency(result.monthlyBreakdown[0].cumulativeBenefitWithAutomation, currency)}
+                    </div>
+                    <p className="text-[11px] text-[#F6DBC0]/80 mt-0.5 leading-snug">
+                      Se detienen las tareas manuales y se recuperan clientes que antes se iban por contestar tarde.
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-mono text-[#d8b4fe]/70">Inicio de amortización</span>
+                </div>
+
+                {/* Hito 2: Breakeven */}
+                <div className="p-3.5 rounded-xl bg-[rgba(16,185,129,0.14)] border border-[rgba(16,185,129,0.45)] flex flex-col justify-between shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-[#10B981] font-bold">2. Punto de Equilibrio</span>
+                    <span className="text-white font-bold bg-[#10B981]/30 px-1.5 py-0.5 rounded">Mes {breakevenMonthObj.month}</span>
+                  </div>
+                  <div className="my-2">
+                    <div className="text-base font-bold text-[#10B981] font-mono">
+                      Inversión 100% Recuperada
+                    </div>
+                    <p className="text-[11px] text-[#F8F4E9]/90 mt-0.5 leading-snug">
+                      El sistema ya se pagó completamente solo. A partir de aquí todo es ganancia limpia para tu caja.
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-mono text-[#10B981]">Amortización en ~{result.paybackMonths} meses</span>
+                </div>
+
+                {/* Hito 3: Mes 6 */}
+                <div className="p-3.5 rounded-xl bg-[rgba(30,15,35,0.7)] border border-[rgba(147,80,115,0.35)] flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-[#c084fc] font-bold">3. Medio Año</span>
+                    <span className="text-[#F6DBC0]/70">Mes 6</span>
+                  </div>
+                  <div className="my-2">
+                    <div className="text-base font-bold text-white font-mono">
+                      {formatCurrency(result.monthlyBreakdown[5].netProfit, currency)}
+                    </div>
+                    <p className="text-[11px] text-[#F6DBC0]/80 mt-0.5 leading-snug">
+                      Ganancia neta acumulada en caja tras 6 meses operando en piloto automático.
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-mono text-[#d8b4fe]/70">Operación continua estable</span>
+                </div>
+
+                {/* Hito 4: Mes 12 */}
+                <div className="p-3.5 rounded-xl bg-[rgba(192,132,252,0.15)] border border-[#c084fc]/60 flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-[#d8b4fe] font-bold">4. Cierre Año 1</span>
+                    <span className="text-[#F6DBC0]/70">Mes 12</span>
+                  </div>
+                  <div className="my-2">
+                    <div className="text-base font-bold text-[#d8b4fe] font-mono">
+                      {formatCurrency(result.yearOneNetSavings, currency)}
+                    </div>
+                    <p className="text-[11px] text-[#F6DBC0]/80 mt-0.5 leading-snug">
+                      Dinero extra retenido en el negocio con un retorno de inversión de +{result.roiPercentage}%.
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-mono text-[#c084fc]">Retorno neto anual garantizado</span>
+                </div>
+              </div>
+
+              {/* GRÁFICA DE RETORNO Y PUNTO DE EQUILIBRIO (SVG ESTABLE Y NATIVO) */}
               <div className="p-4 sm:p-5 rounded-2xl bg-[rgba(24,12,28,0.95)] border border-[rgba(147,80,115,0.4)] space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[rgba(147,80,115,0.25)] pb-2.5">
                   <div>
@@ -821,7 +957,7 @@ export const RoiCalculatorModal: React.FC = () => {
                   </div>
                 </div>
 
-                {/* SVG Interactivo */}
+                {/* SVG Interactivo Estable (Sin temblores) */}
                 <div className="w-full overflow-x-auto">
                   <svg
                     viewBox={`0 0 ${chartWidth} ${chartHeight}`}
@@ -908,30 +1044,27 @@ export const RoiCalculatorModal: React.FC = () => {
                       points={pointsInvestment}
                     />
 
-                    {/* Punto de Equilibrio (Breakeven) */}
+                    {/* Punto de Equilibrio (Breakeven - Estable, sin temblor CSS) */}
                     {breakevenMonthObj && (
                       <g>
                         <circle
                           cx={getX(breakevenMonthObj.month)}
                           cy={getY(breakevenMonthObj.cumulativeBenefitWithAutomation)}
-                          r="6"
+                          r="8"
                           fill="#10B981"
-                          stroke="#160B1A"
-                          strokeWidth="2"
+                          fillOpacity="0.25"
+                          stroke="#10B981"
+                          strokeWidth="1.5"
                         />
                         <circle
                           cx={getX(breakevenMonthObj.month)}
                           cy={getY(breakevenMonthObj.cumulativeBenefitWithAutomation)}
-                          r="12"
-                          fill="none"
-                          stroke="#10B981"
-                          strokeWidth="1.5"
-                          opacity="0.5"
-                          className="animate-ping"
+                          r="4.5"
+                          fill="#10B981"
                         />
                         <text
                           x={getX(breakevenMonthObj.month)}
-                          y={getY(breakevenMonthObj.cumulativeBenefitWithAutomation) - 14}
+                          y={getY(breakevenMonthObj.cumulativeBenefitWithAutomation) - 13}
                           textAnchor="middle"
                           fill="#10B981"
                           fontSize="11"
@@ -963,21 +1096,27 @@ export const RoiCalculatorModal: React.FC = () => {
                   </svg>
                 </div>
 
-                {/* Tooltip de Datos del Mes Seleccionado */}
-                {hoveredMonth !== null && (
-                  <div className="p-3 rounded-lg bg-[rgba(42,18,50,0.95)] border border-[#c084fc] text-xs font-mono flex flex-wrap items-center justify-between gap-3 animate-fadeIn">
-                    <span className="text-[#FFFFFF] font-bold">Mes {hoveredMonth}:</span>
-                    <span className="text-[#ff8080]">
-                      Pérdida sin sistema: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].cumulativeCostWithoutAutomation, currency)}
+                {/* Barra fija de inspección del mes (Evita saltos visuales de layout) */}
+                <div className="min-h-[46px] p-2.5 rounded-lg bg-[rgba(32,15,38,0.7)] border border-[rgba(147,80,115,0.3)] text-xs font-mono flex items-center justify-between">
+                  {hoveredMonth !== null ? (
+                    <div className="w-full flex flex-wrap items-center justify-between gap-3 animate-fadeIn">
+                      <span className="text-[#FFFFFF] font-bold">Mes {hoveredMonth}:</span>
+                      <span className="text-[#ff8080]">
+                        Pérdida acumulada sin sistema: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].cumulativeCostWithoutAutomation, currency)}
+                      </span>
+                      <span className="text-[#10B981] font-bold">
+                        Beneficio acumulado: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].cumulativeBenefitWithAutomation, currency)}
+                      </span>
+                      <span className="text-[#d8b4fe]">
+                        Ganancia Neta: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].netProfit, currency)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-[#F6DBC0]/60 text-[11px]">
+                      💡 Pasa el cursor por cualquier mes en la gráfica para auditar el beneficio y ahorro neto proyectado.
                     </span>
-                    <span className="text-[#10B981] font-bold">
-                      Beneficio con sistema: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].cumulativeBenefitWithAutomation, currency)}
-                    </span>
-                    <span className="text-[#d8b4fe]">
-                      Ganancia Neta: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].netProfit, currency)}
-                    </span>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               {/* CARD DE CONTROL DE PRIVACIDAD / MODO CONFIDENCIAL */}
@@ -988,12 +1127,12 @@ export const RoiCalculatorModal: React.FC = () => {
                   </div>
                   <div>
                     <span className="font-bold text-xs sm:text-sm text-white block">
-                      Modo Confidencial al Contactar
+                      Modo Confidencial al Compartir
                     </span>
                     <span className="text-[11px] text-[#F6DBC0]/70 block">
                       {isConfidential
-                        ? '🛡️ Activado: Tus métricas de facturación y pérdidas NO se incluirán en el mensaje de WhatsApp ni propuesta.'
-                        : '📊 Desactivado: Se incluirá el desglose completo de fuga financiera para que Erick prepare la reunión.'}
+                        ? '🛡️ Activado: Tus métricas de facturación y pérdidas NO se incluirán en el PDF ni en el mensaje de contacto.'
+                        : '📊 Desactivado: Se incluirá el desglose completo de fuga financiera para revisar puntos de mejora.'}
                     </span>
                   </div>
                 </div>
@@ -1013,29 +1152,246 @@ export const RoiCalculatorModal: React.FC = () => {
               </div>
 
               {/* ACCIONES Y BOTONES DE CIERRE */}
-              <div className="p-4 rounded-xl bg-[rgba(30,15,35,0.85)] border border-[rgba(147,80,115,0.3)] flex flex-col sm:flex-row items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={handleCopyProposal}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[rgba(80,45,85,0.4)] hover:bg-[rgba(80,45,85,0.7)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-                >
-                  <Copy className="w-4 h-4 text-[#d8b4fe]" />
-                  <span>{copied ? '¡Copiado al Portapapeles!' : isConfidential ? 'Copiar Propuesta Confidencial' : 'Copiar Propuesta Completa'}</span>
-                </button>
+              <div className="p-4 rounded-xl bg-[rgba(30,15,35,0.85)] border border-[rgba(147,80,115,0.35)] space-y-3">
+                <div>
+                  <h5 className="text-sm font-bold text-white flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-[#c084fc]" /> ¿Listo para implementar en tu negocio?
+                  </h5>
+                  <p className="text-xs text-[#F6DBC0]/75 mt-0.5">
+                    Descarga tu reporte oficial en PDF o contáctame directo para revisar un prototipo funcional sin compromiso.
+                  </p>
+                </div>
 
-                <button
-                  type="button"
-                  onClick={handleBookWithQuote}
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-extrabold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-all active:scale-95"
-                >
-                  <span>{isConfidential ? 'Agendar con Cotización Confidencial' : 'Agendar Videollamada con esta Cotización'}</span>
-                  <ExternalLink className="w-4 h-4" />
-                </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
+                  {/* 1. Descargar PDF */}
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="px-4 py-2.5 rounded-xl bg-[rgba(80,45,85,0.45)] hover:bg-[rgba(80,45,85,0.8)] border border-[rgba(147,80,115,0.5)] text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
+                    title="Descargar o imprimir reporte ejecutivo en PDF"
+                  >
+                    <FileDown className="w-4 h-4 text-[#10B981]" />
+                    <span>Descargar Reporte en PDF</span>
+                  </button>
+
+                  {/* 2. Enviar por WhatsApp */}
+                  <button
+                    type="button"
+                    onClick={handleWhatsAppClick}
+                    className="px-4 py-2.5 rounded-xl bg-[rgba(16,185,129,0.2)] hover:bg-[rgba(16,185,129,0.35)] border border-[rgba(16,185,129,0.5)] text-[#A7F3D0] hover:text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
+                    title="Enviar cotización por WhatsApp a Erick"
+                  >
+                    <MessageSquare className="w-4 h-4 text-[#10B981]" />
+                    <span>Mandar por WhatsApp</span>
+                  </button>
+
+                  {/* 3. Enviar por Correo */}
+                  <button
+                    type="button"
+                    onClick={handleEmailClick}
+                    className="px-4 py-2.5 rounded-xl bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.6)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-medium text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+                    title="Enviar propuesta por correo electrónico"
+                  >
+                    <Mail className="w-4 h-4 text-[#ffafd5]" />
+                    <span>Enviar por Correo</span>
+                  </button>
+
+                  {/* 4. Agendar Videollamada */}
+                  <button
+                    type="button"
+                    onClick={handleBookingClick}
+                    className="px-4 py-2.5 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-all active:scale-95"
+                    title="Agendar videollamada para revisar el prototipo navegable"
+                  >
+                    <Video className="w-4 h-4" />
+                    <span>Agendar Videollamada</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-[rgba(147,80,115,0.2)] text-[11px] text-[#F6DBC0]/70">
+                  <button
+                    type="button"
+                    onClick={handleCopyProposal}
+                    className="hover:text-white flex items-center gap-1.5 font-mono cursor-pointer transition-colors"
+                  >
+                    <Copy className="w-3.5 h-3.5 text-[#d8b4fe]" />
+                    <span>{copied ? '¡Copiado al portapapeles!' : 'Copiar texto de cotización'}</span>
+                  </button>
+                  <span className="font-mono">Garantía: Liquidación tras validar prototipo</span>
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* 2. VISTA EJECUTIVA PARA DESCARGA DE PDF / IMPRESIÓN FORMAL (PRINT-ONLY) */}
+      <div className="hidden print:block roi-printable-report text-[#111827] bg-white p-8 max-w-4xl mx-auto font-sans">
+        {/* Header del Reporte */}
+        <div className="border-b-2 border-purple-900 pb-4 mb-6 flex justify-between items-start">
+          <div>
+            <div className="text-2xl font-black tracking-tight text-purple-950 font-mono">
+              DAARICK // SISTEMAS DE IA & AUTOMATIZACIÓN
+            </div>
+            <div className="text-sm font-semibold text-gray-700 mt-1">
+              Dictamen de Cotización y Retorno de Inversión (ROI) para Negocios
+            </div>
+            <div className="text-xs text-gray-500 mt-0.5">
+              Ingeniería de Software & Arquitectura Determinista • Erick Daniel García
+            </div>
+          </div>
+          <div className="text-right text-xs font-mono text-gray-600">
+            <div><strong>Folio:</strong> #COT-202610-{result.technicalFloorCost}</div>
+            <div><strong>Fecha:</strong> {new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+            <div><strong>Moneda:</strong> {currency}</div>
+          </div>
+        </div>
+
+        {/* Resumen de Módulos */}
+        <div className="mb-6">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-purple-900 border-b border-gray-200 pb-1 mb-2 font-mono">
+            1. Alcance de Soluciones Seleccionadas ({selectedIds.length} Módulos)
+          </h3>
+          <div className="space-y-2">
+            {AUTOMATION_CATALOG.filter((i) => selectedIds.includes(i.id)).map((item) => (
+              <div key={item.id} className="p-2 rounded border border-gray-200 bg-gray-50 flex justify-between items-start text-xs">
+                <div>
+                  <div className="font-bold text-gray-900">{item.name}</div>
+                  <div className="text-gray-600 mt-0.5">{item.description}</div>
+                </div>
+                <span className="font-mono text-gray-500 shrink-0 ml-4 font-semibold uppercase">{item.category}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Diagnóstico Financiero */}
+        <div className="mb-6">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-purple-900 border-b border-gray-200 pb-1 mb-2 font-mono">
+            2. Diagnóstico de Ineficiencias & Fuga Financiera
+          </h3>
+          {isConfidential ? (
+            <div className="p-3 bg-gray-50 border border-gray-200 rounded text-xs text-gray-600 italic">
+              🛡️ Modo Confidencial: Los detalles específicos de nómina y clientes han sido resguardados a solicitud del cliente.
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3 text-xs">
+              <div className="p-2.5 bg-gray-50 rounded border border-gray-200">
+                <span className="text-gray-500 block">Horas manuales / semana</span>
+                <span className="font-bold font-mono text-gray-900 text-sm">{bleedInputs.lostHoursPerWeek} hrs/sem</span>
+              </div>
+              <div className="p-2.5 bg-gray-50 rounded border border-gray-200">
+                <span className="text-gray-500 block">Ticket Promedio</span>
+                <span className="font-bold font-mono text-gray-900 text-sm">{formatCurrency(bleedInputs.averageTicketValue, currency)}</span>
+              </div>
+              <div className="p-2.5 bg-gray-50 rounded border border-gray-200">
+                <span className="text-gray-500 block">Fuga Mensual Estimada</span>
+                <span className="font-bold font-mono text-red-700 text-sm">{formatCurrency(result.totalMonthlyBleed, currency)}/mes</span>
+              </div>
+              <div className="col-span-3 p-2.5 bg-red-50 rounded border border-red-200 flex justify-between items-center">
+                <span className="text-red-900 font-semibold">Pérdida Anual Acumulada por Falta de Automatización:</span>
+                <span className="font-bold font-mono text-red-900 text-base">{formatCurrency(result.totalAnnualBleed, currency)} / año</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Dictamen de Inversión y ROI */}
+        <div className="mb-6">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-purple-900 border-b border-gray-200 pb-1 mb-2 font-mono">
+            3. Dictamen de Inversión & Retorno Proyectado (Value-Based Pricing)
+          </h3>
+          <div className="grid grid-cols-4 gap-3 text-xs mb-3">
+            <div className="p-3 bg-purple-50 rounded border border-purple-200">
+              <span className="text-purple-800 font-semibold block">Implementación (Setup)</span>
+              <span className="font-bold font-mono text-purple-950 text-base mt-1 block">{formatCurrency(result.recommendedSetupPrice, currency)}</span>
+              <span className="text-[10px] text-gray-500">Pago único</span>
+            </div>
+            <div className="p-3 bg-purple-50 rounded border border-purple-200">
+              <span className="text-purple-800 font-semibold block">Mantenimiento Mensual</span>
+              <span className="font-bold font-mono text-purple-950 text-base mt-1 block">{formatCurrency(result.recommendedMonthlyRetainer, currency)}</span>
+              <span className="text-[10px] text-gray-500">Servidores & SLA</span>
+            </div>
+            <div className="p-3 bg-emerald-50 rounded border border-emerald-200">
+              <span className="text-emerald-800 font-semibold block">Beneficio Neto Año 1</span>
+              <span className="font-bold font-mono text-emerald-900 text-base mt-1 block">{formatCurrency(result.yearOneNetSavings, currency)}</span>
+              <span className="text-[10px] text-emerald-700">Ahorro libre de caja</span>
+            </div>
+            <div className="p-3 bg-emerald-50 rounded border border-emerald-200">
+              <span className="text-emerald-800 font-semibold block">Retorno de Inversión</span>
+              <span className="font-bold font-mono text-emerald-900 text-base mt-1 block">+{result.roiPercentage}%</span>
+              <span className="text-[10px] text-emerald-700">Amortizado en ~{result.paybackMonths} meses</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabla de Hitos y Amortización */}
+        <div className="mb-6">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-purple-900 border-b border-gray-200 pb-1 mb-2 font-mono">
+            4. Hitos de Amortización Proyectada a 12 Meses
+          </h3>
+          <table className="w-full text-xs border border-gray-200">
+            <thead className="bg-gray-100 text-gray-700 font-mono">
+              <tr>
+                <th className="p-2 text-left border-b">Mes</th>
+                <th className="p-2 text-right border-b">Sin Sistema (Pérdida)</th>
+                <th className="p-2 text-right border-b">Inversión Acumulada</th>
+                <th className="p-2 text-right border-b">Beneficio Recuperado</th>
+                <th className="p-2 text-right border-b font-bold">Ganancia Neta en Caja</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[1, 3, breakevenMonthObj.month, 6, 9, 12]
+                .filter((v, idx, arr) => arr.indexOf(v) === idx)
+                .sort((a, b) => a - b)
+                .map((m) => {
+                  const row = result.monthlyBreakdown[m - 1];
+                  const isBreakeven = m === breakevenMonthObj.month;
+                  return (
+                    <tr key={m} className={isBreakeven ? 'bg-emerald-50 font-semibold' : 'border-b border-gray-100'}>
+                      <td className="p-2 text-left font-mono">
+                        Mes {m} {isBreakeven && <span className="text-[10px] bg-emerald-200 text-emerald-900 px-1 py-0.5 rounded ml-1 font-sans">★ Breakeven</span>}
+                      </td>
+                      <td className="p-2 text-right font-mono text-red-700">{formatCurrency(row.cumulativeCostWithoutAutomation, currency)}</td>
+                      <td className="p-2 text-right font-mono text-purple-900">{formatCurrency(row.cumulativeInvestmentWithAutomation, currency)}</td>
+                      <td className="p-2 text-right font-mono text-emerald-800">{formatCurrency(row.cumulativeBenefitWithAutomation, currency)}</td>
+                      <td className="p-2 text-right font-mono font-bold text-gray-900">{formatCurrency(row.netProfit, currency)}</td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Políticas de Contratación y Contacto */}
+        <div className="border-t-2 border-gray-200 pt-4 flex justify-between items-start text-xs text-gray-600">
+          <div className="space-y-1">
+            <div className="font-bold text-gray-900">Garantía de Satisfacción Técnica:</div>
+            <div>• Pago del setup condicionado a validación de prototipo navegable funcional.</div>
+            <div>• Código limpio, sin ataduras a plataformas propietarias cerradas.</div>
+          </div>
+          <div className="text-right space-y-0.5 font-mono">
+            <div className="font-bold text-gray-900">Erick Daniel García // Daarick</div>
+            <div>WhatsApp: +52 55 7866 6313</div>
+            <div>Correo: e.danielgrz10@gmail.com</div>
+            <div>Web: https://daarick.dev</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (isPage) {
+    return content;
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-2.5 sm:p-6 bg-[rgba(10,5,15,0.88)] backdrop-blur-md animate-fadeIn roi-calculator-modal-backdrop"
+      role="dialog"
+      aria-label="Calculadora de Cotización y Retorno de Inversión"
+    >
+      {content}
     </div>
   );
 };

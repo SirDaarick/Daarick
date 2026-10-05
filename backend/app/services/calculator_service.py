@@ -14,68 +14,68 @@ from app.schemas.calculator import (
 CATALOG: List[AutomationItemSchema] = [
     AutomationItemSchema(
         id="ai-sales-bot",
-        name="Asistente de Ventas & Calificación 24/7 (WhatsApp/Web)",
-        tagline="Responde dudas, filtra prospectos y agenda reuniones sin intervención humana",
+        name="Asistente de WhatsApp que Atiende y Vende 24/7",
+        tagline="Responde precios, catálogo y dudas al instante para no perder clientes por tardar en contestar",
         category="atencion",
         base_hours_first_time=24,
         reusable_discount_hours=6,
-        description="Atención conversacional empática con memoria de contexto y agendado.",
-        popular=True
-    ),
-    AutomationItemSchema(
-        id="doc-extractor-ocr",
-        name="Extractor Inteligente de Facturas, Recibos & Tickets",
-        tagline="Lectura visual con IA a Excel o base de datos con verificación matemática",
-        category="extraccion",
-        base_hours_first_time=28,
-        reusable_discount_hours=8,
-        description="Elimina la captura manual de tickets y facturas PDF/JPG validando totales.",
+        description="Atención automática amable por WhatsApp o tu web. Resuelve dudas frecuentes, filtra prospectos y toma pedidos sin que tengas que estar pegado al teléfono.",
         popular=True
     ),
     AutomationItemSchema(
         id="calendar-sync",
-        name="Agendador Determinista & Recordatorios Anti-Inasistencias",
-        tagline="Sincronización en tiempo real con Google Calendar y avisos preventivos",
+        name="Agendador Automático de Citas sin Cruces de Horario",
+        tagline="Tus clientes eligen su hora libre y reciben recordatorio automático 2 horas antes para evitar inasistencias",
         category="gestion",
         base_hours_first_time=16,
         reusable_discount_hours=4,
-        description="Evita choques de horarios y confirma asistencia por WhatsApp 2 horas antes."
+        description="Conecta con tu calendario en vivo. Evita empalmes, elimina cancelaciones de última hora y confirma la asistencia de tus clientes automáticamente.",
+        popular=True
+    ),
+    AutomationItemSchema(
+        id="doc-extractor-ocr",
+        name="Lector Automático de Facturas, Recibos y Tickets a Excel",
+        tagline="Pasa las fotos de tus comprobantes o facturas en PDF directo a tu Excel sin escribir nada a mano",
+        category="extraccion",
+        base_hours_first_time=28,
+        reusable_discount_hours=8,
+        description="Toma foto de cualquier ticket de compra o factura y el sistema extrae fechas, montos e impuestos directo a tu control de gastos sin errores humanos."
     ),
     AutomationItemSchema(
         id="debtor-recovery",
-        name="Auditoría de Cobranza & Avisos Preventivos a Clientes",
-        tagline="Seguimiento automatizado de pagos pendientes con tono amable y profesional",
+        name="Recordatorio Amable de Cobranza y Cuentas Pendientes",
+        tagline="Manda avisos educados por WhatsApp a clientes con pagos atrasados para recuperar tu dinero sin desgaste",
         category="operacion",
         base_hours_first_time=18,
         reusable_discount_hours=5,
-        description="Acelera el flujo de caja enviando estados de cuenta sin fricciones."
+        description="Acelera tus cobros pendientes con mensajes profesionales y automáticos, reduciendo la morosidad sin generar fricción con tus clientes."
     ),
     AutomationItemSchema(
         id="crm-sheets-sync",
-        name="Integración Webhooks & Sincronización ERP / Google Sheets",
-        tagline="Conexión bidireccional entre formularios, pagos y hojas de cálculo sin fallos",
+        name="Sincronizador de Pedidos y Ventas a tu Excel",
+        tagline="Cada venta o pedido nuevo se anota solo en tu inventario o Excel sin errores de captura",
         category="operacion",
         base_hours_first_time=14,
         reusable_discount_hours=4,
-        description="Cada venta se refleja de inmediato eliminando errores de transcripción."
+        description="Conecta tu tienda, formularios o mensajes para que cada pedido se registre al instante en tu inventario o lista de control en tiempo real."
     ),
     AutomationItemSchema(
         id="support-ticket-bot",
-        name="Agente Autónomo de Soporte Nivel 1 & Preguntas Frecuentes",
-        tagline="Resuelve el 80% de las consultas rutinarias de clientes al instante",
+        name="Asistente de Preguntas Frecuentes y Ayuda a Clientes",
+        tagline="Resuelve las 10 preguntas que siempre te hacen sobre horarios, ubicación y envíos al momento",
         category="atencion",
         base_hours_first_time=22,
         reusable_discount_hours=6,
-        description="Guía al cliente paso a paso ante dudas técnicas o comerciales comunes."
+        description="Ahorra horas respondiendo las mismas dudas diarias y permite que tú o tu equipo solo intervengan cuando el cliente realmente requiera atención personalizada."
     ),
     AutomationItemSchema(
         id="churn-alert-system",
-        name="Radar de Retención & Reactivación de Clientes Inactivos",
-        tagline="Detecta cuentas que están dejando de comprar y lanza ofertas de reactivación",
+        name="Reactivador de Clientes que Dejaron de Comprar",
+        tagline="Avisa a clientes que tienen semanas sin visitarte con una promoción especial para que vuelvan",
         category="gestion",
         base_hours_first_time=20,
         reusable_discount_hours=5,
-        description="Analiza la frecuencia de compra de tu clientela y detona mensajes preventivos."
+        description="Detecta en tu historial a clientes inactivos y les envía promociones personalizadas para incentivar nuevas compras y fidelizarlos."
     )
 ]
 
@@ -93,21 +93,21 @@ def calculate_quote(
     if bleed is None:
         if currency == "MXN":
             bleed = ClientBleedInputsSchema(
-                lost_hours_per_week=12.0,
-                hourly_labor_cost=200.0,
-                average_ticket_value=3500.0,
-                monthly_leads_or_clients=40,
-                lost_clients_percentage=20.0,
-                human_errors_monthly_cost=3000.0
+                lost_hours_per_week=10.0,
+                hourly_labor_cost=180.0,
+                average_ticket_value=450.0,
+                monthly_leads_or_clients=200,
+                lost_clients_percentage=15.0,
+                human_errors_monthly_cost=2000.0
             )
         else:
             bleed = ClientBleedInputsSchema(
-                lost_hours_per_week=12.0,
+                lost_hours_per_week=10.0,
                 hourly_labor_cost=18.0,
-                average_ticket_value=250.0,
-                monthly_leads_or_clients=40,
-                lost_clients_percentage=20.0,
-                human_errors_monthly_cost=200.0
+                average_ticket_value=35.0,
+                monthly_leads_or_clients=200,
+                lost_clients_percentage=15.0,
+                human_errors_monthly_cost=150.0
             )
 
     # Tarifa horaria efectiva en la divisa elegida
