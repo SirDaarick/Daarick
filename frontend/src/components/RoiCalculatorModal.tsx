@@ -1078,133 +1078,175 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
     </div>
   );
 
-  // 4. REPORTE EJECUTIVO IMPRIMIBLE (SOLO VISIBLE AL IMPRIMIR / DESCARGAR PDF)
+  // 4. REPORTE EJECUTIVO IMPRIMIBLE EN TABLAS (SOLO VISIBLE AL IMPRIMIR / DESCARGAR PDF - 1 SOLA PÁGINA)
   const renderPrintableReport = () => (
-    <div className="hidden print:block roi-printable-report text-[#111827] bg-white p-8 max-w-4xl mx-auto font-sans">
-      <div className="border-b-2 border-purple-900 pb-4 mb-6 flex justify-between items-start">
+    <div className="hidden print:block roi-printable-report text-[#0f172a] bg-white p-4 max-w-4xl mx-auto font-sans leading-tight">
+      {/* CABECERA OFICIAL CON DATOS DE LA CONSULTORÍA */}
+      <div className="border-b-2 border-purple-950 pb-2 mb-2.5 flex justify-between items-start">
         <div>
-          <div className="text-2xl font-black tracking-tight text-purple-950 font-mono">
+          <div className="text-lg font-black tracking-tight text-purple-950 font-mono">
             DAARICK // SISTEMAS DE IA & AUTOMATIZACIÓN
           </div>
-          <div className="text-sm font-semibold text-gray-700 mt-1">
-            Dictamen de Cotización y Retorno de Inversión (ROI) para Negocios
+          <div className="text-[11px] font-semibold text-gray-800 mt-0.5">
+            Dictamen Técnico de Cotización y Retorno de Inversión (ROI)
           </div>
-          <div className="text-xs text-gray-500 mt-0.5">
+          <div className="text-[9px] text-gray-600 mt-0.5">
             Ingeniería de Software & Arquitectura Determinista • Erick Daniel García
           </div>
         </div>
-        <div className="text-right text-xs font-mono text-gray-600">
+        <div className="text-right text-[9px] font-mono text-gray-700 leading-tight">
           <div><strong>Folio:</strong> #COT-202610-{result.technicalFloorCost}</div>
           <div><strong>Fecha:</strong> {new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
           <div><strong>Moneda:</strong> {currency}</div>
+          <div className="text-purple-900 font-semibold mt-0.5">e.danielgrz10@gmail.com • +52 55 7866 6313</div>
         </div>
       </div>
 
-      <div className="mb-6">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-purple-900 border-b border-gray-200 pb-1 mb-2 font-mono">
-          1. Alcance de Soluciones Seleccionadas ({selectedIds.length} Módulos)
-        </h3>
-        <div className="space-y-2">
-          {AUTOMATION_CATALOG.filter((i) => selectedIds.includes(i.id)).map((item) => (
-            <div key={item.id} className="p-2 rounded border border-gray-200 bg-gray-50 flex justify-between items-start text-xs">
-              <div>
-                <div className="font-bold text-gray-900">{item.name}</div>
-                <div className="text-gray-600 mt-0.5">{item.description}</div>
-              </div>
-              <span className="font-mono text-gray-500 shrink-0 ml-4 font-semibold uppercase">{item.category}</span>
-            </div>
-          ))}
+      {/* TABLA 1: ALCANCE DE SOLUCIONES COTIZADAS */}
+      <div className="mb-2.5">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-purple-950 mb-1 font-mono">
+          1. Alcance de Soluciones Cotizadas ({selectedIds.length} Módulos)
         </div>
-      </div>
-
-      <div className="mb-6">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-purple-900 border-b border-gray-200 pb-1 mb-2 font-mono">
-          2. Diagnóstico de Ineficiencias & Fuga Financiera
-        </h3>
-        {isConfidential ? (
-          <div className="p-3 bg-gray-50 border border-gray-200 rounded text-xs text-gray-600 italic">
-            🛡️ Modo Confidencial: Los detalles específicos de nómina y clientes han sido resguardados a solicitud del cliente.
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-3 text-xs">
-            <div className="p-2.5 bg-gray-50 rounded border border-gray-200">
-              <span className="text-gray-500 block">Horas manuales / semana</span>
-              <span className="font-bold font-mono text-gray-900 text-sm">{bleedInputs.lostHoursPerWeek} hrs/sem</span>
-            </div>
-            <div className="p-2.5 bg-gray-50 rounded border border-gray-200">
-              <span className="text-gray-500 block">Ticket Promedio</span>
-              <span className="font-bold font-mono text-gray-900 text-sm">{formatCurrency(bleedInputs.averageTicketValue, currency)}</span>
-            </div>
-            <div className="p-2.5 bg-gray-50 rounded border border-gray-200">
-              <span className="text-gray-500 block">Fuga Mensual Estimada</span>
-              <span className="font-bold font-mono text-red-700 text-sm">{formatCurrency(result.totalMonthlyBleed, currency)}/mes</span>
-            </div>
-            <div className="col-span-3 p-2.5 bg-red-50 rounded border border-red-200 flex justify-between items-center">
-              <span className="text-red-900 font-semibold">Pérdida Anual Acumulada por Falta de Automatización:</span>
-              <span className="font-bold font-mono text-red-900 text-base">{formatCurrency(result.totalAnnualBleed, currency)} / año</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="mb-6">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-purple-900 border-b border-gray-200 pb-1 mb-2 font-mono">
-          3. Dictamen de Inversión & Retorno Proyectado (Value-Based Pricing)
-        </h3>
-        <div className="grid grid-cols-4 gap-3 text-xs mb-3">
-          <div className="p-3 bg-purple-50 rounded border border-purple-200">
-            <span className="text-purple-800 font-semibold block">Implementación (Setup)</span>
-            <span className="font-bold font-mono text-purple-950 text-base mt-1 block">{formatCurrency(result.recommendedSetupPrice, currency)}</span>
-            <span className="text-[10px] text-gray-500">Pago único</span>
-          </div>
-          <div className="p-3 bg-purple-50 rounded border border-purple-200">
-            <span className="text-purple-800 font-semibold block">Mantenimiento Mensual</span>
-            <span className="font-bold font-mono text-purple-950 text-base mt-1 block">{formatCurrency(result.recommendedMonthlyRetainer, currency)}</span>
-            <span className="text-[10px] text-gray-500">Servidores & SLA</span>
-          </div>
-          <div className="p-3 bg-emerald-50 rounded border border-emerald-200">
-            <span className="text-emerald-800 font-semibold block">Beneficio Neto Año 1</span>
-            <span className="font-bold font-mono text-emerald-900 text-base mt-1 block">{formatCurrency(result.yearOneNetSavings, currency)}</span>
-            <span className="text-[10px] text-emerald-700">Ahorro libre de caja</span>
-          </div>
-          <div className="p-3 bg-emerald-50 rounded border border-emerald-200">
-            <span className="text-emerald-800 font-semibold block">Retorno de Inversión</span>
-            <span className="font-bold font-mono text-emerald-900 text-base mt-1 block">+{result.roiPercentage}%</span>
-            <span className="text-[10px] text-emerald-700">Amortizado en ~{result.paybackMonths} meses</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-purple-900 border-b border-gray-200 pb-1 mb-2 font-mono">
-          4. Hitos de Amortización Proyectada a 12 Meses
-        </h3>
-        <table className="w-full text-xs border border-gray-200">
-          <thead className="bg-gray-100 text-gray-700 font-mono">
+        <table className="w-full text-[9.5px] border-collapse border border-gray-300">
+          <thead className="bg-gray-100 text-gray-800 font-mono uppercase text-[8.5px]">
             <tr>
-              <th className="p-2 text-left border-b">Mes</th>
-              <th className="p-2 text-right border-b">Sin Sistema (Pérdida)</th>
-              <th className="p-2 text-right border-b">Inversión Acumulada</th>
-              <th className="p-2 text-right border-b">Beneficio Recuperado</th>
-              <th className="p-2 text-right border-b font-bold">Ganancia Neta en Caja</th>
+              <th className="p-1 text-center border border-gray-300 w-6">#</th>
+              <th className="p-1 text-left border border-gray-300 w-44">Módulo / Solución</th>
+              <th className="p-1 text-left border border-gray-300">Beneficio Operativo Tangible</th>
+              <th className="p-1 text-center border border-gray-300 w-24">Área</th>
             </tr>
           </thead>
           <tbody>
-            {[1, 3, breakevenMonthObj.month, 6, 9, 12]
+            {AUTOMATION_CATALOG.filter((i) => selectedIds.includes(i.id)).map((item, idx) => (
+              <tr key={item.id} className="border-b border-gray-200 odd:bg-white even:bg-gray-50/50">
+                <td className="p-1 text-center font-mono text-gray-500 border border-gray-300">{idx + 1}</td>
+                <td className="p-1 font-bold text-gray-900 border border-gray-300">{item.name}</td>
+                <td className="p-1 text-gray-700 border border-gray-300">{item.tagline}</td>
+                <td className="p-1 text-center font-mono text-gray-600 capitalize border border-gray-300">{item.category}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* TABLA 2: DIAGNÓSTICO OPERATIVO & FUGA FINANCIERA */}
+      <div className="mb-2.5">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-purple-950 mb-1 font-mono">
+          2. Diagnóstico Operativo & Fuga Financiera Anual
+        </div>
+        {isConfidential ? (
+          <div className="p-1.5 bg-gray-50 border border-gray-300 rounded text-[9px] text-gray-600 italic">
+            🛡️ Modo Confidencial Activado: Las variables específicas de nómina y facturación han sido resguardadas a solicitud del cliente.
+          </div>
+        ) : (
+          <table className="w-full text-[9.5px] border-collapse border border-gray-300">
+            <thead className="bg-gray-100 text-gray-800 font-mono uppercase text-[8.5px]">
+              <tr>
+                <th className="p-1 text-left border border-gray-300">Variable Auditada</th>
+                <th className="p-1 text-center border border-gray-300 w-36">Parámetro del Negocio</th>
+                <th className="p-1 text-right border border-gray-300 w-40">Impacto Económico Estimado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-gray-200">
+                <td className="p-1 text-gray-900 border border-gray-300">Tareas manuales repetitivas en el equipo</td>
+                <td className="p-1 text-center font-mono border border-gray-300">{bleedInputs.lostHoursPerWeek} hrs / semana</td>
+                <td className="p-1 text-right font-mono text-gray-900 border border-gray-300">{formatCurrency(result.monthlyTimeLossCost, currency)} / mes</td>
+              </tr>
+              <tr className="border-b border-gray-200">
+                <td className="p-1 text-gray-900 border border-gray-300">Costo horario operativo de personal involucrado</td>
+                <td className="p-1 text-center font-mono border border-gray-300">{formatCurrency(bleedInputs.hourlyLaborCost, currency)} / hora</td>
+                <td className="p-1 text-right font-mono text-gray-600 border border-gray-300">Nómina operativa absorbida</td>
+              </tr>
+              <tr className="border-b border-gray-200">
+                <td className="p-1 text-gray-900 border border-gray-300">Ticket promedio & volumen mensual</td>
+                <td className="p-1 text-center font-mono border border-gray-300">{formatCurrency(bleedInputs.averageTicketValue, currency)} ({bleedInputs.monthlyLeadsOrClients} clientes)</td>
+                <td className="p-1 text-right font-mono text-gray-600 border border-gray-300">Base mensual de operaciones</td>
+              </tr>
+              <tr className="border-b border-gray-200">
+                <td className="p-1 text-gray-900 border border-gray-300">Ventas caídas por tardanza en responder</td>
+                <td className="p-1 text-center font-mono border border-gray-300">{bleedInputs.lostClientsPercentage}% de prospectos no atendidos</td>
+                <td className="p-1 text-right font-mono text-gray-900 border border-gray-300">{formatCurrency(result.monthlySalesLossCost, currency)} / mes</td>
+              </tr>
+              <tr className="bg-red-50/70 font-semibold border-t border-red-200">
+                <td className="p-1 text-red-950 border border-gray-300">Pérdida Financiera Acumulada Sin Sistema (Inacción):</td>
+                <td className="p-1 text-center font-mono text-red-900 border border-gray-300">{formatCurrency(result.totalMonthlyBleed, currency)} / mes</td>
+                <td className="p-1 text-right font-mono text-red-950 font-bold border border-gray-300">{formatCurrency(result.totalAnnualBleed, currency)} / año</td>
+              </tr>
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* TABLA 3: DICTAMEN DE INVERSIÓN & RETORNO PROYECTADO */}
+      <div className="mb-2.5">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-purple-950 mb-1 font-mono">
+          3. Dictamen de Inversión & Retorno Proyectado (Value-Based Pricing)
+        </div>
+        <table className="w-full text-[9.5px] border-collapse border border-gray-300">
+          <thead className="bg-gray-100 text-gray-800 font-mono uppercase text-[8.5px]">
+            <tr>
+              <th className="p-1 text-left border border-gray-300">Concepto</th>
+              <th className="p-1 text-right border border-gray-300 w-36">Monto ({currency})</th>
+              <th className="p-1 text-left border border-gray-300">Términos de Entrega & Garantía</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-b border-gray-200">
+              <td className="p-1 font-bold text-purple-950 border border-gray-300">Implementación Inicial (Setup)</td>
+              <td className="p-1 text-right font-mono font-bold text-purple-950 border border-gray-300 text-[10.5px]">{formatCurrency(result.recommendedSetupPrice, currency)}</td>
+              <td className="p-1 text-gray-700 border border-gray-300">Pago único (Liquidación condicionada a validación de prototipo funcional)</td>
+            </tr>
+            <tr className="border-b border-gray-200">
+              <td className="p-1 font-bold text-purple-950 border border-gray-300">Mantenimiento Mensual (Retainer)</td>
+              <td className="p-1 text-right font-mono font-bold text-purple-950 border border-gray-300 text-[10.5px]">{formatCurrency(result.recommendedMonthlyRetainer, currency)} / mes</td>
+              <td className="p-1 text-gray-700 border border-gray-300">Servidores, soporte técnico, monitoreo proactivo y mejoras continuas</td>
+            </tr>
+            <tr className="border-b border-gray-200 bg-emerald-50/60">
+              <td className="p-1 font-bold text-emerald-950 border border-gray-300">Beneficio Neto Año 1</td>
+              <td className="p-1 text-right font-mono font-bold text-emerald-950 border border-gray-300 text-[10.5px]">+{formatCurrency(result.yearOneNetSavings, currency)}</td>
+              <td className="p-1 text-emerald-900 border border-gray-300">Ahorro libre de caja en el primer año (descontando setup y retainers)</td>
+            </tr>
+            <tr className="bg-emerald-50/60 font-semibold">
+              <td className="p-1 font-bold text-emerald-950 border border-gray-300">Retorno de Inversión (ROI)</td>
+              <td className="p-1 text-right font-mono font-bold text-emerald-950 border border-gray-300 text-[10.5px]">+{result.roiPercentage}%</td>
+              <td className="p-1 text-emerald-900 border border-gray-300">Amortización total de inversión en ~{result.paybackMonths} meses ({result.paybackDays} días)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* TABLA 4: HITOS DE AMORTIZACIÓN PROYECTADA A 12 MESES */}
+      <div className="mb-2.5">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-purple-950 mb-1 font-mono">
+          4. Hitos de Amortización Proyectada a 12 Meses (Flujo Acumulado)
+        </div>
+        <table className="w-full text-[9.5px] border-collapse border border-gray-300">
+          <thead className="bg-gray-100 text-gray-800 font-mono uppercase text-[8.5px]">
+            <tr>
+              <th className="p-1 text-left border border-gray-300 w-24">Mes</th>
+              <th className="p-1 text-right border border-gray-300">Sin Sistema (Pérdida)</th>
+              <th className="p-1 text-right border border-gray-300">Inversión Acumulada</th>
+              <th className="p-1 text-right border border-gray-300">Beneficio Recuperado</th>
+              <th className="p-1 text-right border border-gray-300 font-bold">Ganancia Neta en Caja</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[1, 3, breakevenMonthObj.month, 6, 12]
               .filter((v, idx, arr) => arr.indexOf(v) === idx)
               .sort((a, b) => a - b)
               .map((m) => {
                 const row = result.monthlyBreakdown[m - 1];
                 const isBreakeven = m === breakevenMonthObj.month;
                 return (
-                  <tr key={m} className={isBreakeven ? 'bg-emerald-50 font-semibold' : 'border-b border-gray-100'}>
-                    <td className="p-2 text-left font-mono">
-                      Mes {m} {isBreakeven && <span className="text-[10px] bg-emerald-200 text-emerald-900 px-1 py-0.5 rounded ml-1 font-sans">★ Breakeven</span>}
+                  <tr key={m} className={isBreakeven ? 'bg-emerald-100/70 font-semibold' : 'border-b border-gray-200'}>
+                    <td className="p-1 text-left font-mono border border-gray-300">
+                      Mes {m} {isBreakeven && <span className="text-[8px] bg-emerald-700 text-white px-1 py-0.2 rounded font-sans ml-1">★ Breakeven</span>}
                     </td>
-                    <td className="p-2 text-right font-mono text-red-700">{formatCurrency(row.cumulativeCostWithoutAutomation, currency)}</td>
-                    <td className="p-2 text-right font-mono text-purple-900">{formatCurrency(row.cumulativeInvestmentWithAutomation, currency)}</td>
-                    <td className="p-2 text-right font-mono text-emerald-800">{formatCurrency(row.cumulativeBenefitWithAutomation, currency)}</td>
-                    <td className="p-2 text-right font-mono font-bold text-gray-900">{formatCurrency(row.netProfit, currency)}</td>
+                    <td className="p-1 text-right font-mono text-red-700 border border-gray-300">{formatCurrency(row.cumulativeCostWithoutAutomation, currency)}</td>
+                    <td className="p-1 text-right font-mono text-purple-950 border border-gray-300">{formatCurrency(row.cumulativeInvestmentWithAutomation, currency)}</td>
+                    <td className="p-1 text-right font-mono text-emerald-800 border border-gray-300">{formatCurrency(row.cumulativeBenefitWithAutomation, currency)}</td>
+                    <td className="p-1 text-right font-mono font-bold text-gray-900 border border-gray-300">{formatCurrency(row.netProfit, currency)}</td>
                   </tr>
                 );
               })}
@@ -1212,17 +1254,24 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
         </table>
       </div>
 
-      <div className="border-t-2 border-gray-200 pt-4 flex justify-between items-start text-xs text-gray-600">
-        <div className="space-y-1">
-          <div className="font-bold text-gray-900">Garantía de Satisfacción Técnica:</div>
-          <div>• Pago del setup condicionado a validación de prototipo navegable funcional.</div>
-          <div>• Código limpio, sin ataduras a plataformas propietarias cerradas.</div>
+      {/* PIE DE PÁGINA CON GARANTÍA Y FIRMAS */}
+      <div className="pt-2 border-t-2 border-gray-300 flex justify-between items-end text-[9px] text-gray-700">
+        <div className="space-y-0.5 max-w-sm">
+          <div className="font-bold text-gray-900 font-mono uppercase text-[8.5px]">Garantía de Satisfacción Técnica:</div>
+          <div>• Liquidación del setup condicionada a validación de prototipo navegable.</div>
+          <div>• Código limpio y arquitectura determinista sin ataduras a plataformas propietarias.</div>
+          <div className="pt-1 text-gray-500 font-mono text-[8.5px]">
+            Daarick // Erick Daniel García • https://daarick.dev • WhatsApp: +52 55 7866 6313
+          </div>
         </div>
-        <div className="text-right space-y-0.5 font-mono">
-          <div className="font-bold text-gray-900">Erick Daniel García // Daarick</div>
-          <div>WhatsApp: +52 55 7866 6313</div>
-          <div>Correo: e.danielgrz10@gmail.com</div>
-          <div>Web: https://daarick.dev</div>
+
+        <div className="flex gap-6 text-center font-mono text-[8.5px]">
+          <div className="w-32 pt-5 border-t border-gray-400">
+            Aprobación del Cliente
+          </div>
+          <div className="w-32 pt-5 border-t border-gray-400">
+            Erick Daniel García (Ingeniero)
+          </div>
         </div>
       </div>
     </div>
@@ -1231,10 +1280,13 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   // VISTA EN MODO PÁGINA: DISEÑO MINIMALISTA DESPEJADO
   if (isPage) {
     return (
-      <div className="w-full space-y-8 roi-calculator-page-view">
-        {renderMinimalNavbar()}
-        {renderAdminPanel()}
-        {renderTabContent()}
+      <div className="w-full roi-calculator-page-view">
+        {/* Contenedor interactivo (Oculto al imprimir para que solo aparezca el reporte en tablas) */}
+        <div className="roi-calculator-interactive roi-interactive-view print:hidden space-y-8">
+          {renderMinimalNavbar()}
+          {renderAdminPanel()}
+          {renderTabContent()}
+        </div>
         {renderPrintableReport()}
       </div>
     );
@@ -1248,9 +1300,12 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
       aria-label="Calculadora de Cotización y Retorno de Inversión"
     >
       <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto p-6 sm:p-8 bg-[#160B1A] border border-white/10 rounded-2xl shadow-2xl scrollbar-thin scrollbar-thumb-white/10 space-y-6">
-        {renderMinimalNavbar()}
-        {renderAdminPanel()}
-        {renderTabContent()}
+        {/* Contenedor interactivo (Oculto al imprimir) */}
+        <div className="roi-calculator-interactive roi-interactive-view print:hidden space-y-6">
+          {renderMinimalNavbar()}
+          {renderAdminPanel()}
+          {renderTabContent()}
+        </div>
         {renderPrintableReport()}
       </div>
     </div>
