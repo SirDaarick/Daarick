@@ -148,8 +148,8 @@ export const AUTOMATION_CATALOG: AutomationItem[] = [
 export const DEFAULT_CLIENT_INPUTS_MXN: ClientBleedInputs = {
   lostHoursPerWeek: 10, // 10 horas a la semana contestando mensajes o en notas manuales
   hourlyLaborCost: 180, // $180 MXN/hr (salario de personal operativo común)
-  averageTicketValue: 450, // $450 MXN ticket promedio realista de pyme local
-  monthlyLeadsOrClients: 200, // 200 clientes o consultas al mes (≈ 7 a 10 diarios)
+  averageTicketValue: 1200, // $1,200 MXN ticket promedio equilibrado de negocio
+  monthlyLeadsOrClients: 250, // 250 clientes o consultas al mes (≈ 8 a 10 diarios)
   lostClientsPercentage: 15, // 15% de clientes perdidos por tardar en responder
   humanErrorsMonthlyCost: 2000 // $2,000 MXN en retrabajos, cancelaciones o mermas
 };
@@ -158,8 +158,8 @@ export const DEFAULT_CLIENT_INPUTS_MXN: ClientBleedInputs = {
 export const DEFAULT_CLIENT_INPUTS_USD: ClientBleedInputs = {
   lostHoursPerWeek: 10,
   hourlyLaborCost: 18,
-  averageTicketValue: 35,
-  monthlyLeadsOrClients: 200,
+  averageTicketValue: 65,
+  monthlyLeadsOrClients: 250,
   lostClientsPercentage: 15,
   humanErrorsMonthlyCost: 150
 };

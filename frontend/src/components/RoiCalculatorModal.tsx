@@ -249,12 +249,12 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   // Parámetros y límites de sliders según divisa
   const isMxn = currency === 'MXN';
   const laborMin = isMxn ? 50 : 5;
-  const laborMax = isMxn ? 1500 : 150;
+  const laborMax = isMxn ? 2000 : 150;
   const laborStep = isMxn ? 25 : 1;
 
   const ticketMin = isMxn ? 100 : 10;
-  const ticketMax = isMxn ? 15000 : 1000;
-  const ticketStep = isMxn ? 50 : 5;
+  const ticketMax = isMxn ? 20000 : 1500;
+  const ticketStep = isMxn ? 100 : 10;
 
   // Dimensiones del gráfico SVG
   const chartWidth = 600;
@@ -636,22 +636,32 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 </p>
               </div>
 
-              {/* Controles deslizantes interactivos */}
+              {/* Controles deslizantes e inputs directos interactivos */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* 1. Horas perdidas */}
-                <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-2">
-                  <div className="flex justify-between items-center text-sm font-semibold">
-                    <span className="text-white flex items-center gap-1.5">
+                <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-white text-sm font-semibold flex items-center gap-1.5">
                       <Clock className="w-4 h-4 text-[#c084fc]" /> Horas dedicadas a tareas repetitivas:
                     </span>
-                    <span className="font-mono text-[#d8b4fe] text-base font-bold">
-                      {bleedInputs.lostHoursPerWeek} hrs / sem
-                    </span>
+                    <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                      <input
+                        type="number"
+                        min="0"
+                        max="168"
+                        value={bleedInputs.lostHoursPerWeek}
+                        onChange={(e) =>
+                          setBleedInputs({ ...bleedInputs, lostHoursPerWeek: Math.max(0, Number(e.target.value) || 0) })
+                        }
+                        className="w-20 px-2.5 py-1 rounded-lg bg-[rgba(15,8,18,0.95)] border border-[rgba(192,132,252,0.4)] text-right font-mono text-white text-sm font-bold focus:outline-none focus:border-[#c084fc] shadow-inner"
+                      />
+                      <span className="font-mono text-xs text-[#d8b4fe]">hrs/sem</span>
+                    </div>
                   </div>
                   <input
                     type="range"
                     min="1"
-                    max="50"
+                    max={Math.max(60, bleedInputs.lostHoursPerWeek)}
                     step="1"
                     value={bleedInputs.lostHoursPerWeek}
                     onChange={(e) =>
@@ -659,27 +669,37 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     }
                     className="w-full accent-[#c084fc] cursor-pointer"
                   />
-                  <div className="flex justify-between text-[11px] text-[#F6DBC0]/60">
+                  <div className="flex justify-between text-[11px] text-[#F6DBC0]/60 font-mono">
                     <span>1 hr/sem</span>
-                    <span>25 hrs/sem</span>
-                    <span>50 hrs/sem</span>
+                    <span>30 hrs/sem</span>
+                    <span>{Math.max(60, bleedInputs.lostHoursPerWeek)} hrs/sem</span>
                   </div>
                 </div>
 
                 {/* 2. Costo por hora */}
-                <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-2">
-                  <div className="flex justify-between items-center text-sm font-semibold">
-                    <span className="text-white flex items-center gap-1.5">
+                <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-white text-sm font-semibold flex items-center gap-1.5">
                       <DollarSign className="w-4 h-4 text-[#c084fc]" /> Costo por hora operativa del equipo:
                     </span>
-                    <span className="font-mono text-[#d8b4fe] text-base font-bold">
-                      {formatCurrency(bleedInputs.hourlyLaborCost, currency)} / hr
-                    </span>
+                    <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                      <span className="font-mono text-xs text-[#d8b4fe]">$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={bleedInputs.hourlyLaborCost}
+                        onChange={(e) =>
+                          setBleedInputs({ ...bleedInputs, hourlyLaborCost: Math.max(0, Number(e.target.value) || 0) })
+                        }
+                        className="w-24 px-2.5 py-1 rounded-lg bg-[rgba(15,8,18,0.95)] border border-[rgba(192,132,252,0.4)] text-right font-mono text-white text-sm font-bold focus:outline-none focus:border-[#c084fc] shadow-inner"
+                      />
+                      <span className="font-mono text-xs text-[#d8b4fe]">/ hr</span>
+                    </div>
                   </div>
                   <input
                     type="range"
                     min={laborMin}
-                    max={laborMax}
+                    max={Math.max(laborMax, bleedInputs.hourlyLaborCost)}
                     step={laborStep}
                     value={bleedInputs.hourlyLaborCost}
                     onChange={(e) =>
@@ -687,27 +707,37 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     }
                     className="w-full accent-[#c084fc] cursor-pointer"
                   />
-                  <div className="flex justify-between text-[11px] text-[#F6DBC0]/60">
+                  <div className="flex justify-between text-[11px] text-[#F6DBC0]/60 font-mono">
                     <span>{formatCurrency(laborMin, currency)}</span>
                     <span>{formatCurrency(Math.round((laborMin + laborMax) / 2), currency)}</span>
-                    <span>{formatCurrency(laborMax, currency)}</span>
+                    <span>{formatCurrency(Math.max(laborMax, bleedInputs.hourlyLaborCost), currency)}</span>
                   </div>
                 </div>
 
                 {/* 3. Ticket promedio */}
-                <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-2">
-                  <div className="flex justify-between items-center text-sm font-semibold">
-                    <span className="text-white flex items-center gap-1.5">
-                      <TrendingUp className="w-4 h-4 text-[#c084fc]" /> Ticket promedio por venta o cliente:
+                <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-white text-sm font-semibold flex items-center gap-1.5">
+                      <TrendingUp className="w-4 h-4 text-[#c084fc]" /> Ticket promedio por venta o servicio:
                     </span>
-                    <span className="font-mono text-[#d8b4fe] text-base font-bold">
-                      {formatCurrency(bleedInputs.averageTicketValue, currency)}
-                    </span>
+                    <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                      <span className="font-mono text-xs text-[#d8b4fe]">$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={bleedInputs.averageTicketValue}
+                        onChange={(e) =>
+                          setBleedInputs({ ...bleedInputs, averageTicketValue: Math.max(0, Number(e.target.value) || 0) })
+                        }
+                        className="w-28 px-2.5 py-1 rounded-lg bg-[rgba(15,8,18,0.95)] border border-[rgba(192,132,252,0.4)] text-right font-mono text-white text-sm font-bold focus:outline-none focus:border-[#c084fc] shadow-inner"
+                      />
+                      <span className="font-mono text-xs text-[#d8b4fe]">{currency}</span>
+                    </div>
                   </div>
                   <input
                     type="range"
                     min={ticketMin}
-                    max={ticketMax}
+                    max={Math.max(ticketMax, bleedInputs.averageTicketValue)}
                     step={ticketStep}
                     value={bleedInputs.averageTicketValue}
                     onChange={(e) =>
@@ -715,27 +745,36 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     }
                     className="w-full accent-[#c084fc] cursor-pointer"
                   />
-                  <div className="flex justify-between text-[11px] text-[#F6DBC0]/60">
+                  <div className="flex justify-between text-[11px] text-[#F6DBC0]/60 font-mono">
                     <span>{formatCurrency(ticketMin, currency)}</span>
-                    <span>{formatCurrency(Math.round((ticketMin + ticketMax) / 2), currency)}</span>
-                    <span>{formatCurrency(ticketMax, currency)}</span>
+                    <span>{formatCurrency(Math.round(ticketMax / 2), currency)}</span>
+                    <span>{formatCurrency(Math.max(ticketMax, bleedInputs.averageTicketValue), currency)}</span>
                   </div>
                 </div>
 
                 {/* 4. Clientes mensuales */}
-                <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-2">
-                  <div className="flex justify-between items-center text-sm font-semibold">
-                    <span className="text-white flex items-center gap-1.5">
-                      <UserCheck className="w-4 h-4 text-[#c084fc]" /> Clientes o consultas al mes:
+                <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-white text-sm font-semibold flex items-center gap-1.5">
+                      <UserCheck className="w-4 h-4 text-[#c084fc]" /> Clientes o prospectos al mes:
                     </span>
-                    <span className="font-mono text-[#d8b4fe] text-base font-bold">
-                      {bleedInputs.monthlyLeadsOrClients} clientes
-                    </span>
+                    <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                      <input
+                        type="number"
+                        min="0"
+                        value={bleedInputs.monthlyLeadsOrClients}
+                        onChange={(e) =>
+                          setBleedInputs({ ...bleedInputs, monthlyLeadsOrClients: Math.max(0, Number(e.target.value) || 0) })
+                        }
+                        className="w-24 px-2.5 py-1 rounded-lg bg-[rgba(15,8,18,0.95)] border border-[rgba(192,132,252,0.4)] text-right font-mono text-white text-sm font-bold focus:outline-none focus:border-[#c084fc] shadow-inner"
+                      />
+                      <span className="font-mono text-xs text-[#d8b4fe]">clientes</span>
+                    </div>
                   </div>
                   <input
                     type="range"
                     min="10"
-                    max="600"
+                    max={Math.max(2000, bleedInputs.monthlyLeadsOrClients)}
                     step="10"
                     value={bleedInputs.monthlyLeadsOrClients}
                     onChange={(e) =>
@@ -743,27 +782,37 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     }
                     className="w-full accent-[#c084fc] cursor-pointer"
                   />
-                  <div className="flex justify-between text-[11px] text-[#F6DBC0]/60">
-                    <span>10/mes</span>
-                    <span>300/mes</span>
-                    <span>600/mes</span>
+                  <div className="flex justify-between text-[11px] text-[#F6DBC0]/60 font-mono">
+                    <span>10</span>
+                    <span>1,000</span>
+                    <span>{Math.max(2000, bleedInputs.monthlyLeadsOrClients).toLocaleString('es-MX')} clientes</span>
                   </div>
                 </div>
 
                 {/* 5. % Pérdida por lentitud */}
-                <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-2 md:col-span-2">
-                  <div className="flex justify-between items-center text-sm font-semibold">
-                    <span className="text-white flex items-center gap-1.5">
-                      <BadgeAlert className="w-4 h-4 text-[#c084fc]" /> Clientes perdidos por tardar en contestar o no dar seguimiento:
+                <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-white text-sm font-semibold flex items-center gap-1.5">
+                      <BadgeAlert className="w-4 h-4 text-[#c084fc]" /> Clientes perdidos por tardar en responder:
                     </span>
-                    <span className="font-mono text-[#ff8080] text-base font-bold">
-                      {bleedInputs.lostClientsPercentage}% de fuga
-                    </span>
+                    <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={bleedInputs.lostClientsPercentage}
+                        onChange={(e) =>
+                          setBleedInputs({ ...bleedInputs, lostClientsPercentage: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })
+                        }
+                        className="w-20 px-2.5 py-1 rounded-lg bg-[rgba(15,8,18,0.95)] border border-[rgba(255,128,128,0.4)] text-right font-mono text-[#ff8080] text-sm font-bold focus:outline-none focus:border-[#ff8080] shadow-inner"
+                      />
+                      <span className="font-mono text-xs text-[#ff8080]">% de fuga</span>
+                    </div>
                   </div>
                   <input
                     type="range"
                     min="0"
-                    max="50"
+                    max="80"
                     step="1"
                     value={bleedInputs.lostClientsPercentage}
                     onChange={(e) =>
@@ -771,10 +820,48 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     }
                     className="w-full accent-[#c084fc] cursor-pointer"
                   />
-                  <div className="flex justify-between text-[11px] text-[#F6DBC0]/60">
+                  <div className="flex justify-between text-[11px] text-[#F6DBC0]/60 font-mono">
                     <span>0% (Ninguno)</span>
-                    <span>15% (Promedio de fuga en WhatsApp)</span>
-                    <span>50% (Alta saturación)</span>
+                    <span>15% (Promedio en WhatsApp)</span>
+                    <span>80% (Pérdida crítica)</span>
+                  </div>
+                </div>
+
+                {/* 6. Mermas o errores humanos mensuales */}
+                <div className="p-4 rounded-xl bg-[rgba(26,14,30,0.7)] border border-[rgba(147,80,115,0.3)] space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-white text-sm font-semibold flex items-center gap-1.5">
+                      <FileSpreadsheet className="w-4 h-4 text-[#c084fc]" /> Mermas o retrabajos por errores manuales:
+                    </span>
+                    <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                      <span className="font-mono text-xs text-[#d8b4fe]">$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={bleedInputs.humanErrorsMonthlyCost}
+                        onChange={(e) =>
+                          setBleedInputs({ ...bleedInputs, humanErrorsMonthlyCost: Math.max(0, Number(e.target.value) || 0) })
+                        }
+                        className="w-24 px-2.5 py-1 rounded-lg bg-[rgba(15,8,18,0.95)] border border-[rgba(192,132,252,0.4)] text-right font-mono text-white text-sm font-bold focus:outline-none focus:border-[#c084fc] shadow-inner"
+                      />
+                      <span className="font-mono text-xs text-[#d8b4fe]">/ mes</span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max={Math.max(isMxn ? 15000 : 1000, bleedInputs.humanErrorsMonthlyCost)}
+                    step={isMxn ? 250 : 25}
+                    value={bleedInputs.humanErrorsMonthlyCost}
+                    onChange={(e) =>
+                      setBleedInputs({ ...bleedInputs, humanErrorsMonthlyCost: Number(e.target.value) })
+                    }
+                    className="w-full accent-[#c084fc] cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[11px] text-[#F6DBC0]/60 font-mono">
+                    <span>$0</span>
+                    <span>{formatCurrency(isMxn ? 7500 : 500, currency)}</span>
+                    <span>{formatCurrency(Math.max(isMxn ? 15000 : 1000, bleedInputs.humanErrorsMonthlyCost), currency)}</span>
                   </div>
                 </div>
               </div>

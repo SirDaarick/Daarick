@@ -95,8 +95,8 @@ def calculate_quote(
             bleed = ClientBleedInputsSchema(
                 lost_hours_per_week=10.0,
                 hourly_labor_cost=180.0,
-                average_ticket_value=450.0,
-                monthly_leads_or_clients=200,
+                average_ticket_value=1200.0,
+                monthly_leads_or_clients=250,
                 lost_clients_percentage=15.0,
                 human_errors_monthly_cost=2000.0
             )
@@ -104,8 +104,8 @@ def calculate_quote(
             bleed = ClientBleedInputsSchema(
                 lost_hours_per_week=10.0,
                 hourly_labor_cost=18.0,
-                average_ticket_value=35.0,
-                monthly_leads_or_clients=200,
+                average_ticket_value=65.0,
+                monthly_leads_or_clients=250,
                 lost_clients_percentage=15.0,
                 human_errors_monthly_cost=150.0
             )
