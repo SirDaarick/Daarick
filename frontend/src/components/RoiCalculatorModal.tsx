@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
-  Sparkles,
   Clock,
   DollarSign,
   TrendingUp,
-  Bot,
-  FileSpreadsheet,
-  Calendar,
-  BadgeAlert,
-  Workflow,
-  Headphones,
   UserCheck,
   Check,
   Copy,
@@ -18,16 +11,15 @@ import {
   ShieldCheck,
   Shield,
   ArrowRight,
-  ExternalLink,
   RotateCcw,
-  Zap,
-  Lock,
   Eye,
   EyeOff,
   FileDown,
   Mail,
   MessageSquare,
-  Video
+  Video,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import {
   AUTOMATION_CATALOG,
@@ -38,10 +30,8 @@ import {
   formatCurrency,
   buildProposalMarkdown,
   buildWhatsAppMessage,
-  type AutomationItem,
   type ClientBleedInputs,
-  type DeveloperConfig,
-  type CalculationResult
+  type DeveloperConfig
 } from '../data/calculatorEngine';
 
 interface OpenRoiEventDetail {
@@ -59,13 +49,14 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   const [isOpen, setIsOpen] = useState(isPage);
   const [isCalculadoraRoute, setIsCalculadoraRoute] = useState(false);
   const [activeTab, setActiveTab] = useState<'catalog' | 'bleed' | 'roi'>('catalog');
-  const [currency, setCurrency] = useState<'USD' | 'MXN'>('MXN'); // Default en Pesos Mexicanos (MXN)
+  const [currency, setCurrency] = useState<'USD' | 'MXN'>('MXN');
   const [isConfidential, setIsConfidential] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showAdminMode, setShowAdminMode] = useState(false);
+  const [showAdvancedBleed, setShowAdvancedBleed] = useState(false);
   const [hoveredMonth, setHoveredMonth] = useState<number | null>(null);
 
-  // Estados de cálculo (por defecto en MXN con valores pyme realistas)
+  // Estados de cálculo
   const [selectedIds, setSelectedIds] = useState<string[]>([
     'ai-sales-bot',
     'calendar-sync'
@@ -83,7 +74,6 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   // Escuchar evento global para abrir modal (desde Navbar, Hero o Chatbot)
   useEffect(() => {
     const handleOpen = (e: Event) => {
-      // Si estamos en modo modal y ya estamos en la página /calculadora, omitir para no duplicar
       if (mode === 'modal' && typeof window !== 'undefined' && window.location.pathname.includes('/calculadora')) {
         return;
       }
@@ -140,39 +130,22 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   };
 
   const toggleAutomation = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+    if (selectedIds.includes(id)) {
+      if (selectedIds.length > 1) {
+        setSelectedIds(selectedIds.filter((item) => item !== id));
+      }
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
   };
 
-  // Resultado reactivo determinista
-  const result: CalculationResult = calculateRoi(
+  // Cálculo reactivo puro
+  const result = calculateRoi(
     selectedIds,
     bleedInputs,
     devConfig,
     currency
   );
-
-  const getIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'Bot':
-        return <Bot className="w-5 h-5" />;
-      case 'FileSpreadsheet':
-        return <FileSpreadsheet className="w-5 h-5" />;
-      case 'Calendar':
-        return <Calendar className="w-5 h-5" />;
-      case 'BadgeAlert':
-        return <BadgeAlert className="w-5 h-5" />;
-      case 'Workflow':
-        return <Workflow className="w-5 h-5" />;
-      case 'Headphones':
-        return <Headphones className="w-5 h-5" />;
-      case 'UserCheck':
-        return <UserCheck className="w-5 h-5" />;
-      default:
-        return <Zap className="w-5 h-5" />;
-    }
-  };
 
   const handleCopyProposal = () => {
     const text = buildProposalMarkdown(
@@ -234,8 +207,6 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
     }
   };
 
-  // Si estamos en modo modal y es la ruta /calculadora, el componente modal no debe renderizarse
-  // porque /calculadora ya renderiza la versión mode="page" directamente.
   if (mode === 'modal' && isCalculadoraRoute) {
     return null;
   }
@@ -244,7 +215,6 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
     return null;
   }
 
-  // Parámetros y límites de sliders según divisa
   const isMxn = currency === 'MXN';
   const laborMin = isMxn ? 50 : 5;
   const laborMax = isMxn ? 2000 : 150;
@@ -254,10 +224,10 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   const ticketMax = isMxn ? 20000 : 1500;
   const ticketStep = isMxn ? 100 : 10;
 
-  // Dimensiones del gráfico SVG
+  // Gráfico SVG sobrio
   const chartWidth = 600;
-  const chartHeight = 220;
-  const padding = { top: 25, right: 30, bottom: 35, left: 60 };
+  const chartHeight = 200;
+  const padding = { top: 20, right: 20, bottom: 30, left: 55 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
 
@@ -271,109 +241,104 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   const getX = (month: number) => padding.left + ((month - 1) / 11) * innerWidth;
   const getY = (val: number) => padding.top + innerHeight - (val / maxVal) * innerHeight;
 
-  // Puntos para líneas
   const pointsLoss = result.monthlyBreakdown
     .map((d) => `${getX(d.month)},${getY(d.cumulativeCostWithoutAutomation)}`)
     .join(' ');
   const pointsBenefit = result.monthlyBreakdown
     .map((d) => `${getX(d.month)},${getY(d.cumulativeBenefitWithAutomation)}`)
     .join(' ');
-  const pointsInvestment = result.monthlyBreakdown
-    .map((d) => `${getX(d.month)},${getY(d.cumulativeInvestmentWithAutomation)}`)
-    .join(' ');
 
-  // Encontrar mes de cruce (Breakeven)
   const breakevenMonthObj =
     result.monthlyBreakdown.find(
       (d) => d.cumulativeBenefitWithAutomation >= d.cumulativeInvestmentWithAutomation
     ) || result.monthlyBreakdown[result.monthlyBreakdown.length - 1];
 
-  // 1. BARRA FLOTANTE DE PESTAÑAS Y CONTROLES (SIN CONTENEDOR ENVOLVENTE GIGANTE)
-  const renderFloatingToolbar = () => (
-    <div className="p-2 sm:p-2.5 rounded-2xl bg-[rgba(30,15,35,0.65)] backdrop-blur-xl border border-[rgba(147,80,115,0.35)] shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-3 print:hidden">
-      {/* Pestañas 1, 2, 3 */}
-      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto w-full md:w-auto">
+  // 1. NAVEGACIÓN MINIMALISTA DE PASOS (ESTILO SUIZO)
+  const renderMinimalNavbar = () => (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4 print:hidden">
+      <nav className="flex items-center gap-6 text-sm font-medium">
         <button
           type="button"
           onClick={() => setActiveTab('catalog')}
-          className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`pb-1 transition-all cursor-pointer relative ${
             activeTab === 'catalog'
-              ? 'bg-[#521f61] text-white border border-[#c084fc]/50 shadow-md'
-              : 'text-[#F6DBC0]/70 hover:text-white hover:bg-[rgba(80,45,85,0.3)]'
+              ? 'text-white font-semibold'
+              : 'text-[#F6DBC0]/50 hover:text-white'
           }`}
         >
-          <span className="w-5 h-5 rounded-full bg-[#c084fc]/20 flex items-center justify-center text-[11px] font-mono text-[#d8b4fe]">
-            1
-          </span>
-          <span>Servicios & Soluciones ({selectedIds.length})</span>
+          01 Soluciones <span className="text-xs text-[#c084fc]">({selectedIds.length})</span>
+          {activeTab === 'catalog' && (
+            <span className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-[#c084fc]" />
+          )}
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('bleed')}
-          className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`pb-1 transition-all cursor-pointer relative ${
             activeTab === 'bleed'
-              ? 'bg-[#521f61] text-white border border-[#c084fc]/50 shadow-md'
-              : 'text-[#F6DBC0]/70 hover:text-white hover:bg-[rgba(80,45,85,0.3)]'
+              ? 'text-white font-semibold'
+              : 'text-[#F6DBC0]/50 hover:text-white'
           }`}
         >
-          <span className="w-5 h-5 rounded-full bg-[#c084fc]/20 flex items-center justify-center text-[11px] font-mono text-[#d8b4fe]">
-            2
-          </span>
-          <span>Diagnóstico de Fuga</span>
+          02 Diagnóstico
+          {activeTab === 'bleed' && (
+            <span className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-[#c084fc]" />
+          )}
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('roi')}
-          className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`pb-1 transition-all cursor-pointer relative ${
             activeTab === 'roi'
-              ? 'bg-[#c084fc] text-[#160B1A] font-bold shadow-md'
-              : 'text-[#F6DBC0]/70 hover:text-white hover:bg-[rgba(80,45,85,0.3)]'
+              ? 'text-white font-semibold'
+              : 'text-[#F6DBC0]/50 hover:text-white'
           }`}
         >
-          <span className="w-5 h-5 rounded-full bg-[#160B1A]/20 flex items-center justify-center text-[11px] font-mono font-bold">
-            3
-          </span>
-          <span>Dictamen de ROI</span>
+          03 Dictamen
+          {activeTab === 'roi' && (
+            <span className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-[#c084fc]" />
+          )}
         </button>
-      </div>
+      </nav>
 
-      {/* Controles de Moneda y Configuración */}
-      <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
-        <div className="flex items-center bg-[rgba(80,45,85,0.4)] p-0.5 rounded-xl border border-[rgba(147,80,115,0.4)] text-xs font-mono">
+      <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
+        {/* Toggle de divisa ultra-compacto */}
+        <div className="flex items-center text-xs font-mono bg-white/[0.04] p-0.5 rounded-lg border border-white/10">
           <button
             type="button"
             onClick={() => handleCurrencySwitch('MXN')}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+            className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
               currency === 'MXN'
-                ? 'bg-[#c084fc] text-[#160B1A] font-bold shadow'
-                : 'text-[#F8F4E9]/70 hover:text-white'
+                ? 'bg-[#c084fc] text-[#160B1A] font-bold'
+                : 'text-[#F8F4E9]/60 hover:text-white'
             }`}
           >
-            MXN ($)
+            MXN
           </button>
           <button
             type="button"
             onClick={() => handleCurrencySwitch('USD')}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+            className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
               currency === 'USD'
-                ? 'bg-[#c084fc] text-[#160B1A] font-bold shadow'
-                : 'text-[#F8F4E9]/70 hover:text-white'
+                ? 'bg-[#c084fc] text-[#160B1A] font-bold'
+                : 'text-[#F8F4E9]/60 hover:text-white'
             }`}
           >
-            USD ($)
+            USD
           </button>
         </div>
 
+        {/* Modo Ingeniero */}
         <button
           type="button"
           onClick={() => setShowAdminMode(!showAdminMode)}
-          title="Modo Ingeniero (Ajuste de Tarifas y Parámetros Técnicos)"
-          className={`p-2 rounded-xl border transition-all cursor-pointer ${
+          title="Modo Ingeniero (Tarifas y horas base)"
+          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
             showAdminMode
-              ? 'bg-[#c084fc]/20 border-[#c084fc] text-[#d8b4fe]'
-              : 'bg-[rgba(80,45,85,0.3)] border-[rgba(147,80,115,0.3)] text-[#F6DBC0]/70 hover:text-white'
+              ? 'text-[#c084fc] bg-[#c084fc]/10'
+              : 'text-white/40 hover:text-white'
           }`}
         >
           <Settings className="w-4 h-4" />
@@ -383,8 +348,8 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
           <button
             type="button"
             onClick={closeModal}
-            className="p-2 rounded-xl bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.6)] text-[#F8F4E9] transition-colors cursor-pointer"
-            title="Cerrar modal"
+            className="p-1.5 text-white/50 hover:text-white transition-colors cursor-pointer"
+            title="Cerrar ventana"
           >
             <X className="w-5 h-5" />
           </button>
@@ -393,49 +358,41 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
     </div>
   );
 
-  // 2. PANEL ADMINISTRADOR FLOTANTE
+  // 2. PANEL ADMINISTRADOR
   const renderAdminPanel = () => {
     if (!showAdminMode) return null;
     return (
-      <div className="p-5 rounded-2xl bg-[rgba(38,16,46,0.95)] backdrop-blur-xl border border-[#c084fc] shadow-2xl animate-fadeIn space-y-3 print:hidden">
-        <div className="flex items-center justify-between border-b border-[rgba(147,80,115,0.3)] pb-2">
+      <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-3 print:hidden text-xs">
+        <div className="flex items-center justify-between pb-2 border-b border-white/10">
           <div className="flex items-center gap-2 text-[#d8b4fe]">
-            <ShieldCheck className="w-5 h-5 text-[#c084fc]" />
-            <span className="font-mono text-sm font-bold text-white uppercase tracking-wider">
-              Panel de Control de Tarifas Técnicas (Vista Erick)
+            <ShieldCheck className="w-4 h-4 text-[#c084fc]" />
+            <span className="font-mono font-semibold text-white uppercase tracking-wider">
+              Parámetros de Costo Técnico
             </span>
           </div>
           <button
             type="button"
             onClick={() => setDevConfig(DEFAULT_DEVELOPER_CONFIG)}
-            className="text-xs text-[#c084fc] hover:underline flex items-center gap-1 cursor-pointer font-mono"
+            className="text-[11px] text-[#c084fc] hover:underline flex items-center gap-1 cursor-pointer font-mono"
           >
-            <RotateCcw className="w-3 h-3" /> Restaurar por defecto
+            <RotateCcw className="w-3 h-3" /> Restaurar defaults
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div>
-            <label className="block text-[#F6DBC0] mb-1 font-mono">
-              Tarifa Base Erick ($ USD / hr):
-            </label>
+            <label className="block text-[#F6DBC0]/70 mb-1 font-mono">Tarifa Base ($ USD/hr):</label>
             <input
               type="number"
               value={devConfig.erickHourlyRateUSD}
               onChange={(e) =>
                 setDevConfig({ ...devConfig, erickHourlyRateUSD: Number(e.target.value) || 0 })
               }
-              className="w-full bg-[#160B1A] border border-[rgba(147,80,115,0.4)] rounded-lg p-2 text-white font-mono text-sm"
+              className="w-full bg-[#160B1A] border border-white/20 rounded p-1.5 text-white font-mono"
             />
-            <span className="text-[11px] text-[#d8b4fe]/70 font-mono">
-              ≈ {formatCurrency(devConfig.erickHourlyRateUSD * devConfig.exchangeRateUsdToMxn, 'MXN')}/hr
-            </span>
           </div>
-
           <div>
-            <label className="block text-[#F6DBC0] mb-1 font-mono">
-              Tipo de Cambio (USD ➔ MXN):
-            </label>
+            <label className="block text-[#F6DBC0]/70 mb-1 font-mono">Tipo de Cambio (MXN/USD):</label>
             <input
               type="number"
               step="0.1"
@@ -443,179 +400,145 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
               onChange={(e) =>
                 setDevConfig({ ...devConfig, exchangeRateUsdToMxn: Number(e.target.value) || 18.5 })
               }
-              className="w-full bg-[#160B1A] border border-[rgba(147,80,115,0.4)] rounded-lg p-2 text-white font-mono text-sm"
+              className="w-full bg-[#160B1A] border border-white/20 rounded p-1.5 text-white font-mono"
             />
-            <span className="text-[11px] text-[#d8b4fe]/70 font-mono">Paridad para cálculo en pesos</span>
           </div>
-
           <div>
-            <label className="block text-[#F6DBC0] mb-1 font-mono">
-              Overhead Plataforma + QA:
-            </label>
+            <label className="block text-[#F6DBC0]/70 mb-1 font-mono">Plataforma & QA (hrs):</label>
             <input
               type="number"
-              value={devConfig.platformBaseHours + devConfig.meetingsAndPmHours}
-              onChange={(e) => {
-                const val = Number(e.target.value) || 0;
-                setDevConfig({
-                  ...devConfig,
-                  platformBaseHours: Math.round(val * 0.6),
-                  meetingsAndPmHours: Math.round(val * 0.4)
-                });
-              }}
-              className="w-full bg-[#160B1A] border border-[rgba(147,80,115,0.4)] rounded-lg p-2 text-white font-mono text-sm"
+              value={devConfig.platformDevelopmentHours}
+              onChange={(e) =>
+                setDevConfig({ ...devConfig, platformDevelopmentHours: Number(e.target.value) || 0 })
+              }
+              className="w-full bg-[#160B1A] border border-white/20 rounded p-1.5 text-white font-mono"
             />
-            <span className="text-[11px] text-[#d8b4fe]/70 font-mono">
-              {devConfig.platformBaseHours + devConfig.meetingsAndPmHours} horas fijas
-            </span>
           </div>
-
           <div>
-            <label className="block text-[#F6DBC0] mb-1 font-mono">
-              Captura de Valor (% Beneficio):
-            </label>
+            <label className="block text-[#F6DBC0]/70 mb-1 font-mono">Captura de Valor (%):</label>
             <input
               type="number"
-              step="0.01"
-              min="0.05"
-              max="0.4"
               value={devConfig.valueCapturePercentage}
               onChange={(e) =>
-                setDevConfig({
-                  ...devConfig,
-                  valueCapturePercentage: Number(e.target.value) || 0.15
-                })
+                setDevConfig({ ...devConfig, valueCapturePercentage: Number(e.target.value) || 0 })
               }
-              className="w-full bg-[#160B1A] border border-[rgba(147,80,115,0.4)] rounded-lg p-2 text-white font-mono text-sm"
+              className="w-full bg-[#160B1A] border border-white/20 rounded p-1.5 text-white font-mono"
             />
-            <span className="text-[11px] text-[#d8b4fe]/70 font-mono">
-              {(devConfig.valueCapturePercentage * 100).toFixed(0)}% del año 1
-            </span>
           </div>
         </div>
       </div>
     );
   };
 
-  // 3. CONTENIDO DE LAS PESTAÑAS (TARJETAS FLOTANTES SOBRE EL FONDO)
+  // 3. CONTENIDO DE LAS PESTAÑAS
   const renderTabContent = () => (
     <div className="space-y-6">
-      {/* TAB 1: CATÁLOGO DE SOLUCIONES */}
+      {/* PASO 1: CATÁLOGO ESBELTO DE SOLUCIONES */}
       {activeTab === 'catalog' && (
-        <div className="space-y-5 animate-fadeIn">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
-            <div>
-              <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                Catálogo de Soluciones para tu Negocio
-              </h3>
-              <p className="text-xs sm:text-sm text-[#F6DBC0]/80 mt-0.5">
-                Selecciona los procesos que te quitan tiempo o donde pierdes clientes para calcular el costo y los beneficios.
-              </p>
-            </div>
-            <div className="text-xs font-mono px-3.5 py-1.5 rounded-xl bg-[rgba(80,45,85,0.35)] backdrop-blur-md border border-[rgba(147,80,115,0.35)] text-[#d8b4fe] shrink-0 self-start sm:self-auto shadow-sm">
-              Horas Técnicas Estimadas: <strong className="text-white">{result.totalProjectHours} hrs</strong>
-            </div>
+        <div className="space-y-6 animate-fadeIn">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              ¿Qué procesos deseas automatizar?
+            </h2>
+            <p className="text-sm text-[#F6DBC0]/70 mt-1">
+              Selecciona los módulos donde tu negocio pierde más tiempo o ventas.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="divide-y divide-white/10 border-y border-white/10">
             {AUTOMATION_CATALOG.map((item) => {
               const isSelected = selectedIds.includes(item.id);
               return (
                 <div
                   key={item.id}
                   onClick={() => toggleAutomation(item.id)}
-                  className={`p-5 rounded-2xl border transition-all cursor-pointer select-none flex flex-col justify-between gap-3 shadow-lg ${
+                  className={`py-4 px-3 sm:px-4 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-4 select-none ${
                     isSelected
-                      ? 'bg-[rgba(82,31,97,0.75)] border-[#c084fc] shadow-[0_0_20px_rgba(192,132,252,0.25)] ring-1 ring-[#c084fc]/50'
-                      : 'bg-[rgba(26,14,30,0.6)] hover:bg-[rgba(48,22,58,0.7)] border-[rgba(147,80,115,0.3)] backdrop-blur-md'
+                      ? 'bg-white/[0.04] text-white'
+                      : 'hover:bg-white/[0.02] text-white/80'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-3.5 flex-1">
                     <div
-                      className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 mt-0.5 border transition-all ${
+                      className={`w-5 h-5 rounded flex items-center justify-center shrink-0 transition-colors ${
                         isSelected
-                          ? 'bg-[#c084fc] border-[#c084fc] text-[#160B1A]'
-                          : 'bg-[rgba(30,12,36,0.5)] border-[rgba(147,80,115,0.5)] text-transparent'
+                          ? 'bg-[#c084fc] text-[#160B1A]'
+                          : 'border border-white/30 text-transparent'
                       }`}
                     >
-                      <Check className={`w-4 h-4 stroke-[3] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
+                      <Check className={`w-3.5 h-3.5 stroke-[3] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
                     </div>
 
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-sm sm:text-[15px] text-white flex items-center gap-1.5">
-                          {getIcon(item.iconName)}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-sm sm:text-base text-white">
                           {item.name}
                         </span>
                         {item.popular && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30 shrink-0">
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                             Más pedido
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-[#F6DBC0] mt-1.5 leading-relaxed">
+                      <p className="text-xs sm:text-sm text-[#F6DBC0]/65 mt-0.5 leading-relaxed">
                         {item.tagline}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2.5 border-t border-[rgba(147,80,115,0.2)] text-[11px] font-mono text-[#d8b4fe]/80">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-[#c084fc]" />
-                      {item.baseHoursFirstTime} hrs de desarrollo base
+                  <div className="text-right shrink-0 hidden sm:block">
+                    <span className="text-xs font-mono text-[#F6DBC0]/40 capitalize">
+                      {item.category}
                     </span>
-                    <span className="text-[#F6DBC0]/60 capitalize">
-                      Área: {item.category}
-                    </span>
+                    {showAdminMode && (
+                      <span className="block text-[10px] font-mono text-[#c084fc]">
+                        {item.baseHoursFirstTime} hrs
+                      </span>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
 
-          <div className="flex justify-end pt-2">
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-xs font-mono text-[#F6DBC0]/60">
+              {selectedIds.length} {selectedIds.length === 1 ? 'módulo seleccionado' : 'módulos seleccionados'}
+            </span>
+
             <button
               type="button"
               onClick={() => setActiveTab('bleed')}
-              className="px-6 py-3 rounded-2xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-extrabold text-sm flex items-center gap-2 shadow-xl cursor-pointer transition-transform active:scale-95"
+              className="px-6 py-2.5 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-bold text-sm flex items-center gap-2 transition-all cursor-pointer shadow-md"
             >
-              <span>Continuar al Diagnóstico de Pérdidas</span>
+              <span>Continuar al diagnóstico</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* TAB 2: DIAGNÓSTICO DE FUGA FINANCIERA */}
+      {/* PASO 2: DIAGNÓSTICO ESENCIAL + PROGRESSIVE DISCLOSURE */}
       {activeTab === 'bleed' && (
         <div className="space-y-6 animate-fadeIn">
-          {/* Banner flotante de privacidad */}
-          <div className="p-4 rounded-2xl bg-[rgba(16,185,129,0.12)] backdrop-blur-md border border-[rgba(16,185,129,0.3)] shadow-lg flex items-center gap-3">
-            <Lock className="w-5 h-5 text-[#10B981] shrink-0" />
-            <div className="text-xs text-[#F8F4E9]">
-              <strong className="text-[#10B981] block">Privacidad Garantizada (Zero-Data Stored):</strong>
-              Esta herramienta calcula todo en tu propio navegador. Ningún dato de ventas, nómina o clientes se envía a servidores externos.
-            </div>
-          </div>
-
-          <div className="px-1">
-            <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-              Diagnóstico de Ineficiencias & Fuga de Dinero
-            </h3>
-            <p className="text-xs sm:text-sm text-[#F6DBC0]/80 mt-0.5">
-              Ajusta los valores con la barra o escribe directamente el número en cada campo con tu teclado en {currency}.
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              Diagnóstico de Ineficiencias & Pérdidas
+            </h2>
+            <p className="text-sm text-[#F6DBC0]/70 mt-1">
+              Ajusta las variables de tu negocio. Puedes mover la barra o teclear el número directamente.
             </p>
           </div>
 
-          {/* 6 Tarjetas Flotantes de Entrada Dual */}
+          {/* 4 Entradas Esenciales del Negocio */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* 1. Horas perdidas */}
-            <div className="p-5 rounded-2xl bg-[rgba(26,14,30,0.6)] backdrop-blur-md border border-[rgba(147,80,115,0.3)] shadow-lg space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span className="text-white text-sm font-semibold flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-[#c084fc]" /> Horas en tareas repetitivas:
+            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs sm:text-sm font-medium text-white flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-[#c084fc]" /> Horas manuales por semana:
                 </span>
-                <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                <div className="flex items-center gap-1 font-mono text-xs">
                   <input
                     type="number"
                     min="0"
@@ -624,9 +547,9 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     onChange={(e) =>
                       setBleedInputs({ ...bleedInputs, lostHoursPerWeek: Math.max(0, Number(e.target.value) || 0) })
                     }
-                    className="w-20 px-2.5 py-1 rounded-lg bg-[rgba(15,8,18,0.95)] border border-[rgba(192,132,252,0.4)] text-right font-mono text-white text-sm font-bold focus:outline-none focus:border-[#c084fc] shadow-inner"
+                    className="w-16 px-2 py-0.5 rounded bg-black/40 border border-white/20 text-right font-bold text-white"
                   />
-                  <span className="font-mono text-xs text-[#d8b4fe]">hrs/sem</span>
+                  <span className="text-[#F6DBC0]/60">hrs</span>
                 </div>
               </div>
               <input
@@ -640,21 +563,20 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 }
                 className="w-full accent-[#c084fc] cursor-pointer"
               />
-              <div className="flex justify-between text-[11px] text-[#F6DBC0]/60 font-mono">
+              <div className="flex justify-between text-[10px] font-mono text-[#F6DBC0]/40">
                 <span>1 hr/sem</span>
-                <span>30 hrs/sem</span>
                 <span>{Math.max(60, bleedInputs.lostHoursPerWeek)} hrs/sem</span>
               </div>
             </div>
 
             {/* 2. Costo por hora */}
-            <div className="p-5 rounded-2xl bg-[rgba(26,14,30,0.6)] backdrop-blur-md border border-[rgba(147,80,115,0.3)] shadow-lg space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span className="text-white text-sm font-semibold flex items-center gap-1.5">
+            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs sm:text-sm font-medium text-white flex items-center gap-1.5">
                   <DollarSign className="w-4 h-4 text-[#c084fc]" /> Costo por hora operativa:
                 </span>
-                <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                  <span className="font-mono text-xs text-[#d8b4fe]">$</span>
+                <div className="flex items-center gap-1 font-mono text-xs">
+                  <span className="text-[#F6DBC0]/60">$</span>
                   <input
                     type="number"
                     min="0"
@@ -662,9 +584,9 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     onChange={(e) =>
                       setBleedInputs({ ...bleedInputs, hourlyLaborCost: Math.max(0, Number(e.target.value) || 0) })
                     }
-                    className="w-24 px-2.5 py-1 rounded-lg bg-[rgba(15,8,18,0.95)] border border-[rgba(192,132,252,0.4)] text-right font-mono text-white text-sm font-bold focus:outline-none focus:border-[#c084fc] shadow-inner"
+                    className="w-20 px-2 py-0.5 rounded bg-black/40 border border-white/20 text-right font-bold text-white"
                   />
-                  <span className="font-mono text-xs text-[#d8b4fe]">/ hr</span>
+                  <span className="text-[#F6DBC0]/60">/hr</span>
                 </div>
               </div>
               <input
@@ -678,21 +600,20 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 }
                 className="w-full accent-[#c084fc] cursor-pointer"
               />
-              <div className="flex justify-between text-[11px] text-[#F6DBC0]/60 font-mono">
+              <div className="flex justify-between text-[10px] font-mono text-[#F6DBC0]/40">
                 <span>{formatCurrency(laborMin, currency)}</span>
-                <span>{formatCurrency(Math.round((laborMin + laborMax) / 2), currency)}</span>
                 <span>{formatCurrency(Math.max(laborMax, bleedInputs.hourlyLaborCost), currency)}</span>
               </div>
             </div>
 
             {/* 3. Ticket promedio */}
-            <div className="p-5 rounded-2xl bg-[rgba(26,14,30,0.6)] backdrop-blur-md border border-[rgba(147,80,115,0.3)] shadow-lg space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span className="text-white text-sm font-semibold flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4 text-[#c084fc]" /> Ticket promedio por cliente:
+            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs sm:text-sm font-medium text-white flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-[#c084fc]" /> Ticket promedio por venta:
                 </span>
-                <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                  <span className="font-mono text-xs text-[#d8b4fe]">$</span>
+                <div className="flex items-center gap-1 font-mono text-xs">
+                  <span className="text-[#F6DBC0]/60">$</span>
                   <input
                     type="number"
                     min="0"
@@ -700,9 +621,9 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     onChange={(e) =>
                       setBleedInputs({ ...bleedInputs, averageTicketValue: Math.max(0, Number(e.target.value) || 0) })
                     }
-                    className="w-28 px-2.5 py-1 rounded-lg bg-[rgba(15,8,18,0.95)] border border-[rgba(192,132,252,0.4)] text-right font-mono text-white text-sm font-bold focus:outline-none focus:border-[#c084fc] shadow-inner"
+                    className="w-24 px-2 py-0.5 rounded bg-black/40 border border-white/20 text-right font-bold text-white"
                   />
-                  <span className="font-mono text-xs text-[#d8b4fe]">{currency}</span>
+                  <span className="text-[#F6DBC0]/60">{currency}</span>
                 </div>
               </div>
               <input
@@ -716,20 +637,19 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 }
                 className="w-full accent-[#c084fc] cursor-pointer"
               />
-              <div className="flex justify-between text-[11px] text-[#F6DBC0]/60 font-mono">
+              <div className="flex justify-between text-[10px] font-mono text-[#F6DBC0]/40">
                 <span>{formatCurrency(ticketMin, currency)}</span>
-                <span>{formatCurrency(Math.round(ticketMax / 2), currency)}</span>
                 <span>{formatCurrency(Math.max(ticketMax, bleedInputs.averageTicketValue), currency)}</span>
               </div>
             </div>
 
-            {/* 4. Clientes mensuales */}
-            <div className="p-5 rounded-2xl bg-[rgba(26,14,30,0.6)] backdrop-blur-md border border-[rgba(147,80,115,0.3)] shadow-lg space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span className="text-white text-sm font-semibold flex items-center gap-1.5">
+            {/* 4. Clientes al mes */}
+            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs sm:text-sm font-medium text-white flex items-center gap-1.5">
                   <UserCheck className="w-4 h-4 text-[#c084fc]" /> Clientes o consultas al mes:
                 </span>
-                <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                <div className="flex items-center gap-1 font-mono text-xs">
                   <input
                     type="number"
                     min="0"
@@ -737,9 +657,9 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     onChange={(e) =>
                       setBleedInputs({ ...bleedInputs, monthlyLeadsOrClients: Math.max(0, Number(e.target.value) || 0) })
                     }
-                    className="w-24 px-2.5 py-1 rounded-lg bg-[rgba(15,8,18,0.95)] border border-[rgba(192,132,252,0.4)] text-right font-mono text-white text-sm font-bold focus:outline-none focus:border-[#c084fc] shadow-inner"
+                    className="w-20 px-2 py-0.5 rounded bg-black/40 border border-white/20 text-right font-bold text-white"
                   />
-                  <span className="font-mono text-xs text-[#d8b4fe]">clientes</span>
+                  <span className="text-[#F6DBC0]/60">cli</span>
                 </div>
               </div>
               <input
@@ -753,275 +673,201 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 }
                 className="w-full accent-[#c084fc] cursor-pointer"
               />
-              <div className="flex justify-between text-[11px] text-[#F6DBC0]/60 font-mono">
+              <div className="flex justify-between text-[10px] font-mono text-[#F6DBC0]/40">
                 <span>10</span>
-                <span>1,000</span>
                 <span>{Math.max(2000, bleedInputs.monthlyLeadsOrClients).toLocaleString('es-MX')} clientes</span>
-              </div>
-            </div>
-
-            {/* 5. % Pérdida por lentitud */}
-            <div className="p-5 rounded-2xl bg-[rgba(26,14,30,0.6)] backdrop-blur-md border border-[rgba(147,80,115,0.3)] shadow-lg space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span className="text-white text-sm font-semibold flex items-center gap-1.5">
-                  <BadgeAlert className="w-4 h-4 text-[#c084fc]" /> Clientes perdidos por tardanza:
-                </span>
-                <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={bleedInputs.lostClientsPercentage}
-                    onChange={(e) =>
-                      setBleedInputs({ ...bleedInputs, lostClientsPercentage: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })
-                    }
-                    className="w-20 px-2.5 py-1 rounded-lg bg-[rgba(15,8,18,0.95)] border border-[rgba(255,128,128,0.4)] text-right font-mono text-[#ff8080] text-sm font-bold focus:outline-none focus:border-[#ff8080] shadow-inner"
-                  />
-                  <span className="font-mono text-xs text-[#ff8080]">% de fuga</span>
-                </div>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="80"
-                step="1"
-                value={bleedInputs.lostClientsPercentage}
-                onChange={(e) =>
-                  setBleedInputs({ ...bleedInputs, lostClientsPercentage: Number(e.target.value) })
-                }
-                className="w-full accent-[#c084fc] cursor-pointer"
-              />
-              <div className="flex justify-between text-[11px] text-[#F6DBC0]/60 font-mono">
-                <span>0% (Ninguno)</span>
-                <span>15% (Promedio en WhatsApp)</span>
-                <span>80% (Pérdida crítica)</span>
-              </div>
-            </div>
-
-            {/* 6. Mermas o errores humanos mensuales */}
-            <div className="p-5 rounded-2xl bg-[rgba(26,14,30,0.6)] backdrop-blur-md border border-[rgba(147,80,115,0.3)] shadow-lg space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span className="text-white text-sm font-semibold flex items-center gap-1.5">
-                  <FileSpreadsheet className="w-4 h-4 text-[#c084fc]" /> Retrabajos y notas manuales:
-                </span>
-                <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                  <span className="font-mono text-xs text-[#d8b4fe]">$</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={bleedInputs.humanErrorsMonthlyCost}
-                    onChange={(e) =>
-                      setBleedInputs({ ...bleedInputs, humanErrorsMonthlyCost: Math.max(0, Number(e.target.value) || 0) })
-                    }
-                    className="w-24 px-2.5 py-1 rounded-lg bg-[rgba(15,8,18,0.95)] border border-[rgba(192,132,252,0.4)] text-right font-mono text-white text-sm font-bold focus:outline-none focus:border-[#c084fc] shadow-inner"
-                  />
-                  <span className="font-mono text-xs text-[#d8b4fe]">/ mes</span>
-                </div>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max={Math.max(isMxn ? 15000 : 1000, bleedInputs.humanErrorsMonthlyCost)}
-                step={isMxn ? 250 : 25}
-                value={bleedInputs.humanErrorsMonthlyCost}
-                onChange={(e) =>
-                  setBleedInputs({ ...bleedInputs, humanErrorsMonthlyCost: Number(e.target.value) })
-                }
-                className="w-full accent-[#c084fc] cursor-pointer"
-              />
-              <div className="flex justify-between text-[11px] text-[#F6DBC0]/60 font-mono">
-                <span>$0</span>
-                <span>{formatCurrency(isMxn ? 7500 : 500, currency)}</span>
-                <span>{formatCurrency(Math.max(isMxn ? 15000 : 1000, bleedInputs.humanErrorsMonthlyCost), currency)}</span>
               </div>
             </div>
           </div>
 
-          {/* Resumen del Dolor Flotante */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-[rgba(255,80,80,0.12)] backdrop-blur-md border border-[rgba(255,100,100,0.35)] shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="space-y-1 text-center sm:text-left">
-              <span className="text-xs uppercase font-mono font-bold tracking-wider text-[#ff8080]">
-                Pérdida Financiera Acumulada Anual Sin Automatizar
-              </span>
-              <div className="text-2xl sm:text-3xl font-extrabold text-white font-mono">
-                {formatCurrency(result.totalAnnualBleed, currency)} <span className="text-sm font-normal text-[#F6DBC0]">/ año</span>
+          {/* Acordeón de Progressive Disclosure: Variables Avanzadas */}
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => setShowAdvancedBleed(!showAdvancedBleed)}
+              className="text-xs font-mono text-[#c084fc] hover:underline flex items-center gap-1.5 cursor-pointer"
+            >
+              {showAdvancedBleed ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              <span>{showAdvancedBleed ? 'Ocultar variables secundarias' : '+ Ajustar variables secundarias de fuga (% fuga WhatsApp, retrabajos)'}</span>
+            </button>
+
+            {showAdvancedBleed && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 pt-3 border-t border-white/10 animate-fadeIn">
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/80">Clientes perdidos por tardanza (%):</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={bleedInputs.lostClientsPercentage}
+                      onChange={(e) =>
+                        setBleedInputs({ ...bleedInputs, lostClientsPercentage: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })
+                      }
+                      className="w-16 px-1.5 py-0.5 rounded bg-black/40 border border-white/20 text-right font-mono font-bold text-white text-xs"
+                    />
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80"
+                    step="1"
+                    value={bleedInputs.lostClientsPercentage}
+                    onChange={(e) =>
+                      setBleedInputs({ ...bleedInputs, lostClientsPercentage: Number(e.target.value) })
+                    }
+                    className="w-full accent-[#c084fc] cursor-pointer"
+                  />
+                </div>
+
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/80">Mermas y errores manuales ($/mes):</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={bleedInputs.humanErrorsMonthlyCost}
+                      onChange={(e) =>
+                        setBleedInputs({ ...bleedInputs, humanErrorsMonthlyCost: Math.max(0, Number(e.target.value) || 0) })
+                      }
+                      className="w-20 px-1.5 py-0.5 rounded bg-black/40 border border-white/20 text-right font-mono font-bold text-white text-xs"
+                    />
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max={Math.max(isMxn ? 15000 : 1000, bleedInputs.humanErrorsMonthlyCost)}
+                    step={isMxn ? 250 : 25}
+                    value={bleedInputs.humanErrorsMonthlyCost}
+                    onChange={(e) =>
+                      setBleedInputs({ ...bleedInputs, humanErrorsMonthlyCost: Number(e.target.value) })
+                    }
+                    className="w-full accent-[#c084fc] cursor-pointer"
+                  />
+                </div>
               </div>
-              <p className="text-xs text-[#F6DBC0]">
-                Fuga mensual: {formatCurrency(result.totalMonthlyBleed, currency)}/mes ({formatCurrency(result.monthlyTimeLossCost, currency)} en tiempo perdido + {formatCurrency(result.monthlySalesLossCost, currency)} en ventas que se escapan).
+            )}
+          </div>
+
+          {/* Resumen del Dolor Austero */}
+          <div className="p-6 rounded-2xl bg-white/[0.04] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span className="text-xs font-mono uppercase tracking-wider text-rose-400 block">
+                Fuga Financiera Estimada Sin Automatización
+              </span>
+              <div className="text-2xl sm:text-3xl font-bold font-mono text-white mt-1">
+                {formatCurrency(result.totalAnnualBleed, currency)}{' '}
+                <span className="text-sm font-normal text-[#F6DBC0]/60">/ año</span>
+              </div>
+              <p className="text-xs text-[#F6DBC0]/70 mt-1">
+                Representa {formatCurrency(result.totalMonthlyBleed, currency)} cada mes en tareas manuales y oportunidades no atendidas.
               </p>
             </div>
 
             <button
               type="button"
               onClick={() => setActiveTab('roi')}
-              className="px-6 py-3 rounded-2xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-extrabold text-sm flex items-center gap-2 shadow-xl cursor-pointer transition-transform active:scale-95 shrink-0"
+              className="px-6 py-2.5 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-bold text-sm flex items-center gap-2 transition-all cursor-pointer shrink-0 shadow-md"
             >
-              <span>Ver Dictamen de ROI & Gráfica</span>
+              <span>Ver Dictamen & ROI</span>
               <ArrowRight className="w-4 h-4" />
             </button>
+          </div>
+
+          <div className="text-center text-[11px] text-[#F6DBC0]/50 font-mono">
+            🔒 Privacidad garantizada: Este análisis se calcula de forma 100% privada en tu navegador.
           </div>
         </div>
       )}
 
-      {/* TAB 3: DICTAMEN DE ROI & GRÁFICA */}
+      {/* PASO 3: DICTAMEN DE ROI & UN SOLO HÉROE VISUAL */}
       {activeTab === 'roi' && (
         <div className="space-y-6 animate-fadeIn">
-          {/* TARJETAS DE IMPACTO PRINCIPAL FLOTANTES */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* 1. Setup Price */}
-            <div className="p-5 rounded-2xl bg-[rgba(26,14,30,0.6)] backdrop-blur-md border border-[rgba(147,80,115,0.3)] shadow-lg flex flex-col justify-between">
-              <span className="text-xs font-mono text-[#d8b4fe] uppercase font-semibold">
-                Implementación Inicial
+          {/* EL HÉROE VISUAL: INVERSIÓN VS RETORNO */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 sm:p-8 rounded-2xl bg-white/[0.04] border border-white/10">
+            {/* Columna Izquierda: Inversión */}
+            <div className="space-y-4">
+              <span className="text-xs font-mono uppercase tracking-wider text-[#d8b4fe] block">
+                Inversión Requerida
               </span>
-              <div className="text-xl sm:text-2xl font-extrabold text-white font-mono my-2">
-                {formatCurrency(result.recommendedSetupPrice, currency)}
+
+              <div className="space-y-3">
+                <div>
+                  <span className="text-xs text-[#F6DBC0]/60 block">Implementación Inicial (Setup único)</span>
+                  <div className="text-2xl sm:text-3xl font-bold font-mono text-white mt-0.5">
+                    {formatCurrency(result.recommendedSetupPrice, currency)}
+                  </div>
+                  <span className="text-[11px] text-[#F6DBC0]/50">Liquidación al validar prototipo funcional</span>
+                </div>
+
+                <div className="pt-2 border-t border-white/10">
+                  <span className="text-xs text-[#F6DBC0]/60 block">Mantenimiento mensual & servidores</span>
+                  <div className="text-lg font-bold font-mono text-white/90 mt-0.5">
+                    {formatCurrency(result.recommendedMonthlyRetainer, currency)}{' '}
+                    <span className="text-xs text-[#F6DBC0]/50 font-normal">/ mes</span>
+                  </div>
+                </div>
               </div>
-              <span className="text-[11px] text-[#F6DBC0]/70">
-                Pago único al validar prototipo funcional
-              </span>
             </div>
 
-            {/* 2. Monthly Retainer */}
-            <div className="p-5 rounded-2xl bg-[rgba(26,14,30,0.6)] backdrop-blur-md border border-[rgba(147,80,115,0.3)] shadow-lg flex flex-col justify-between">
-              <span className="text-xs font-mono text-[#d8b4fe] uppercase font-semibold">
-                Mantenimiento & Servidor
+            {/* Columna Derecha: Beneficio */}
+            <div className="space-y-4 border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-6">
+              <span className="text-xs font-mono uppercase tracking-wider text-emerald-400 block">
+                Impacto Financiero Proyectado
               </span>
-              <div className="text-xl sm:text-2xl font-extrabold text-white font-mono my-2">
-                {formatCurrency(result.recommendedMonthlyRetainer, currency)}
-              </div>
-              <span className="text-[11px] text-[#F6DBC0]/70">
-                Soporte, actualizaciones y servidores
-              </span>
-            </div>
 
-            {/* 3. Net Savings */}
-            <div className="p-5 rounded-2xl bg-[rgba(16,185,129,0.12)] backdrop-blur-md border border-[rgba(16,185,129,0.4)] shadow-lg flex flex-col justify-between">
-              <span className="text-xs font-mono text-[#10B981] uppercase font-semibold">
-                Beneficio Neto Año 1
-              </span>
-              <div className="text-xl sm:text-2xl font-extrabold text-[#10B981] font-mono my-2">
-                {formatCurrency(result.yearOneNetSavings, currency)}
-              </div>
-              <span className="text-[11px] text-[#F8F4E9]/80">
-                Dinero extra en el bolsillo del negocio
-              </span>
-            </div>
+              <div className="space-y-3">
+                <div>
+                  <span className="text-xs text-[#F6DBC0]/60 block">Beneficio Neto Año 1 (Ahorro libre)</span>
+                  <div className="text-2xl sm:text-3xl font-bold font-mono text-emerald-400 mt-0.5">
+                    {formatCurrency(result.yearOneNetSavings, currency)}
+                  </div>
+                  <span className="text-[11px] text-[#F6DBC0]/50">Dinero adicional retenido en tu negocio</span>
+                </div>
 
-            {/* 4. ROI & Payback */}
-            <div className="p-5 rounded-2xl bg-[rgba(192,132,252,0.15)] backdrop-blur-md border border-[#c084fc] shadow-[0_0_20px_rgba(192,132,252,0.2)] flex flex-col justify-between">
-              <span className="text-xs font-mono text-[#d8b4fe] uppercase font-semibold">
-                Retorno de Inversión (ROI)
-              </span>
-              <div className="text-xl sm:text-2xl font-extrabold text-[#d8b4fe] font-mono my-2">
-                +{result.roiPercentage}%
+                <div className="pt-2 border-t border-white/10">
+                  <span className="text-xs text-[#F6DBC0]/60 block">Retorno de Inversión (ROI)</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-lg font-bold font-mono text-white">
+                      +{result.roiPercentage}%
+                    </span>
+                    <span className="text-xs text-emerald-400/90 font-mono">
+                      (Recuperado en ~{result.paybackMonths} meses)
+                    </span>
+                  </div>
+                </div>
               </div>
-              <span className="text-[11px] text-white font-semibold">
-                Se amortiza en ~{result.paybackMonths} meses ({result.paybackDays} días)
-              </span>
             </div>
           </div>
 
-          {/* HITOS CLAVE DE RETORNO FLOTANTES */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Hito 1: Mes 1 */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-[rgba(26,14,30,0.6)] backdrop-blur-md border border-[rgba(147,80,115,0.3)] shadow-lg flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-[#c084fc] font-bold">1. Puesta en Marcha</span>
-                <span className="text-[#F6DBC0]/70">Mes 1</span>
-              </div>
-              <div className="my-2">
-                <div className="text-base font-bold text-white font-mono">
-                  {formatCurrency(result.monthlyBreakdown[0].cumulativeBenefitWithAutomation, currency)}
-                </div>
-                <p className="text-[11px] text-[#F6DBC0]/80 mt-0.5 leading-snug">
-                  Se detienen las tareas manuales y se recuperan clientes que antes se iban por contestar tarde.
-                </p>
-              </div>
-              <span className="text-[10px] font-mono text-[#d8b4fe]/70">Inicio de amortización</span>
-            </div>
-
-            {/* Hito 2: Breakeven */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-[rgba(16,185,129,0.14)] backdrop-blur-md border border-[rgba(16,185,129,0.45)] shadow-[0_0_15px_rgba(16,185,129,0.15)] flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-[#10B981] font-bold">2. Punto de Equilibrio</span>
-                <span className="text-white font-bold bg-[#10B981]/30 px-1.5 py-0.5 rounded">Mes {breakevenMonthObj.month}</span>
-              </div>
-              <div className="my-2">
-                <div className="text-base font-bold text-[#10B981] font-mono">
-                  Inversión 100% Recuperada
-                </div>
-                <p className="text-[11px] text-[#F8F4E9]/90 mt-0.5 leading-snug">
-                  El sistema ya se pagó completamente solo. A partir de aquí todo es ganancia limpia para tu caja.
-                </p>
-              </div>
-              <span className="text-[10px] font-mono text-[#10B981]">Amortización en ~{result.paybackMonths} meses</span>
-            </div>
-
-            {/* Hito 3: Mes 6 */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-[rgba(26,14,30,0.6)] backdrop-blur-md border border-[rgba(147,80,115,0.3)] shadow-lg flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-[#c084fc] font-bold">3. Medio Año</span>
-                <span className="text-[#F6DBC0]/70">Mes 6</span>
-              </div>
-              <div className="my-2">
-                <div className="text-base font-bold text-white font-mono">
-                  {formatCurrency(result.monthlyBreakdown[5].netProfit, currency)}
-                </div>
-                <p className="text-[11px] text-[#F6DBC0]/80 mt-0.5 leading-snug">
-                  Ganancia neta acumulada en caja tras 6 meses operando en piloto automático.
-                </p>
-              </div>
-              <span className="text-[10px] font-mono text-[#d8b4fe]/70">Operación continua estable</span>
-            </div>
-
-            {/* Hito 4: Mes 12 */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-[rgba(192,132,252,0.15)] backdrop-blur-md border border-[#c084fc]/60 shadow-lg flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-[#d8b4fe] font-bold">4. Cierre Año 1</span>
-                <span className="text-[#F6DBC0]/70">Mes 12</span>
-              </div>
-              <div className="my-2">
-                <div className="text-base font-bold text-[#d8b4fe] font-mono">
-                  {formatCurrency(result.yearOneNetSavings, currency)}
-                </div>
-                <p className="text-[11px] text-[#F6DBC0]/80 mt-0.5 leading-snug">
-                  Dinero extra retenido en el negocio con un retorno de inversión de +{result.roiPercentage}%.
-                </p>
-              </div>
-              <span className="text-[10px] font-mono text-[#c084fc]">Retorno neto anual garantizado</span>
-            </div>
-          </div>
-
-          {/* GRÁFICA DE RETORNO Y PUNTO DE EQUILIBRIO FLOTANTE */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-[rgba(26,14,30,0.6)] backdrop-blur-md border border-[rgba(147,80,115,0.3)] shadow-xl space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[rgba(147,80,115,0.25)] pb-3">
+          {/* Gráfica de Breakeven Sobria y Limpia */}
+          <div className="p-5 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h4 className="font-bold text-sm sm:text-base text-white flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-[#10B981]" />
-                  Curva de Proyección a 12 Meses: Punto de Equilibrio (Breakeven)
+                <h4 className="font-semibold text-sm sm:text-base text-white">
+                  Curva de Proyección a 12 Meses: Punto de Equilibrio
                 </h4>
-                <p className="text-xs text-[#F6DBC0]/70 mt-0.5">
-                  Comparativa entre la inacción (seguir perdiendo dinero) vs. la ganancia neta automatizada.
+                <p className="text-xs text-[#F6DBC0]/60 mt-0.5">
+                  El sistema se paga por sí mismo en el mes {breakevenMonthObj.month}.
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 text-xs font-mono">
-                <span className="flex items-center gap-1.5 text-[#ff8080]">
-                  <span className="w-3 h-0.5 bg-[#ff8080] inline-block"></span> Pérdida sin sistema
+              <div className="flex items-center gap-4 text-xs font-mono">
+                <span className="flex items-center gap-1.5 text-rose-400">
+                  <span className="w-3 h-0.5 bg-rose-400 inline-block"></span> Pérdida sin sistema
                 </span>
-                <span className="flex items-center gap-1.5 text-[#10B981]">
-                  <span className="w-3 h-0.5 bg-[#10B981] inline-block"></span> Con sistema
+                <span className="flex items-center gap-1.5 text-emerald-400">
+                  <span className="w-3 h-0.5 bg-emerald-400 inline-block"></span> Beneficio recuperado
                 </span>
               </div>
             </div>
 
-            {/* SVG Interactivo Estable */}
-            <div className="w-full overflow-x-auto">
+            <div className="w-full overflow-x-auto pt-2">
               <svg
                 viewBox={`0 0 ${chartWidth} ${chartHeight}`}
                 className="w-full h-auto min-w-[500px] select-none"
               >
-                {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+                {[0, 0.5, 1].map((ratio, idx) => {
                   const y = padding.top + innerHeight * (1 - ratio);
                   const val = maxVal * ratio;
                   return (
@@ -1031,15 +877,15 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                         y1={y}
                         x2={chartWidth - padding.right}
                         y2={y}
-                        stroke="rgba(147,80,115,0.2)"
-                        strokeDasharray="4 4"
+                        stroke="rgba(255,255,255,0.08)"
+                        strokeDasharray="3 3"
                       />
                       <text
                         x={padding.left - 8}
-                        y={y + 4}
+                        y={y + 3}
                         textAnchor="end"
-                        fill="rgba(246,219,192,0.5)"
-                        fontSize="10"
+                        fill="rgba(246,219,192,0.4)"
+                        fontSize="9"
                         fontFamily="monospace"
                       >
                         {formatCurrency(val, currency)}
@@ -1053,19 +899,12 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                   const isHovered = hoveredMonth === d.month;
                   return (
                     <g key={d.month}>
-                      <line
-                        x1={x}
-                        y1={padding.top + innerHeight}
-                        x2={x}
-                        y2={padding.top + innerHeight + 5}
-                        stroke="rgba(147,80,115,0.4)"
-                      />
                       <text
                         x={x}
-                        y={padding.top + innerHeight + 18}
+                        y={padding.top + innerHeight + 16}
                         textAnchor="middle"
-                        fill={isHovered ? '#FFFFFF' : 'rgba(246,219,192,0.6)'}
-                        fontSize="10"
+                        fill={isHovered ? '#FFFFFF' : 'rgba(246,219,192,0.4)'}
+                        fontSize="9"
                         fontFamily="monospace"
                         fontWeight={isHovered ? 'bold' : 'normal'}
                       >
@@ -1077,24 +916,17 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
 
                 <polyline
                   fill="none"
-                  stroke="#ff6060"
-                  strokeWidth="2.5"
-                  strokeDasharray="5 3"
+                  stroke="#fb7185"
+                  strokeWidth="2"
+                  strokeDasharray="4 3"
                   points={pointsLoss}
                 />
 
                 <polyline
                   fill="none"
-                  stroke="#10B981"
-                  strokeWidth="3"
+                  stroke="#34d399"
+                  strokeWidth="2.5"
                   points={pointsBenefit}
-                />
-
-                <polyline
-                  fill="none"
-                  stroke="#c084fc"
-                  strokeWidth="1.5"
-                  points={pointsInvestment}
                 />
 
                 {breakevenMonthObj && (
@@ -1102,28 +934,19 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     <circle
                       cx={getX(breakevenMonthObj.month)}
                       cy={getY(breakevenMonthObj.cumulativeBenefitWithAutomation)}
-                      r="8"
-                      fill="#10B981"
-                      fillOpacity="0.25"
-                      stroke="#10B981"
-                      strokeWidth="1.5"
-                    />
-                    <circle
-                      cx={getX(breakevenMonthObj.month)}
-                      cy={getY(breakevenMonthObj.cumulativeBenefitWithAutomation)}
-                      r="4.5"
-                      fill="#10B981"
+                      r="4"
+                      fill="#34d399"
                     />
                     <text
                       x={getX(breakevenMonthObj.month)}
-                      y={getY(breakevenMonthObj.cumulativeBenefitWithAutomation) - 13}
+                      y={getY(breakevenMonthObj.cumulativeBenefitWithAutomation) - 10}
                       textAnchor="middle"
-                      fill="#10B981"
-                      fontSize="11"
+                      fill="#34d399"
+                      fontSize="10"
                       fontFamily="monospace"
                       fontWeight="bold"
                     >
-                      Punto de Equilibrio (Mes {breakevenMonthObj.month})
+                      Punto de Equilibrio (M{breakevenMonthObj.month})
                     </text>
                   </g>
                 )}
@@ -1147,124 +970,107 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
               </svg>
             </div>
 
-            {/* Barra fija de inspección del mes */}
-            <div className="min-h-[46px] p-2.5 rounded-xl bg-[rgba(32,15,38,0.7)] border border-[rgba(147,80,115,0.3)] text-xs font-mono flex items-center justify-between">
-              {hoveredMonth !== null ? (
-                <div className="w-full flex flex-wrap items-center justify-between gap-3 animate-fadeIn">
-                  <span className="text-[#FFFFFF] font-bold">Mes {hoveredMonth}:</span>
-                  <span className="text-[#ff8080]">
-                    Pérdida acumulada sin sistema: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].cumulativeCostWithoutAutomation, currency)}
-                  </span>
-                  <span className="text-[#10B981] font-bold">
-                    Beneficio acumulado: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].cumulativeBenefitWithAutomation, currency)}
-                  </span>
-                  <span className="text-[#d8b4fe]">
-                    Ganancia Neta: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].netProfit, currency)}
-                  </span>
-                </div>
-              ) : (
-                <span className="text-[#F6DBC0]/60 text-[11px]">
-                  💡 Pasa el cursor por cualquier mes en la gráfica para auditar el beneficio y ahorro neto proyectado.
+            {/* Inspección interactiva sutil */}
+            {hoveredMonth !== null && (
+              <div className="p-2 rounded bg-black/30 border border-white/10 text-xs font-mono flex items-center justify-between text-white/80 animate-fadeIn">
+                <span className="font-bold text-white">Mes {hoveredMonth}:</span>
+                <span className="text-rose-400">
+                  Sin sistema: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].cumulativeCostWithoutAutomation, currency)}
                 </span>
-              )}
-            </div>
+                <span className="text-emerald-400">
+                  Recuperado: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].cumulativeBenefitWithAutomation, currency)}
+                </span>
+                <span className="text-white font-semibold">
+                  Ganancia Neta: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].netProfit, currency)}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* CARD DE CONTROL DE PRIVACIDAD / MODO CONFIDENCIAL FLOTANTE */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-[rgba(32,15,38,0.7)] backdrop-blur-md border border-[rgba(147,80,115,0.3)] shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isConfidential ? 'bg-[#10B981]/20 text-[#10B981]' : 'bg-[rgba(192,132,252,0.2)] text-[#d8b4fe]'}`}>
-                {isConfidential ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </div>
+          {/* BLOQUE DE ACCIONES CON JERARQUÍA CLARA (OPCIÓN A) */}
+          <div className="p-6 rounded-2xl bg-white/[0.04] border border-white/10 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <span className="font-bold text-xs sm:text-sm text-white block">
-                  Modo Confidencial al Compartir
-                </span>
-                <span className="text-[11px] text-[#F6DBC0]/70 block mt-0.5">
-                  {isConfidential
-                    ? '🛡️ Activado: Tus métricas de facturación y pérdidas NO se incluirán en el PDF ni en el mensaje de contacto.'
-                    : '📊 Desactivado: Se incluirá el desglose completo de fuga financiera para revisar puntos de mejora.'}
-                </span>
+                <h5 className="font-semibold text-white text-base">
+                  ¿Listo para implementar en tu negocio?
+                </h5>
+                <p className="text-xs text-[#F6DBC0]/70 mt-0.5">
+                  Revisemos un prototipo funcional adaptado a tus flujos actuales sin costo inicial.
+                </p>
               </div>
+
+              {/* Toggle de Modo Confidencial discreto */}
+              <button
+                type="button"
+                onClick={() => setIsConfidential(!isConfidential)}
+                className={`text-xs font-mono flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-colors cursor-pointer shrink-0 ${
+                  isConfidential
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                    : 'bg-white/5 border-white/10 text-[#F6DBC0]/60 hover:text-white'
+                }`}
+              >
+                {isConfidential ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                <span>{isConfidential ? 'Modo confidencial activo' : 'Modo confidencial'}</span>
+              </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setIsConfidential(!isConfidential)}
-              className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 ${
-                isConfidential
-                  ? 'bg-[#10B981] text-[#160B1A] shadow-md'
-                  : 'bg-[rgba(80,45,85,0.4)] text-[#F8F4E9] hover:bg-[rgba(80,45,85,0.7)] border border-[rgba(147,80,115,0.3)]'
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span>{isConfidential ? 'Confidencial Activo' : 'Activar Modo Confidencial'}</span>
-            </button>
-          </div>
-
-          {/* ACCIONES Y BOTONES DE CIERRE FLOTANTES */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-[rgba(30,15,35,0.75)] backdrop-blur-md border border-[rgba(147,80,115,0.35)] shadow-xl space-y-4">
-            <div>
-              <h5 className="text-sm font-bold text-white flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-[#c084fc]" /> ¿Listo para implementar en tu negocio?
-              </h5>
-              <p className="text-xs text-[#F6DBC0]/75 mt-0.5">
-                Descarga tu reporte oficial en PDF o contáctame directo para revisar un prototipo funcional sin compromiso.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="px-4 py-3 rounded-xl bg-[rgba(80,45,85,0.45)] hover:bg-[rgba(80,45,85,0.8)] border border-[rgba(147,80,115,0.5)] text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
-                title="Descargar o imprimir reporte ejecutivo en PDF"
-              >
-                <FileDown className="w-4 h-4 text-[#10B981]" />
-                <span>Descargar Reporte en PDF</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleWhatsAppClick}
-                className="px-4 py-3 rounded-xl bg-[rgba(16,185,129,0.2)] hover:bg-[rgba(16,185,129,0.35)] border border-[rgba(16,185,129,0.5)] text-[#A7F3D0] hover:text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 shadow-sm"
-                title="Enviar cotización por WhatsApp a Erick"
-              >
-                <MessageSquare className="w-4 h-4 text-[#10B981]" />
-                <span>Mandar por WhatsApp</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleEmailClick}
-                className="px-4 py-3 rounded-xl bg-[rgba(80,45,85,0.3)] hover:bg-[rgba(80,45,85,0.6)] border border-[rgba(147,80,115,0.4)] text-[#F8F4E9] font-medium text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-                title="Enviar propuesta por correo electrónico"
-              >
-                <Mail className="w-4 h-4 text-[#ffafd5]" />
-                <span>Enviar por Correo</span>
-              </button>
-
+            {/* Fila de Acciones: 1 Botón Protagonista + Secundarios Elegantes */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+              {/* Botón Principal (Protagonista) */}
               <button
                 type="button"
                 onClick={handleBookingClick}
-                className="px-4 py-3 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-all active:scale-95"
+                className="flex-1 px-6 py-3 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-extrabold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-98"
                 title="Agendar videollamada para revisar el prototipo navegable"
               >
                 <Video className="w-4 h-4" />
-                <span>Agendar Videollamada</span>
+                <span>Agendar Videollamada de Demostración</span>
+              </button>
+
+              {/* Secundario: Descargar PDF */}
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
+                title="Descargar reporte en PDF"
+              >
+                <FileDown className="w-4 h-4 text-emerald-400" />
+                <span>Descargar PDF</span>
+              </button>
+
+              {/* Secundario: WhatsApp */}
+              <button
+                type="button"
+                onClick={handleWhatsAppClick}
+                className="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
+                title="Consultar por WhatsApp"
+              >
+                <MessageSquare className="w-4 h-4 text-emerald-400" />
+                <span>WhatsApp</span>
+              </button>
+
+              {/* Secundario: Correo */}
+              <button
+                type="button"
+                onClick={handleEmailClick}
+                className="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white/80 hover:text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
+                title="Enviar por correo"
+              >
+                <Mail className="w-4 h-4" />
+                <span>Correo</span>
               </button>
             </div>
 
-            <div className="flex items-center justify-between pt-2.5 border-t border-[rgba(147,80,115,0.2)] text-[11px] text-[#F6DBC0]/70">
+            <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs text-[#F6DBC0]/60">
               <button
                 type="button"
                 onClick={handleCopyProposal}
                 className="hover:text-white flex items-center gap-1.5 font-mono cursor-pointer transition-colors"
               >
-                <Copy className="w-3.5 h-3.5 text-[#d8b4fe]" />
-                <span>{copied ? '¡Copiado al portapapeles!' : 'Copiar texto de cotización'}</span>
+                <Copy className="w-3.5 h-3.5" />
+                <span>{copied ? '¡Propuesta copiada!' : 'Copiar texto de cotización'}</span>
               </button>
-              <span className="font-mono">Garantía: Liquidación tras validar prototipo</span>
+              <span className="font-mono text-[11px]">Garantía: Liquidación tras validar prototipo</span>
             </div>
           </div>
         </div>
@@ -1422,11 +1228,11 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
     </div>
   );
 
-  // VISTA EN MODO PÁGINA: SIN CONTENEDOR ENVOLVENTE GIGANTE (TARJETAS FLOTANTES SOBRE EL FONDO)
+  // VISTA EN MODO PÁGINA: DISEÑO MINIMALISTA DESPEJADO
   if (isPage) {
     return (
       <div className="w-full space-y-8 roi-calculator-page-view">
-        {renderFloatingToolbar()}
+        {renderMinimalNavbar()}
         {renderAdminPanel()}
         {renderTabContent()}
         {renderPrintableReport()}
@@ -1434,15 +1240,15 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
     );
   }
 
-  // VISTA EN MODO MODAL (SOLO CUANDO SE DISPARA COMO DIÁLOGO EMERGENTE)
+  // VISTA EN MODO MODAL (CUANDO SE ABRE DESDE EL NAVBAR O CHATBOT)
   return (
     <div
-      className="fixed inset-0 z-[100000] flex items-center justify-center p-2.5 sm:p-6 bg-[rgba(10,5,15,0.88)] backdrop-blur-md animate-fadeIn roi-calculator-modal-backdrop"
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fadeIn"
       role="dialog"
       aria-label="Calculadora de Cotización y Retorno de Inversión"
     >
-      <div className="relative w-full max-w-5xl h-[94vh] max-h-[890px] overflow-y-auto p-4 sm:p-6 bg-[#160B1A]/95 backdrop-blur-xl border border-[rgba(147,80,115,0.45)] rounded-2xl shadow-2xl scrollbar-thin scrollbar-thumb-[rgba(147,80,115,0.4)] roi-calculator-container space-y-6">
-        {renderFloatingToolbar()}
+      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto p-6 sm:p-8 bg-[#160B1A] border border-white/10 rounded-2xl shadow-2xl scrollbar-thin scrollbar-thumb-white/10 space-y-6">
+        {renderMinimalNavbar()}
         {renderAdminPanel()}
         {renderTabContent()}
         {renderPrintableReport()}

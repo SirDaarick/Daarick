@@ -10,11 +10,13 @@ import Footer from '../components/Footer.astro';
 interface Props {
   title?: string;
   description?: string;
+  quietBackground?: boolean;
 }
 
 const {
   title = "Daarick // Sistemas de IA & Automatización",
-  description = "Ingeniero de Sistemas de IA & Automatización. Arquitecturas autónomas, limpias y deterministas con FastAPI, Python y React."
+  description = "Ingeniero de Sistemas de IA & Automatización. Arquitecturas autónomas, limpias y deterministas con FastAPI, Python y React.",
+  quietBackground = false
 } = Astro.props;
 ---
 
@@ -70,11 +72,15 @@ const {
     </div>
 
     {/* Ambient Interactive ASCII Background Canvas */}
-    <AsciiCanvas client:load />
+    {!quietBackground && <AsciiCanvas client:load />}
 
     {/* Ambient Glow Spheres */}
-    <div class="pointer-events-none absolute top-12 left-1/4 w-96 h-96 bg-[#c084fc]/10 rounded-full blur-3xl z-0"></div>
-    <div class="pointer-events-none absolute top-96 right-10 w-80 h-80 bg-[rgba(113,52,85,0.2)] rounded-full blur-3xl z-0"></div>
+    {!quietBackground && (
+      <>
+        <div class="pointer-events-none absolute top-12 left-1/4 w-96 h-96 bg-[#c084fc]/10 rounded-full blur-3xl z-0"></div>
+        <div class="pointer-events-none absolute top-96 right-10 w-80 h-80 bg-[rgba(113,52,85,0.2)] rounded-full blur-3xl z-0"></div>
+      </>
+    )}
 
     <Navbar />
 
