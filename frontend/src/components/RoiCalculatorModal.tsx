@@ -55,6 +55,7 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   const [showAdminMode, setShowAdminMode] = useState(false);
   const [showAdvancedBleed, setShowAdvancedBleed] = useState(false);
   const [hoveredMonth, setHoveredMonth] = useState<number | null>(null);
+  const [chartHorizon, setChartHorizon] = useState<6 | 12>(6);
 
   // Estados de cálculo
   const [selectedIds, setSelectedIds] = useState<string[]>([
@@ -231,23 +232,26 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
 
+  // Segmento mensual visible según el zoom seleccionado (6 meses por defecto o 12 meses macro)
+  const displayedBreakdown = result.monthlyBreakdown.slice(0, chartHorizon);
+
   const maxVal = Math.max(
-    ...result.monthlyBreakdown.map((d) =>
+    ...displayedBreakdown.map((d) =>
       Math.max(d.cumulativeCostWithoutAutomation, d.cumulativeBenefitWithAutomation)
     ),
     1000
   );
 
-  const getX = (month: number) => padding.left + ((month - 1) / 11) * innerWidth;
+  const getX = (month: number) => padding.left + ((month - 1) / (chartHorizon - 1)) * innerWidth;
   const getY = (val: number) => padding.top + innerHeight - (val / maxVal) * innerHeight;
 
-  const pointsLoss = result.monthlyBreakdown
+  const pointsLoss = displayedBreakdown
     .map((d) => `${getX(d.month)},${getY(d.cumulativeCostWithoutAutomation)}`)
     .join(' ');
-  const pointsBenefit = result.monthlyBreakdown
+  const pointsBenefit = displayedBreakdown
     .map((d) => `${getX(d.month)},${getY(d.cumulativeBenefitWithAutomation)}`)
     .join(' ');
-  const pointsInvestment = result.monthlyBreakdown
+  const pointsInvestment = displayedBreakdown
     .map((d) => `${getX(d.month)},${getY(d.cumulativeInvestmentWithAutomation)}`)
     .join(' ');
 
@@ -256,8 +260,10 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
       (d) => d.cumulativeBenefitWithAutomation >= d.cumulativeInvestmentWithAutomation
     ) || result.monthlyBreakdown[result.monthlyBreakdown.length - 1];
 
-  // Mes activo para auditoría (Cero brincos: si no hay hover, muestra por defecto el breakeven)
-  const activeInspectMonth = hoveredMonth !== null ? hoveredMonth : breakevenMonthObj.month;
+  // Mes activo para auditoría (Cero brincos: si no hay hover o excede el horizonte, muestra por defecto el breakeven o el último visible)
+  const defaultInspectMonth = breakevenMonthObj.month <= chartHorizon ? breakevenMonthObj.month : chartHorizon;
+  const activeInspectMonth =
+    hoveredMonth !== null && hoveredMonth <= chartHorizon ? hoveredMonth : defaultInspectMonth;
   const activeInspectRow = result.monthlyBreakdown[activeInspectMonth - 1] || result.monthlyBreakdown[0];
   const isBreakevenActive = activeInspectMonth === breakevenMonthObj.month;
 
@@ -848,38 +854,113 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
             </div>
           </div>
 
-          {/* GRÁFICA DIDÁCTICA Y ESTABLE: CERO BRINCOS & EJES EXPLICADOS */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          {/* GRÁFICA DIDÁCTICA Y ESTABLE: FOCO DE RETORNO (ZOOM 6 MESES) & ZONA DE GANANCIA */}
+          <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h4 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white">
-                  Curva de Amortización a 12 Meses: Punto de Equilibrio
+                <h4 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
+                  <span>{chartHorizon === 6 ? 'Foco de Retorno: Amortización & Despegue' : 'Proyección Anual: Retorno y Acumulación a 12 Meses'}</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-semibold">
+                    Recuperación en Mes {breakevenMonthObj.month} ({result.paybackDays} días)
+                  </span>
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-[#F6DBC0]/60 mt-0.5">
-                  El sistema se amortiza completamente en el <strong>Mes {breakevenMonthObj.month}</strong>.
+                  {chartHorizon === 6
+                    ? 'Vista de cerca en la ventana crítica de retorno: observa cuándo se cubre el setup y arranca el flujo libre de caja.'
+                    : 'Proyección acumulada completa de ingresos y costos a lo largo de un año operativo.'}
                 </p>
               </div>
 
-              {/* Leyenda clara y comprensible */}
-              <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
-                <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
-                  <span className="w-3 h-0.5 bg-rose-500 inline-block"></span> Pérdida sin sistema
-                </span>
-                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                  <span className="w-3 h-0.5 bg-emerald-500 inline-block"></span> Beneficio con sistema
-                </span>
-                <span className="flex items-center gap-1.5 text-purple-600 dark:text-purple-400">
-                  <span className="w-3 h-0.5 bg-purple-500 inline-block"></span> Costo acumulado
-                </span>
+              {/* Selector de Horizonte / Zoom */}
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-mono self-start sm:self-auto shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChartHorizon(6);
+                    if (hoveredMonth && hoveredMonth > 6) setHoveredMonth(null);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    chartHorizon === 6
+                      ? 'bg-[#7e22ce] text-white dark:bg-[#c084fc] dark:text-[#160B1A] font-bold shadow-xs'
+                      : 'text-slate-600 dark:text-[#F8F4E9]/60 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                  title="Enfocar en los primeros 6 meses para ver con claridad el punto de equilibrio"
+                >
+                  Zoom 6 Meses (Retorno)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChartHorizon(12)}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    chartHorizon === 12
+                      ? 'bg-[#7e22ce] text-white dark:bg-[#c084fc] dark:text-[#160B1A] font-bold shadow-xs'
+                      : 'text-slate-600 dark:text-[#F8F4E9]/60 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                  title="Ver proyección macro a 12 meses"
+                >
+                  12 Meses (Anual)
+                </button>
               </div>
             </div>
 
-            {/* SVG Didáctico con Ejes Rótulados */}
+            {/* Leyenda clara y comprensible */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-slate-100 dark:border-white/5 text-xs font-mono">
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+                  <span className="w-3 h-0.5 bg-rose-500 inline-block"></span> Pérdida sin sistema
+                </span>
+                <span className="flex items-center gap-1.5 text-purple-600 dark:text-purple-400">
+                  <span className="w-3 h-0.5 bg-purple-500 inline-block"></span> Inversión acumulada
+                </span>
+                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
+                  <span className="w-3 h-0.5 bg-emerald-500 inline-block"></span> Beneficio con sistema
+                </span>
+                {breakevenMonthObj.month <= chartHorizon && (
+                  <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+                    <span className="w-3 h-2 rounded-xs bg-emerald-500/20 border border-emerald-500/40 inline-block"></span> Zona de ganancia neta
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] text-slate-500 dark:text-[#F6DBC0]/50 hidden sm:inline">
+                💡 Pasa el cursor por cada mes para auditar los números
+              </span>
+            </div>
+
+            {/* SVG Didáctico con Ejes Rótulados y Zoom Focal */}
             <div className="w-full overflow-x-auto pt-1 select-none">
               <svg
                 viewBox={`0 0 ${chartWidth} ${chartHeight}`}
                 className="w-full h-auto min-w-[540px]"
+                onMouseLeave={() => setHoveredMonth(null)}
               >
+                <defs>
+                  <linearGradient id="profitZoneGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.14" />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity="0.02" />
+                  </linearGradient>
+                </defs>
+
+                {/* Zona sombreada de Ganancia Neta (Del Breakeven hacia adelante) */}
+                {breakevenMonthObj.month <= chartHorizon && (
+                  <g>
+                    <rect
+                      x={getX(breakevenMonthObj.month)}
+                      y={padding.top}
+                      width={chartWidth - padding.right - getX(breakevenMonthObj.month)}
+                      height={innerHeight}
+                      fill="url(#profitZoneGradient)"
+                      rx="3"
+                    />
+                    <text
+                      x={getX(breakevenMonthObj.month) + 8}
+                      y={padding.top + 13}
+                      className="text-[8.5px] font-mono font-bold fill-emerald-700 dark:fill-emerald-400 select-none tracking-wider"
+                    >
+                      ZONA DE GANANCIA NETA →
+                    </text>
+                  </g>
+                )}
+
                 {/* Rótulo Eje Vertical Y */}
                 <text
                   x={padding.left}
@@ -930,7 +1011,7 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 })}
 
                 {/* Líneas verticales y etiquetas de meses en Eje X */}
-                {result.monthlyBreakdown.map((d) => {
+                {displayedBreakdown.map((d) => {
                   const x = getX(d.month);
                   const isHovered = activeInspectMonth === d.month;
                   return (
@@ -950,7 +1031,7 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                         fill="currentColor"
                         className={`text-[9px] font-mono transition-colors ${
                           isHovered
-                            ? 'font-bold fill-[#7e22ce] dark:fill-white text-[10px]'
+                            ? 'font-bold fill-[#7e22ce] dark:fill-white text-[10.5px]'
                             : 'fill-slate-500 dark:fill-[#F6DBC0]/50'
                         }`}
                       >
@@ -973,8 +1054,8 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 <polyline
                   fill="none"
                   stroke="#a855f7"
-                  strokeWidth="1.5"
-                  opacity="0.8"
+                  strokeWidth="1.75"
+                  opacity="0.85"
                   points={pointsInvestment}
                 />
 
@@ -982,12 +1063,12 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 <polyline
                   fill="none"
                   stroke="#10b981"
-                  strokeWidth="2.5"
+                  strokeWidth="2.75"
                   points={pointsBenefit}
                 />
 
                 {/* Línea vertical y Pin del Punto de Equilibrio (Breakeven) */}
-                {breakevenMonthObj && (
+                {breakevenMonthObj && breakevenMonthObj.month <= chartHorizon && (
                   <g>
                     <line
                       x1={getX(breakevenMonthObj.month)}
@@ -997,7 +1078,15 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                       stroke="#10b981"
                       strokeWidth="1.5"
                       strokeDasharray="2 2"
-                      opacity="0.75"
+                      opacity="0.8"
+                    />
+                    {/* Halo de resalte en el punto de cruce */}
+                    <circle
+                      cx={getX(breakevenMonthObj.month)}
+                      cy={getY(breakevenMonthObj.cumulativeBenefitWithAutomation)}
+                      r="7"
+                      fill="#10b981"
+                      opacity="0.25"
                     />
                     <circle
                       cx={getX(breakevenMonthObj.month)}
@@ -1007,7 +1096,7 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     />
                     <text
                       x={getX(breakevenMonthObj.month)}
-                      y={getY(breakevenMonthObj.cumulativeBenefitWithAutomation) - 9}
+                      y={getY(breakevenMonthObj.cumulativeBenefitWithAutomation) - 10}
                       textAnchor="middle"
                       fill="#10b981"
                       fontSize="9.5"
@@ -1020,14 +1109,15 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 )}
 
                 {/* Columnas invisibles de detección de cursor para cada mes */}
-                {result.monthlyBreakdown.map((d) => {
+                {displayedBreakdown.map((d) => {
                   const x = getX(d.month);
+                  const stepX = innerWidth / (chartHorizon - 1);
                   return (
                     <rect
                       key={d.month}
-                      x={x - innerWidth / 24}
+                      x={x - stepX / 2}
                       y={padding.top}
-                      width={innerWidth / 12}
+                      width={stepX}
                       height={innerHeight}
                       fill="transparent"
                       className="cursor-pointer hover:fill-purple-500/10 dark:hover:fill-white/5 transition-colors"
@@ -1044,9 +1134,17 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 <span className="font-bold text-slate-900 dark:text-white text-sm">
                   Mes {activeInspectMonth}:
                 </span>
-                {isBreakevenActive && (
-                  <span className="text-[10px] font-sans px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-500/30">
-                    ★ Inversión 100% Recuperada
+                {isBreakevenActive ? (
+                  <span className="text-[10px] font-sans px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-500/30">
+                    ★ Punto de Equilibrio (100% Amortizado)
+                  </span>
+                ) : activeInspectRow.netProfit > 0 ? (
+                  <span className="text-[10px] font-sans px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-500/20 text-purple-800 dark:text-purple-300 font-semibold border border-purple-300 dark:border-purple-500/30">
+                    ↑ Flujo Libre de Ganancia
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-sans px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-semibold border border-amber-300 dark:border-amber-500/30">
+                    ⏳ Amortización en proceso
                   </span>
                 )}
               </div>
@@ -1059,7 +1157,8 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                   Recuperado: {formatCurrency(activeInspectRow.cumulativeBenefitWithAutomation, currency)}
                 </span>
                 <span className="font-bold text-slate-900 dark:text-white">
-                  Ganancia Neta: +{formatCurrency(activeInspectRow.netProfit, currency)}
+                  {activeInspectRow.netProfit >= 0 ? 'Ganancia Neta: +' : 'Inversión por amortizar: '}
+                  {formatCurrency(Math.abs(activeInspectRow.netProfit), currency)}
                 </span>
               </div>
             </div>
