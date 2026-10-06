@@ -7,27 +7,28 @@ import { RoiCalculatorModal } from '../components/RoiCalculatorModal';
   title="Calculadora de Cotización & Retorno de Inversión (ROI) // Daarick"
   description="Calcula cuánto cuesta automatizar los procesos de tu negocio y el retorno de inversión proyectado a 12 meses."
 >
-  <div class="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[rgba(147,80,115,0.25)] pb-4 print:hidden">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
+    {/* Encabezado limpio flotando sobre el fondo */}
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 print:hidden">
       <div>
         <a href="/" class="inline-flex items-center gap-1.5 text-xs font-mono text-[#c084fc] hover:underline mb-2 transition-colors">
           ← Volver al portafolio
         </a>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          Cotizador & Retorno de Inversión (ROI) para Negocios
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          Cotizador & Retorno de Inversión (ROI)
         </h1>
-        <p class="text-xs sm:text-sm text-[#F6DBC0]/80 mt-1 max-w-2xl leading-relaxed">
+        <p class="text-sm text-[#F6DBC0]/80 mt-1 max-w-2xl leading-relaxed">
           Diseñado para dueños de negocio y pymes. Sin tecnicismos: cotiza módulos de IA a tu medida y calcula cuánto dinero recupera tu negocio mes a mes.
         </p>
       </div>
 
-      <div class="flex items-center gap-2 text-xs font-mono text-[#10B981] bg-[rgba(16,185,129,0.1)] px-3 py-1.5 rounded-full border border-[rgba(16,185,129,0.25)] shrink-0 self-start sm:self-auto">
+      <div class="flex items-center gap-2 text-xs font-mono text-[#10B981] bg-[rgba(16,185,129,0.1)] px-3.5 py-1.5 rounded-full border border-[rgba(16,185,129,0.25)] shrink-0 self-start sm:self-auto shadow-sm">
         <span class="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
         <span>Cálculo local y privado en tu navegador</span>
       </div>
     </div>
 
-    {/* Calculadora en modo página completa */}
+    {/* Tarjetas interactivas flotando sobre el fondo */}
     <RoiCalculatorModal client:load mode="page" />
   </div>
 </Layout>
