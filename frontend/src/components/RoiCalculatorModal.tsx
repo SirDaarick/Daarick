@@ -1373,7 +1373,7 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   // VISTA EN MODO MODAL (CUANDO SE ABRE DESDE EL NAVBAR O CHATBOT)
   return (
     <div
-      className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-slate-900/40 dark:bg-black/70 backdrop-blur-md animate-fadeIn"
       role="dialog"
       aria-label="Calculadora de Cotización y Retorno de Inversión"
     >
