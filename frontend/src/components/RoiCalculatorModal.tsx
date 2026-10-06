@@ -224,10 +224,10 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   const ticketMax = isMxn ? 20000 : 1500;
   const ticketStep = isMxn ? 100 : 10;
 
-  // Gráfico SVG sobrio
-  const chartWidth = 600;
-  const chartHeight = 200;
-  const padding = { top: 20, right: 20, bottom: 30, left: 55 };
+  // Gráfico SVG sobrio con escalas y dimensiones ajustadas
+  const chartWidth = 640;
+  const chartHeight = 240;
+  const padding = { top: 35, right: 30, bottom: 45, left: 75 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
 
@@ -247,28 +247,36 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   const pointsBenefit = result.monthlyBreakdown
     .map((d) => `${getX(d.month)},${getY(d.cumulativeBenefitWithAutomation)}`)
     .join(' ');
+  const pointsInvestment = result.monthlyBreakdown
+    .map((d) => `${getX(d.month)},${getY(d.cumulativeInvestmentWithAutomation)}`)
+    .join(' ');
 
   const breakevenMonthObj =
     result.monthlyBreakdown.find(
       (d) => d.cumulativeBenefitWithAutomation >= d.cumulativeInvestmentWithAutomation
     ) || result.monthlyBreakdown[result.monthlyBreakdown.length - 1];
 
-  // 1. NAVEGACIÓN MINIMALISTA DE PASOS (ESTILO SUIZO)
+  // Mes activo para auditoría (Cero brincos: si no hay hover, muestra por defecto el breakeven)
+  const activeInspectMonth = hoveredMonth !== null ? hoveredMonth : breakevenMonthObj.month;
+  const activeInspectRow = result.monthlyBreakdown[activeInspectMonth - 1] || result.monthlyBreakdown[0];
+  const isBreakevenActive = activeInspectMonth === breakevenMonthObj.month;
+
+  // 1. NAVEGACIÓN MINIMALISTA DE PESTAÑAS (SIN NÚMEROS INNECESARIOS)
   const renderMinimalNavbar = () => (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4 print:hidden">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-4 print:hidden">
       <nav className="flex items-center gap-6 text-sm font-medium">
         <button
           type="button"
           onClick={() => setActiveTab('catalog')}
           className={`pb-1 transition-all cursor-pointer relative ${
             activeTab === 'catalog'
-              ? 'text-white font-semibold'
-              : 'text-[#F6DBC0]/50 hover:text-white'
+              ? 'text-[#7e22ce] dark:text-white font-semibold'
+              : 'text-slate-500 dark:text-[#F6DBC0]/50 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          01 Soluciones <span className="text-xs text-[#c084fc]">({selectedIds.length})</span>
+          Soluciones <span className="text-xs font-mono text-[#7e22ce] dark:text-[#c084fc]">({selectedIds.length})</span>
           {activeTab === 'catalog' && (
-            <span className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-[#c084fc]" />
+            <span className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-[#7e22ce] dark:bg-[#c084fc]" />
           )}
         </button>
 
@@ -277,13 +285,13 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
           onClick={() => setActiveTab('bleed')}
           className={`pb-1 transition-all cursor-pointer relative ${
             activeTab === 'bleed'
-              ? 'text-white font-semibold'
-              : 'text-[#F6DBC0]/50 hover:text-white'
+              ? 'text-[#7e22ce] dark:text-white font-semibold'
+              : 'text-slate-500 dark:text-[#F6DBC0]/50 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          02 Diagnóstico
+          Diagnóstico de Fuga
           {activeTab === 'bleed' && (
-            <span className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-[#c084fc]" />
+            <span className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-[#7e22ce] dark:bg-[#c084fc]" />
           )}
         </button>
 
@@ -292,27 +300,27 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
           onClick={() => setActiveTab('roi')}
           className={`pb-1 transition-all cursor-pointer relative ${
             activeTab === 'roi'
-              ? 'text-white font-semibold'
-              : 'text-[#F6DBC0]/50 hover:text-white'
+              ? 'text-[#7e22ce] dark:text-white font-semibold'
+              : 'text-slate-500 dark:text-[#F6DBC0]/50 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          03 Dictamen
+          Dictamen & Retorno
           {activeTab === 'roi' && (
-            <span className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-[#c084fc]" />
+            <span className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-[#7e22ce] dark:bg-[#c084fc]" />
           )}
         </button>
       </nav>
 
       <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
-        {/* Toggle de divisa ultra-compacto */}
-        <div className="flex items-center text-xs font-mono bg-white/[0.04] p-0.5 rounded-lg border border-white/10">
+        {/* Toggle de divisa adaptable a modo claro y oscuro */}
+        <div className="flex items-center text-xs font-mono bg-slate-200/70 dark:bg-white/[0.05] p-0.5 rounded-lg border border-slate-300 dark:border-white/10">
           <button
             type="button"
             onClick={() => handleCurrencySwitch('MXN')}
             className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
               currency === 'MXN'
-                ? 'bg-[#c084fc] text-[#160B1A] font-bold'
-                : 'text-[#F8F4E9]/60 hover:text-white'
+                ? 'bg-[#7e22ce] text-white dark:bg-[#c084fc] dark:text-[#160B1A] font-bold shadow-sm'
+                : 'text-slate-600 dark:text-[#F8F4E9]/60 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             MXN
@@ -322,8 +330,8 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
             onClick={() => handleCurrencySwitch('USD')}
             className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
               currency === 'USD'
-                ? 'bg-[#c084fc] text-[#160B1A] font-bold'
-                : 'text-[#F8F4E9]/60 hover:text-white'
+                ? 'bg-[#7e22ce] text-white dark:bg-[#c084fc] dark:text-[#160B1A] font-bold shadow-sm'
+                : 'text-slate-600 dark:text-[#F8F4E9]/60 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             USD
@@ -337,8 +345,8 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
           title="Modo Ingeniero (Tarifas y horas base)"
           className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
             showAdminMode
-              ? 'text-[#c084fc] bg-[#c084fc]/10'
-              : 'text-white/40 hover:text-white'
+              ? 'text-[#7e22ce] bg-purple-100 dark:text-[#c084fc] dark:bg-[#c084fc]/15'
+              : 'text-slate-400 dark:text-white/40 hover:text-slate-800 dark:hover:text-white'
           }`}
         >
           <Settings className="w-4 h-4" />
@@ -348,7 +356,7 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
           <button
             type="button"
             onClick={closeModal}
-            className="p-1.5 text-white/50 hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 text-slate-400 dark:text-white/50 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
             title="Cerrar ventana"
           >
             <X className="w-5 h-5" />
@@ -362,18 +370,18 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   const renderAdminPanel = () => {
     if (!showAdminMode) return null;
     return (
-      <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-3 print:hidden text-xs">
-        <div className="flex items-center justify-between pb-2 border-b border-white/10">
-          <div className="flex items-center gap-2 text-[#d8b4fe]">
-            <ShieldCheck className="w-4 h-4 text-[#c084fc]" />
-            <span className="font-mono font-semibold text-white uppercase tracking-wider">
+      <div className="p-4 rounded-xl bg-slate-100/90 dark:bg-white/[0.03] border border-slate-300 dark:border-white/10 space-y-3 print:hidden text-xs text-slate-800 dark:text-white">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-white/10">
+          <div className="flex items-center gap-2 text-[#7e22ce] dark:text-[#d8b4fe]">
+            <ShieldCheck className="w-4 h-4 text-[#7e22ce] dark:text-[#c084fc]" />
+            <span className="font-mono font-semibold uppercase tracking-wider text-slate-900 dark:text-white">
               Parámetros de Costo Técnico
             </span>
           </div>
           <button
             type="button"
             onClick={() => setDevConfig(DEFAULT_DEVELOPER_CONFIG)}
-            className="text-[11px] text-[#c084fc] hover:underline flex items-center gap-1 cursor-pointer font-mono"
+            className="text-[11px] text-[#7e22ce] dark:text-[#c084fc] hover:underline flex items-center gap-1 cursor-pointer font-mono"
           >
             <RotateCcw className="w-3 h-3" /> Restaurar defaults
           </button>
@@ -381,18 +389,18 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div>
-            <label className="block text-[#F6DBC0]/70 mb-1 font-mono">Tarifa Base ($ USD/hr):</label>
+            <label className="block text-slate-600 dark:text-[#F6DBC0]/70 mb-1 font-mono">Tarifa Base ($ USD/hr):</label>
             <input
               type="number"
               value={devConfig.erickHourlyRateUSD}
               onChange={(e) =>
                 setDevConfig({ ...devConfig, erickHourlyRateUSD: Number(e.target.value) || 0 })
               }
-              className="w-full bg-[#160B1A] border border-white/20 rounded p-1.5 text-white font-mono"
+              className="w-full bg-white dark:bg-[#160B1A] border border-slate-300 dark:border-white/20 rounded p-1.5 font-mono text-slate-900 dark:text-white"
             />
           </div>
           <div>
-            <label className="block text-[#F6DBC0]/70 mb-1 font-mono">Tipo de Cambio (MXN/USD):</label>
+            <label className="block text-slate-600 dark:text-[#F6DBC0]/70 mb-1 font-mono">Tipo de Cambio (MXN/USD):</label>
             <input
               type="number"
               step="0.1"
@@ -400,29 +408,29 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
               onChange={(e) =>
                 setDevConfig({ ...devConfig, exchangeRateUsdToMxn: Number(e.target.value) || 18.5 })
               }
-              className="w-full bg-[#160B1A] border border-white/20 rounded p-1.5 text-white font-mono"
+              className="w-full bg-white dark:bg-[#160B1A] border border-slate-300 dark:border-white/20 rounded p-1.5 font-mono text-slate-900 dark:text-white"
             />
           </div>
           <div>
-            <label className="block text-[#F6DBC0]/70 mb-1 font-mono">Plataforma & QA (hrs):</label>
+            <label className="block text-slate-600 dark:text-[#F6DBC0]/70 mb-1 font-mono">Plataforma & QA (hrs):</label>
             <input
               type="number"
               value={devConfig.platformDevelopmentHours}
               onChange={(e) =>
                 setDevConfig({ ...devConfig, platformDevelopmentHours: Number(e.target.value) || 0 })
               }
-              className="w-full bg-[#160B1A] border border-white/20 rounded p-1.5 text-white font-mono"
+              className="w-full bg-white dark:bg-[#160B1A] border border-slate-300 dark:border-white/20 rounded p-1.5 font-mono text-slate-900 dark:text-white"
             />
           </div>
           <div>
-            <label className="block text-[#F6DBC0]/70 mb-1 font-mono">Captura de Valor (%):</label>
+            <label className="block text-slate-600 dark:text-[#F6DBC0]/70 mb-1 font-mono">Captura de Valor (%):</label>
             <input
               type="number"
               value={devConfig.valueCapturePercentage}
               onChange={(e) =>
                 setDevConfig({ ...devConfig, valueCapturePercentage: Number(e.target.value) || 0 })
               }
-              className="w-full bg-[#160B1A] border border-white/20 rounded p-1.5 text-white font-mono"
+              className="w-full bg-white dark:bg-[#160B1A] border border-slate-300 dark:border-white/20 rounded p-1.5 font-mono text-slate-900 dark:text-white"
             />
           </div>
         </div>
@@ -430,22 +438,22 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
     );
   };
 
-  // 3. CONTENIDO DE LAS PESTAÑAS
+  // 3. CONTENIDO DE LAS PESTAÑAS (COMPLETAMENTE ADAPTABLE AL TEMA CLARO Y OSCURO)
   const renderTabContent = () => (
     <div className="space-y-6">
-      {/* PASO 1: CATÁLOGO ESBELTO DE SOLUCIONES */}
+      {/* PESTAÑA: SOLUCIONES */}
       {activeTab === 'catalog' && (
         <div className="space-y-6 animate-fadeIn">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
               ¿Qué procesos deseas automatizar?
             </h2>
-            <p className="text-sm text-[#F6DBC0]/70 mt-1">
+            <p className="text-sm text-slate-600 dark:text-[#F6DBC0]/70 mt-1">
               Selecciona los módulos donde tu negocio pierde más tiempo o ventas.
             </p>
           </div>
 
-          <div className="divide-y divide-white/10 border-y border-white/10">
+          <div className="divide-y divide-slate-200 dark:divide-white/10 border-y border-slate-200 dark:border-white/10">
             {AUTOMATION_CATALOG.map((item) => {
               const isSelected = selectedIds.includes(item.id);
               return (
@@ -454,16 +462,16 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                   onClick={() => toggleAutomation(item.id)}
                   className={`py-4 px-3 sm:px-4 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-4 select-none ${
                     isSelected
-                      ? 'bg-white/[0.04] text-white'
-                      : 'hover:bg-white/[0.02] text-white/80'
+                      ? 'bg-purple-500/10 dark:bg-white/[0.04] text-slate-900 dark:text-white'
+                      : 'hover:bg-slate-100/60 dark:hover:bg-white/[0.02] text-slate-700 dark:text-white/80'
                   }`}
                 >
                   <div className="flex items-center gap-3.5 flex-1">
                     <div
                       className={`w-5 h-5 rounded flex items-center justify-center shrink-0 transition-colors ${
                         isSelected
-                          ? 'bg-[#c084fc] text-[#160B1A]'
-                          : 'border border-white/30 text-transparent'
+                          ? 'bg-[#7e22ce] text-white dark:bg-[#c084fc] dark:text-[#160B1A]'
+                          : 'border border-slate-300 dark:border-white/30 text-transparent'
                       }`}
                     >
                       <Check className={`w-3.5 h-3.5 stroke-[3] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
@@ -471,27 +479,27 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-sm sm:text-base text-white">
+                        <span className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white">
                           {item.name}
                         </span>
                         {item.popular && (
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-semibold">
                             Más pedido
                           </span>
                         )}
                       </div>
-                      <p className="text-xs sm:text-sm text-[#F6DBC0]/65 mt-0.5 leading-relaxed">
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-[#F6DBC0]/65 mt-0.5 leading-relaxed">
                         {item.tagline}
                       </p>
                     </div>
                   </div>
 
                   <div className="text-right shrink-0 hidden sm:block">
-                    <span className="text-xs font-mono text-[#F6DBC0]/40 capitalize">
+                    <span className="text-xs font-mono text-slate-500 dark:text-[#F6DBC0]/40 capitalize">
                       {item.category}
                     </span>
                     {showAdminMode && (
-                      <span className="block text-[10px] font-mono text-[#c084fc]">
+                      <span className="block text-[10px] font-mono text-[#7e22ce] dark:text-[#c084fc]">
                         {item.baseHoursFirstTime} hrs
                       </span>
                     )}
@@ -502,14 +510,14 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <span className="text-xs font-mono text-[#F6DBC0]/60">
+            <span className="text-xs font-mono text-slate-500 dark:text-[#F6DBC0]/60">
               {selectedIds.length} {selectedIds.length === 1 ? 'módulo seleccionado' : 'módulos seleccionados'}
             </span>
 
             <button
               type="button"
               onClick={() => setActiveTab('bleed')}
-              className="px-6 py-2.5 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-bold text-sm flex items-center gap-2 transition-all cursor-pointer shadow-md"
+              className="px-6 py-2.5 rounded-xl bg-[#7e22ce] hover:bg-[#6b1cb0] text-white dark:bg-[#c084fc] dark:hover:bg-[#d8b4fe] dark:text-[#160B1A] font-bold text-sm flex items-center gap-2 transition-all cursor-pointer shadow-md"
             >
               <span>Continuar al diagnóstico</span>
               <ArrowRight className="w-4 h-4" />
@@ -518,14 +526,14 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
         </div>
       )}
 
-      {/* PASO 2: DIAGNÓSTICO ESENCIAL + PROGRESSIVE DISCLOSURE */}
+      {/* PESTAÑA: DIAGNÓSTICO DE FUGA */}
       {activeTab === 'bleed' && (
         <div className="space-y-6 animate-fadeIn">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
               Diagnóstico de Ineficiencias & Pérdidas
             </h2>
-            <p className="text-sm text-[#F6DBC0]/70 mt-1">
+            <p className="text-sm text-slate-600 dark:text-[#F6DBC0]/70 mt-1">
               Ajusta las variables de tu negocio. Puedes mover la barra o teclear el número directamente.
             </p>
           </div>
@@ -533,10 +541,10 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
           {/* 4 Entradas Esenciales del Negocio */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* 1. Horas perdidas */}
-            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2.5">
+            <div className="p-4 rounded-xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs sm:text-sm font-medium text-white flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-[#c084fc]" /> Horas manuales por semana:
+                <span className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-[#7e22ce] dark:text-[#c084fc]" /> Horas manuales por semana:
                 </span>
                 <div className="flex items-center gap-1 font-mono text-xs">
                   <input
@@ -547,9 +555,9 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     onChange={(e) =>
                       setBleedInputs({ ...bleedInputs, lostHoursPerWeek: Math.max(0, Number(e.target.value) || 0) })
                     }
-                    className="w-16 px-2 py-0.5 rounded bg-black/40 border border-white/20 text-right font-bold text-white"
+                    className="w-16 px-2 py-0.5 rounded bg-slate-50 dark:bg-black/40 border border-slate-300 dark:border-white/20 text-right font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#7e22ce] dark:focus:border-[#c084fc]"
                   />
-                  <span className="text-[#F6DBC0]/60">hrs</span>
+                  <span className="text-slate-500 dark:text-[#F6DBC0]/60">hrs</span>
                 </div>
               </div>
               <input
@@ -561,22 +569,22 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 onChange={(e) =>
                   setBleedInputs({ ...bleedInputs, lostHoursPerWeek: Number(e.target.value) })
                 }
-                className="w-full accent-[#c084fc] cursor-pointer"
+                className="w-full accent-[#7e22ce] dark:accent-[#c084fc] cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] font-mono text-[#F6DBC0]/40">
+              <div className="flex justify-between text-[10px] font-mono text-slate-400 dark:text-[#F6DBC0]/40">
                 <span>1 hr/sem</span>
                 <span>{Math.max(60, bleedInputs.lostHoursPerWeek)} hrs/sem</span>
               </div>
             </div>
 
             {/* 2. Costo por hora */}
-            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2.5">
+            <div className="p-4 rounded-xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs sm:text-sm font-medium text-white flex items-center gap-1.5">
-                  <DollarSign className="w-4 h-4 text-[#c084fc]" /> Costo por hora operativa:
+                <span className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <DollarSign className="w-4 h-4 text-[#7e22ce] dark:text-[#c084fc]" /> Costo por hora operativa:
                 </span>
                 <div className="flex items-center gap-1 font-mono text-xs">
-                  <span className="text-[#F6DBC0]/60">$</span>
+                  <span className="text-slate-500 dark:text-[#F6DBC0]/60">$</span>
                   <input
                     type="number"
                     min="0"
@@ -584,9 +592,9 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     onChange={(e) =>
                       setBleedInputs({ ...bleedInputs, hourlyLaborCost: Math.max(0, Number(e.target.value) || 0) })
                     }
-                    className="w-20 px-2 py-0.5 rounded bg-black/40 border border-white/20 text-right font-bold text-white"
+                    className="w-20 px-2 py-0.5 rounded bg-slate-50 dark:bg-black/40 border border-slate-300 dark:border-white/20 text-right font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#7e22ce] dark:focus:border-[#c084fc]"
                   />
-                  <span className="text-[#F6DBC0]/60">/hr</span>
+                  <span className="text-slate-500 dark:text-[#F6DBC0]/60">/hr</span>
                 </div>
               </div>
               <input
@@ -598,22 +606,22 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 onChange={(e) =>
                   setBleedInputs({ ...bleedInputs, hourlyLaborCost: Number(e.target.value) })
                 }
-                className="w-full accent-[#c084fc] cursor-pointer"
+                className="w-full accent-[#7e22ce] dark:accent-[#c084fc] cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] font-mono text-[#F6DBC0]/40">
+              <div className="flex justify-between text-[10px] font-mono text-slate-400 dark:text-[#F6DBC0]/40">
                 <span>{formatCurrency(laborMin, currency)}</span>
                 <span>{formatCurrency(Math.max(laborMax, bleedInputs.hourlyLaborCost), currency)}</span>
               </div>
             </div>
 
             {/* 3. Ticket promedio */}
-            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2.5">
+            <div className="p-4 rounded-xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs sm:text-sm font-medium text-white flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4 text-[#c084fc]" /> Ticket promedio por venta:
+                <span className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-[#7e22ce] dark:text-[#c084fc]" /> Ticket promedio por venta:
                 </span>
                 <div className="flex items-center gap-1 font-mono text-xs">
-                  <span className="text-[#F6DBC0]/60">$</span>
+                  <span className="text-slate-500 dark:text-[#F6DBC0]/60">$</span>
                   <input
                     type="number"
                     min="0"
@@ -621,9 +629,9 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     onChange={(e) =>
                       setBleedInputs({ ...bleedInputs, averageTicketValue: Math.max(0, Number(e.target.value) || 0) })
                     }
-                    className="w-24 px-2 py-0.5 rounded bg-black/40 border border-white/20 text-right font-bold text-white"
+                    className="w-24 px-2 py-0.5 rounded bg-slate-50 dark:bg-black/40 border border-slate-300 dark:border-white/20 text-right font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#7e22ce] dark:focus:border-[#c084fc]"
                   />
-                  <span className="text-[#F6DBC0]/60">{currency}</span>
+                  <span className="text-slate-500 dark:text-[#F6DBC0]/60">{currency}</span>
                 </div>
               </div>
               <input
@@ -635,19 +643,19 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 onChange={(e) =>
                   setBleedInputs({ ...bleedInputs, averageTicketValue: Number(e.target.value) })
                 }
-                className="w-full accent-[#c084fc] cursor-pointer"
+                className="w-full accent-[#7e22ce] dark:accent-[#c084fc] cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] font-mono text-[#F6DBC0]/40">
+              <div className="flex justify-between text-[10px] font-mono text-slate-400 dark:text-[#F6DBC0]/40">
                 <span>{formatCurrency(ticketMin, currency)}</span>
                 <span>{formatCurrency(Math.max(ticketMax, bleedInputs.averageTicketValue), currency)}</span>
               </div>
             </div>
 
             {/* 4. Clientes al mes */}
-            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2.5">
+            <div className="p-4 rounded-xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs sm:text-sm font-medium text-white flex items-center gap-1.5">
-                  <UserCheck className="w-4 h-4 text-[#c084fc]" /> Clientes o consultas al mes:
+                <span className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <UserCheck className="w-4 h-4 text-[#7e22ce] dark:text-[#c084fc]" /> Clientes o consultas al mes:
                 </span>
                 <div className="flex items-center gap-1 font-mono text-xs">
                   <input
@@ -657,9 +665,9 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     onChange={(e) =>
                       setBleedInputs({ ...bleedInputs, monthlyLeadsOrClients: Math.max(0, Number(e.target.value) || 0) })
                     }
-                    className="w-20 px-2 py-0.5 rounded bg-black/40 border border-white/20 text-right font-bold text-white"
+                    className="w-20 px-2 py-0.5 rounded bg-slate-50 dark:bg-black/40 border border-slate-300 dark:border-white/20 text-right font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#7e22ce] dark:focus:border-[#c084fc]"
                   />
-                  <span className="text-[#F6DBC0]/60">cli</span>
+                  <span className="text-slate-500 dark:text-[#F6DBC0]/60">cli</span>
                 </div>
               </div>
               <input
@@ -671,9 +679,9 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 onChange={(e) =>
                   setBleedInputs({ ...bleedInputs, monthlyLeadsOrClients: Number(e.target.value) })
                 }
-                className="w-full accent-[#c084fc] cursor-pointer"
+                className="w-full accent-[#7e22ce] dark:accent-[#c084fc] cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] font-mono text-[#F6DBC0]/40">
+              <div className="flex justify-between text-[10px] font-mono text-slate-400 dark:text-[#F6DBC0]/40">
                 <span>10</span>
                 <span>{Math.max(2000, bleedInputs.monthlyLeadsOrClients).toLocaleString('es-MX')} clientes</span>
               </div>
@@ -685,17 +693,17 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
             <button
               type="button"
               onClick={() => setShowAdvancedBleed(!showAdvancedBleed)}
-              className="text-xs font-mono text-[#c084fc] hover:underline flex items-center gap-1.5 cursor-pointer"
+              className="text-xs font-mono text-[#7e22ce] dark:text-[#c084fc] hover:underline flex items-center gap-1.5 cursor-pointer"
             >
               {showAdvancedBleed ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               <span>{showAdvancedBleed ? 'Ocultar variables secundarias' : '+ Ajustar variables secundarias de fuga (% fuga WhatsApp, retrabajos)'}</span>
             </button>
 
             {showAdvancedBleed && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 pt-3 border-t border-white/10 animate-fadeIn">
-                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-200 dark:border-white/10 animate-fadeIn">
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-white/80">Clientes perdidos por tardanza (%):</span>
+                    <span className="text-slate-700 dark:text-white/80">Clientes perdidos por tardanza (%):</span>
                     <input
                       type="number"
                       min="0"
@@ -704,7 +712,7 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                       onChange={(e) =>
                         setBleedInputs({ ...bleedInputs, lostClientsPercentage: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })
                       }
-                      className="w-16 px-1.5 py-0.5 rounded bg-black/40 border border-white/20 text-right font-mono font-bold text-white text-xs"
+                      className="w-16 px-1.5 py-0.5 rounded bg-white dark:bg-black/40 border border-slate-300 dark:border-white/20 text-right font-mono font-bold text-slate-900 dark:text-white text-xs"
                     />
                   </div>
                   <input
@@ -716,13 +724,13 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     onChange={(e) =>
                       setBleedInputs({ ...bleedInputs, lostClientsPercentage: Number(e.target.value) })
                     }
-                    className="w-full accent-[#c084fc] cursor-pointer"
+                    className="w-full accent-[#7e22ce] dark:accent-[#c084fc] cursor-pointer"
                   />
                 </div>
 
-                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-2">
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-white/80">Mermas y errores manuales ($/mes):</span>
+                    <span className="text-slate-700 dark:text-white/80">Mermas y errores manuales ($/mes):</span>
                     <input
                       type="number"
                       min="0"
@@ -730,7 +738,7 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                       onChange={(e) =>
                         setBleedInputs({ ...bleedInputs, humanErrorsMonthlyCost: Math.max(0, Number(e.target.value) || 0) })
                       }
-                      className="w-20 px-1.5 py-0.5 rounded bg-black/40 border border-white/20 text-right font-mono font-bold text-white text-xs"
+                      className="w-20 px-1.5 py-0.5 rounded bg-white dark:bg-black/40 border border-slate-300 dark:border-white/20 text-right font-mono font-bold text-slate-900 dark:text-white text-xs"
                     />
                   </div>
                   <input
@@ -742,7 +750,7 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                     onChange={(e) =>
                       setBleedInputs({ ...bleedInputs, humanErrorsMonthlyCost: Number(e.target.value) })
                     }
-                    className="w-full accent-[#c084fc] cursor-pointer"
+                    className="w-full accent-[#7e22ce] dark:accent-[#c084fc] cursor-pointer"
                   />
                 </div>
               </div>
@@ -750,16 +758,16 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
           </div>
 
           {/* Resumen del Dolor Austero */}
-          <div className="p-6 rounded-2xl bg-white/[0.04] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-6 rounded-2xl bg-rose-50/70 dark:bg-white/[0.04] border border-rose-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <span className="text-xs font-mono uppercase tracking-wider text-rose-400 block">
+              <span className="text-xs font-mono uppercase tracking-wider text-rose-600 dark:text-rose-400 block font-bold">
                 Fuga Financiera Estimada Sin Automatización
               </span>
-              <div className="text-2xl sm:text-3xl font-bold font-mono text-white mt-1">
+              <div className="text-2xl sm:text-3xl font-bold font-mono text-slate-900 dark:text-white mt-1">
                 {formatCurrency(result.totalAnnualBleed, currency)}{' '}
-                <span className="text-sm font-normal text-[#F6DBC0]/60">/ año</span>
+                <span className="text-sm font-normal text-slate-500 dark:text-[#F6DBC0]/60">/ año</span>
               </div>
-              <p className="text-xs text-[#F6DBC0]/70 mt-1">
+              <p className="text-xs text-slate-600 dark:text-[#F6DBC0]/70 mt-1">
                 Representa {formatCurrency(result.totalMonthlyBleed, currency)} cada mes en tareas manuales y oportunidades no atendidas.
               </p>
             </div>
@@ -767,71 +775,71 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
             <button
               type="button"
               onClick={() => setActiveTab('roi')}
-              className="px-6 py-2.5 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-bold text-sm flex items-center gap-2 transition-all cursor-pointer shrink-0 shadow-md"
+              className="px-6 py-2.5 rounded-xl bg-[#7e22ce] hover:bg-[#6b1cb0] text-white dark:bg-[#c084fc] dark:hover:bg-[#d8b4fe] dark:text-[#160B1A] font-bold text-sm flex items-center gap-2 transition-all cursor-pointer shrink-0 shadow-md"
             >
-              <span>Ver Dictamen & ROI</span>
+              <span>Ver Dictamen & Retorno</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="text-center text-[11px] text-[#F6DBC0]/50 font-mono">
+          <div className="text-center text-[11px] text-slate-500 dark:text-[#F6DBC0]/50 font-mono">
             🔒 Privacidad garantizada: Este análisis se calcula de forma 100% privada en tu navegador.
           </div>
         </div>
       )}
 
-      {/* PASO 3: DICTAMEN DE ROI & UN SOLO HÉROE VISUAL */}
+      {/* PESTAÑA: DICTAMEN DE ROI & GRÁFICA DIDÁCTICA ESTABLE */}
       {activeTab === 'roi' && (
         <div className="space-y-6 animate-fadeIn">
           {/* EL HÉROE VISUAL: INVERSIÓN VS RETORNO */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 sm:p-8 rounded-2xl bg-white/[0.04] border border-white/10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 sm:p-8 rounded-2xl bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none">
             {/* Columna Izquierda: Inversión */}
             <div className="space-y-4">
-              <span className="text-xs font-mono uppercase tracking-wider text-[#d8b4fe] block">
+              <span className="text-xs font-mono uppercase tracking-wider text-[#7e22ce] dark:text-[#d8b4fe] block font-bold">
                 Inversión Requerida
               </span>
 
               <div className="space-y-3">
                 <div>
-                  <span className="text-xs text-[#F6DBC0]/60 block">Implementación Inicial (Setup único)</span>
-                  <div className="text-2xl sm:text-3xl font-bold font-mono text-white mt-0.5">
+                  <span className="text-xs text-slate-500 dark:text-[#F6DBC0]/60 block">Implementación Inicial (Setup único)</span>
+                  <div className="text-2xl sm:text-3xl font-bold font-mono text-slate-900 dark:text-white mt-0.5">
                     {formatCurrency(result.recommendedSetupPrice, currency)}
                   </div>
-                  <span className="text-[11px] text-[#F6DBC0]/50">Liquidación al validar prototipo funcional</span>
+                  <span className="text-[11px] text-slate-500 dark:text-[#F6DBC0]/50">Liquidación al validar prototipo funcional</span>
                 </div>
 
-                <div className="pt-2 border-t border-white/10">
-                  <span className="text-xs text-[#F6DBC0]/60 block">Mantenimiento mensual & servidores</span>
-                  <div className="text-lg font-bold font-mono text-white/90 mt-0.5">
+                <div className="pt-2 border-t border-slate-200 dark:border-white/10">
+                  <span className="text-xs text-slate-500 dark:text-[#F6DBC0]/60 block">Mantenimiento mensual & servidores</span>
+                  <div className="text-lg font-bold font-mono text-slate-800 dark:text-white/90 mt-0.5">
                     {formatCurrency(result.recommendedMonthlyRetainer, currency)}{' '}
-                    <span className="text-xs text-[#F6DBC0]/50 font-normal">/ mes</span>
+                    <span className="text-xs text-slate-500 dark:text-[#F6DBC0]/50 font-normal">/ mes</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Columna Derecha: Beneficio */}
-            <div className="space-y-4 border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-6">
-              <span className="text-xs font-mono uppercase tracking-wider text-emerald-400 block">
+            <div className="space-y-4 border-t md:border-t-0 md:border-l border-slate-200 dark:border-white/10 pt-4 md:pt-0 md:pl-6">
+              <span className="text-xs font-mono uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block font-bold">
                 Impacto Financiero Proyectado
               </span>
 
               <div className="space-y-3">
                 <div>
-                  <span className="text-xs text-[#F6DBC0]/60 block">Beneficio Neto Año 1 (Ahorro libre)</span>
-                  <div className="text-2xl sm:text-3xl font-bold font-mono text-emerald-400 mt-0.5">
+                  <span className="text-xs text-slate-500 dark:text-[#F6DBC0]/60 block">Beneficio Neto Año 1 (Ahorro libre)</span>
+                  <div className="text-2xl sm:text-3xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
                     {formatCurrency(result.yearOneNetSavings, currency)}
                   </div>
-                  <span className="text-[11px] text-[#F6DBC0]/50">Dinero adicional retenido en tu negocio</span>
+                  <span className="text-[11px] text-slate-500 dark:text-[#F6DBC0]/50">Dinero adicional retenido en tu negocio</span>
                 </div>
 
-                <div className="pt-2 border-t border-white/10">
-                  <span className="text-xs text-[#F6DBC0]/60 block">Retorno de Inversión (ROI)</span>
+                <div className="pt-2 border-t border-slate-200 dark:border-white/10">
+                  <span className="text-xs text-slate-500 dark:text-[#F6DBC0]/60 block">Retorno de Inversión (ROI)</span>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-lg font-bold font-mono text-white">
+                    <span className="text-lg font-bold font-mono text-slate-900 dark:text-white">
                       +{result.roiPercentage}%
                     </span>
-                    <span className="text-xs text-emerald-400/90 font-mono">
+                    <span className="text-xs text-emerald-700 dark:text-emerald-400 font-mono font-semibold">
                       (Recuperado en ~{result.paybackMonths} meses)
                     </span>
                   </div>
@@ -840,33 +848,60 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
             </div>
           </div>
 
-          {/* Gráfica de Breakeven Sobria y Limpia */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3">
+          {/* GRÁFICA DIDÁCTICA Y ESTABLE: CERO BRINCOS & EJES EXPLICADOS */}
+          <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h4 className="font-semibold text-sm sm:text-base text-white">
-                  Curva de Proyección a 12 Meses: Punto de Equilibrio
+                <h4 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white">
+                  Curva de Amortización a 12 Meses: Punto de Equilibrio
                 </h4>
-                <p className="text-xs text-[#F6DBC0]/60 mt-0.5">
-                  El sistema se paga por sí mismo en el mes {breakevenMonthObj.month}.
+                <p className="text-xs text-slate-600 dark:text-[#F6DBC0]/60 mt-0.5">
+                  El sistema se amortiza completamente en el <strong>Mes {breakevenMonthObj.month}</strong>.
                 </p>
               </div>
 
-              <div className="flex items-center gap-4 text-xs font-mono">
-                <span className="flex items-center gap-1.5 text-rose-400">
-                  <span className="w-3 h-0.5 bg-rose-400 inline-block"></span> Pérdida sin sistema
+              {/* Leyenda clara y comprensible */}
+              <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
+                <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+                  <span className="w-3 h-0.5 bg-rose-500 inline-block"></span> Pérdida sin sistema
                 </span>
-                <span className="flex items-center gap-1.5 text-emerald-400">
-                  <span className="w-3 h-0.5 bg-emerald-400 inline-block"></span> Beneficio recuperado
+                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                  <span className="w-3 h-0.5 bg-emerald-500 inline-block"></span> Beneficio con sistema
+                </span>
+                <span className="flex items-center gap-1.5 text-purple-600 dark:text-purple-400">
+                  <span className="w-3 h-0.5 bg-purple-500 inline-block"></span> Costo acumulado
                 </span>
               </div>
             </div>
 
-            <div className="w-full overflow-x-auto pt-2">
+            {/* SVG Didáctico con Ejes Rótulados */}
+            <div className="w-full overflow-x-auto pt-1 select-none">
               <svg
                 viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                className="w-full h-auto min-w-[500px] select-none"
+                className="w-full h-auto min-w-[540px]"
               >
+                {/* Rótulo Eje Vertical Y */}
+                <text
+                  x={padding.left}
+                  y={18}
+                  fill="currentColor"
+                  className="text-[10px] font-mono font-semibold fill-slate-500 dark:fill-white/60"
+                >
+                  ↑ Dinero Acumulado ({currency})
+                </text>
+
+                {/* Rótulo Eje Horizontal X */}
+                <text
+                  x={padding.left + innerWidth / 2}
+                  y={chartHeight - 6}
+                  textAnchor="middle"
+                  fill="currentColor"
+                  className="text-[10px] font-mono font-semibold fill-slate-500 dark:fill-white/60"
+                >
+                  → Meses de Operación Transcurridos
+                </text>
+
+                {/* Líneas horizontales de escala en Y */}
                 {[0, 0.5, 1].map((ratio, idx) => {
                   const y = padding.top + innerHeight * (1 - ratio);
                   const val = maxVal * ratio;
@@ -877,16 +912,16 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                         y1={y}
                         x2={chartWidth - padding.right}
                         y2={y}
-                        stroke="rgba(255,255,255,0.08)"
+                        stroke="currentColor"
+                        className="stroke-slate-200 dark:stroke-white/10"
                         strokeDasharray="3 3"
                       />
                       <text
                         x={padding.left - 8}
                         y={y + 3}
                         textAnchor="end"
-                        fill="rgba(246,219,192,0.4)"
-                        fontSize="9"
-                        fontFamily="monospace"
+                        fill="currentColor"
+                        className="text-[9px] font-mono fill-slate-400 dark:fill-[#F6DBC0]/40"
                       >
                         {formatCurrency(val, currency)}
                       </text>
@@ -894,19 +929,30 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                   );
                 })}
 
+                {/* Líneas verticales y etiquetas de meses en Eje X */}
                 {result.monthlyBreakdown.map((d) => {
                   const x = getX(d.month);
-                  const isHovered = hoveredMonth === d.month;
+                  const isHovered = activeInspectMonth === d.month;
                   return (
                     <g key={d.month}>
+                      <line
+                        x1={x}
+                        y1={padding.top + innerHeight}
+                        x2={x}
+                        y2={padding.top + innerHeight + 4}
+                        stroke="currentColor"
+                        className="stroke-slate-300 dark:stroke-white/20"
+                      />
                       <text
                         x={x}
                         y={padding.top + innerHeight + 16}
                         textAnchor="middle"
-                        fill={isHovered ? '#FFFFFF' : 'rgba(246,219,192,0.4)'}
-                        fontSize="9"
-                        fontFamily="monospace"
-                        fontWeight={isHovered ? 'bold' : 'normal'}
+                        fill="currentColor"
+                        className={`text-[9px] font-mono transition-colors ${
+                          isHovered
+                            ? 'font-bold fill-[#7e22ce] dark:fill-white text-[10px]'
+                            : 'fill-slate-500 dark:fill-[#F6DBC0]/50'
+                        }`}
                       >
                         M{d.month}
                       </text>
@@ -914,43 +960,66 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                   );
                 })}
 
+                {/* Curva 1: Pérdida sin sistema (Fuga) */}
                 <polyline
                   fill="none"
-                  stroke="#fb7185"
+                  stroke="#f43f5e"
                   strokeWidth="2"
                   strokeDasharray="4 3"
                   points={pointsLoss}
                 />
 
+                {/* Curva 2: Inversión acumulada */}
                 <polyline
                   fill="none"
-                  stroke="#34d399"
+                  stroke="#a855f7"
+                  strokeWidth="1.5"
+                  opacity="0.8"
+                  points={pointsInvestment}
+                />
+
+                {/* Curva 3: Beneficio con sistema */}
+                <polyline
+                  fill="none"
+                  stroke="#10b981"
                   strokeWidth="2.5"
                   points={pointsBenefit}
                 />
 
+                {/* Línea vertical y Pin del Punto de Equilibrio (Breakeven) */}
                 {breakevenMonthObj && (
                   <g>
+                    <line
+                      x1={getX(breakevenMonthObj.month)}
+                      y1={padding.top}
+                      x2={getX(breakevenMonthObj.month)}
+                      y2={padding.top + innerHeight}
+                      stroke="#10b981"
+                      strokeWidth="1.5"
+                      strokeDasharray="2 2"
+                      opacity="0.75"
+                    />
                     <circle
                       cx={getX(breakevenMonthObj.month)}
                       cy={getY(breakevenMonthObj.cumulativeBenefitWithAutomation)}
-                      r="4"
-                      fill="#34d399"
+                      r="4.5"
+                      fill="#10b981"
                     />
                     <text
                       x={getX(breakevenMonthObj.month)}
-                      y={getY(breakevenMonthObj.cumulativeBenefitWithAutomation) - 10}
+                      y={getY(breakevenMonthObj.cumulativeBenefitWithAutomation) - 9}
                       textAnchor="middle"
-                      fill="#34d399"
-                      fontSize="10"
+                      fill="#10b981"
+                      fontSize="9.5"
                       fontFamily="monospace"
                       fontWeight="bold"
                     >
-                      Punto de Equilibrio (M{breakevenMonthObj.month})
+                      ★ Breakeven (M{breakevenMonthObj.month})
                     </text>
                   </g>
                 )}
 
+                {/* Columnas invisibles de detección de cursor para cada mes */}
                 {result.monthlyBreakdown.map((d) => {
                   const x = getX(d.month);
                   return (
@@ -961,40 +1030,49 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                       width={innerWidth / 12}
                       height={innerHeight}
                       fill="transparent"
-                      className="cursor-pointer hover:fill-white/5"
+                      className="cursor-pointer hover:fill-purple-500/10 dark:hover:fill-white/5 transition-colors"
                       onMouseEnter={() => setHoveredMonth(d.month)}
-                      onMouseLeave={() => setHoveredMonth(null)}
                     />
                   );
                 })}
               </svg>
             </div>
 
-            {/* Inspección interactiva sutil */}
-            {hoveredMonth !== null && (
-              <div className="p-2 rounded bg-black/30 border border-white/10 text-xs font-mono flex items-center justify-between text-white/80 animate-fadeIn">
-                <span className="font-bold text-white">Mes {hoveredMonth}:</span>
-                <span className="text-rose-400">
-                  Sin sistema: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].cumulativeCostWithoutAutomation, currency)}
+            {/* PANEL DE AUDITORÍA MENSUAL FIJO (CERO BRINCOS: ALTURA PERMANENTE DE 52PX) */}
+            <div className="h-13 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-black/30 border border-slate-200 dark:border-white/10 text-xs font-mono flex items-center justify-between text-slate-800 dark:text-white/80">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-900 dark:text-white text-sm">
+                  Mes {activeInspectMonth}:
                 </span>
-                <span className="text-emerald-400">
-                  Recuperado: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].cumulativeBenefitWithAutomation, currency)}
+                {isBreakevenActive && (
+                  <span className="text-[10px] font-sans px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-500/30">
+                    ★ Inversión 100% Recuperada
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 text-right">
+                <span className="text-rose-600 dark:text-rose-400">
+                  Sin sistema: {formatCurrency(activeInspectRow.cumulativeCostWithoutAutomation, currency)}
                 </span>
-                <span className="text-white font-semibold">
-                  Ganancia Neta: {formatCurrency(result.monthlyBreakdown[hoveredMonth - 1].netProfit, currency)}
+                <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
+                  Recuperado: {formatCurrency(activeInspectRow.cumulativeBenefitWithAutomation, currency)}
+                </span>
+                <span className="font-bold text-slate-900 dark:text-white">
+                  Ganancia Neta: +{formatCurrency(activeInspectRow.netProfit, currency)}
                 </span>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* BLOQUE DE ACCIONES CON JERARQUÍA CLARA (OPCIÓN A) */}
-          <div className="p-6 rounded-2xl bg-white/[0.04] border border-white/10 space-y-4">
+          {/* BLOQUE DE ACCIONES CON JERARQUÍA CLARA */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h5 className="font-semibold text-white text-base">
+                <h5 className="font-semibold text-slate-900 dark:text-white text-base">
                   ¿Listo para implementar en tu negocio?
                 </h5>
-                <p className="text-xs text-[#F6DBC0]/70 mt-0.5">
+                <p className="text-xs text-slate-600 dark:text-[#F6DBC0]/70 mt-0.5">
                   Revisemos un prototipo funcional adaptado a tus flujos actuales sin costo inicial.
                 </p>
               </div>
@@ -1005,8 +1083,8 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
                 onClick={() => setIsConfidential(!isConfidential)}
                 className={`text-xs font-mono flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-colors cursor-pointer shrink-0 ${
                   isConfidential
-                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
-                    : 'bg-white/5 border-white/10 text-[#F6DBC0]/60 hover:text-white'
+                    ? 'bg-emerald-100 dark:bg-emerald-500/15 border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-semibold'
+                    : 'bg-slate-100 dark:bg-white/5 border-slate-300 dark:border-white/10 text-slate-600 dark:text-[#F6DBC0]/60 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {isConfidential ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -1020,7 +1098,7 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
               <button
                 type="button"
                 onClick={handleBookingClick}
-                className="flex-1 px-6 py-3 rounded-xl bg-[#c084fc] hover:bg-[#d8b4fe] text-[#160B1A] font-extrabold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-98"
+                className="flex-1 px-6 py-3 rounded-xl bg-[#7e22ce] hover:bg-[#6b1cb0] text-white dark:bg-[#c084fc] dark:hover:bg-[#d8b4fe] dark:text-[#160B1A] font-extrabold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-98"
                 title="Agendar videollamada para revisar el prototipo navegable"
               >
                 <Video className="w-4 h-4" />
@@ -1031,10 +1109,10 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
+                className="px-4 py-3 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/15 dark:text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-sm dark:shadow-none"
                 title="Descargar reporte en PDF"
               >
-                <FileDown className="w-4 h-4 text-emerald-400" />
+                <FileDown className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 <span>Descargar PDF</span>
               </button>
 
@@ -1042,10 +1120,10 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
               <button
                 type="button"
                 onClick={handleWhatsAppClick}
-                className="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
+                className="px-4 py-3 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/15 dark:text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-sm dark:shadow-none"
                 title="Consultar por WhatsApp"
               >
-                <MessageSquare className="w-4 h-4 text-emerald-400" />
+                <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 <span>WhatsApp</span>
               </button>
 
@@ -1053,7 +1131,7 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
               <button
                 type="button"
                 onClick={handleEmailClick}
-                className="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white/80 hover:text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
+                className="px-4 py-3 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 hover:text-slate-900 dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/15 dark:text-white/80 dark:hover:text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 shadow-sm dark:shadow-none"
                 title="Enviar por correo"
               >
                 <Mail className="w-4 h-4" />
@@ -1061,11 +1139,11 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
               </button>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs text-[#F6DBC0]/60">
+            <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-white/10 text-xs text-slate-500 dark:text-[#F6DBC0]/60">
               <button
                 type="button"
                 onClick={handleCopyProposal}
-                className="hover:text-white flex items-center gap-1.5 font-mono cursor-pointer transition-colors"
+                className="hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 font-mono cursor-pointer transition-colors"
               >
                 <Copy className="w-3.5 h-3.5" />
                 <span>{copied ? '¡Propuesta copiada!' : 'Copiar texto de cotización'}</span>
@@ -1295,11 +1373,11 @@ export const RoiCalculatorModal: React.FC<RoiCalculatorProps> = ({ mode = 'modal
   // VISTA EN MODO MODAL (CUANDO SE ABRE DESDE EL NAVBAR O CHATBOT)
   return (
     <div
-      className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-md animate-fadeIn"
       role="dialog"
       aria-label="Calculadora de Cotización y Retorno de Inversión"
     >
-      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto p-6 sm:p-8 bg-[#160B1A] border border-white/10 rounded-2xl shadow-2xl scrollbar-thin scrollbar-thumb-white/10 space-y-6">
+      <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto p-6 sm:p-8 bg-[#FAF7F2] dark:bg-[#160B1A] text-slate-900 dark:text-[#F8F4E9] border border-slate-300 dark:border-white/10 rounded-2xl shadow-2xl scrollbar-thin space-y-6">
         {/* Contenedor interactivo (Oculto al imprimir) */}
         <div className="roi-calculator-interactive roi-interactive-view print:hidden space-y-6">
           {renderMinimalNavbar()}
